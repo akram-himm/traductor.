@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Quick Translator Pro - DeepSeek AI",
+  "description": "Traduction instantanée avec IA DeepSeek, flashcards intelligentes et mode pratique",
+  "version": "3.0",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "https://api.deepseek.com/*",
+    "https://api.mymemory.translated.net/*",
+    "https://lingva.ml/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Quick Translator Pro"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "commands": {
+    "translate-selection": {
+      "suggested_key": {
+        "default": "Ctrl+T",
+        "mac": "Command+T"
+      },
+      "description": "Traduire le texte sélectionné"
+    }
+  }
+}

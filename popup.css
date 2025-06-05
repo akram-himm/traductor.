@@ -1,0 +1,153 @@
+/* Notification Styles */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 10000;
+    animation: slideIn 0.3s ease-out;
+    max-width: 300px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.notification-success { 
+    background: #10b981; 
+}
+
+.notification-warning { 
+    background: #f59e0b; 
+}
+
+.notification-error { 
+    background: #ef4444; 
+}
+
+.notification-info { 
+    background: #3b82f6; 
+}
+
+@keyframes slideIn {
+    from { 
+        transform: translateX(100%); 
+        opacity: 0; 
+    }
+    to { 
+        transform: translateX(0); 
+        opacity: 1; 
+    }
+}
+
+@keyframes slideOut {
+    from { 
+        transform: translateX(0); 
+        opacity: 1; 
+    }
+    to { 
+        transform: translateX(100%); 
+        opacity: 0; 
+    }
+}
+
+/* Practice Mode Styles */
+.practice-setup {
+    padding: 20px;
+}
+
+.practice-setup h2 {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.practice-setup h3 {
+    font-size: 16px;
+    margin-bottom: 16px;
+}
+
+.practice-setup label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 12px;
+    background: white;
+    border: 2px solid var(--gray-200);
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.practice-setup label:hover {
+    border-color: var(--primary-color);
+    background: var(--gray-50);
+}
+
+.practice-setup input[type="checkbox"]:checked + label {
+    border-color: var(--primary-color);
+    background: var(--primary-50);
+}
+
+/* Flashcard Actions */
+.flashcard-actions {
+    margin-top: 12px;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* Ensure buttons in flashcards are visible */
+.flashcard.flipped .flashcard-actions {
+    display: flex !important;
+}
+
+/* Language Folders pour Flashcards */
+.flashcard-language-folder {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    transition: var(--transition-base);
+}
+
+.flashcard-language-folder.expanded {
+    box-shadow: var(--shadow-md);
+}
+
+.flashcard-language-folder .folder-header {
+    padding: 16px;
+    background: var(--gray-50);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: var(--transition-base);
+}
+
+.flashcard-language-folder .folder-header:hover {
+    background: var(--gray-100);
+}
+
+.flashcard-language-folder.expanded .folder-arrow {
+    transform: rotate(90deg);
+}
+
+.flashcard-language-folder .folder-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    padding: 0 16px;
+}
+
+.flashcard-language-folder.expanded .folder-content {
+    max-height: 2000px;
+    padding: 16px;
+}
+
+/* Button Large */
+.btn-lg {
+    padding: 14px 28px;
+    font-size: 16px;
+}
