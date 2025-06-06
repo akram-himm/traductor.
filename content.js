@@ -11,7 +11,9 @@ function getLanguageName(langCode) {
   };
   
   return names[langCode] || langCode.toUpperCase();
-}// Variables globales
+}
+
+// Variables globales
 let qtIcon = null;
 let qtBubble = null;
 let selectedText = '';
@@ -26,11 +28,20 @@ let currentTranslationData = {
 // Cache pour éviter les re-traductions
 const translationCache = new Map();
 
+// Vérifier si le contexte de l'extension est valide
+function isExtensionContextValid() {
+  try {
+    return chrome.runtime && chrome.runtime.id;
+  } catch (e) {
+    return false;
+  }
+}
+
 // Charger les paramètres utilisateur
 async function loadSettings() {
   return new Promise((resolve) => {
     try {
-      if (!chrome.storage || !chrome.storage.sync) {
+      if (!chrome.storage || !chrome.storage.sync || !isExtensionContextValid()) {
         console.warn('⚠️ Extension context invalidated');
         userSettings = getDefaultSettings();
         resolve(userSettings);
@@ -88,7 +99,7 @@ async function saveTranslation(original, translated, fromLang, toLang) {
       domain: window.location.hostname
     };
     
-    if (!chrome.storage || !chrome.storage.local) {
+    if (!chrome.storage || !chrome.storage.local || !isExtensionContextValid()) {
       console.warn('⚠️ Extension context invalidated');
       return;
     }
@@ -406,7 +417,9 @@ function isBadTranslation(original, translation, sourceLang, targetLang) {
     'porte': ['door porte', 'porte door'],
     'population': ['earths', 'planets'],
     'certaines': ['beverage', 'drink'],
-    'principale': ['supply', 'provide']
+    'principale': ['supply', 'provide'],
+    'organization': ['propietaria', 'proprietary'],
+    'develop': ['crear', 'create']
   };
   
   if (badTranslations[originalLower]) {
@@ -456,6 +469,148 @@ function isBadTranslation(original, translation, sourceLang, targetLang) {
 // Dictionnaire de traductions fiables (étendu)
 function getReliableTranslation(text, sourceLang, targetLang) {
   const translations = {
+    'en_es': {
+      // Mots qui posent problème
+      'organization': 'organización',
+      'organisation': 'organización',
+      'develop': 'desarrollar',
+      'development': 'desarrollo',
+      'developer': 'desarrollador',
+      'proprietary': 'propietario',
+      'property': 'propiedad',
+      'properties': 'propiedades',
+      'artificial': 'artificial',
+      'intelligence': 'inteligencia',
+      'artificial intelligence': 'inteligencia artificial',
+      'founded': 'fundado',
+      'founder': 'fundador',
+      'foundation': 'fundación',
+      'headquartered': 'con sede en',
+      'headquarters': 'sede',
+      'company': 'empresa',
+      'corporation': 'corporación',
+      'business': 'negocio',
+      'enterprise': 'empresa',
+      // Mots tech courants
+      'software': 'software',
+      'hardware': 'hardware',
+      'computer': 'ordenador',
+      'computing': 'informática',
+      'technology': 'tecnología',
+      'system': 'sistema',
+      'network': 'red',
+      'internet': 'internet',
+      'website': 'sitio web',
+      'application': 'aplicación',
+      'program': 'programa',
+      'code': 'código',
+      'data': 'datos',
+      'database': 'base de datos',
+      'server': 'servidor',
+      'client': 'cliente',
+      'user': 'usuario',
+      'password': 'contraseña',
+      'security': 'seguridad',
+      'privacy': 'privacidad',
+      // Mots courants
+      'hello': 'hola',
+      'goodbye': 'adiós',
+      'thank you': 'gracias',
+      'thanks': 'gracias',
+      'please': 'por favor',
+      'yes': 'sí',
+      'no': 'no',
+      'maybe': 'quizás',
+      'sorry': 'lo siento',
+      'excuse me': 'disculpe',
+      'good morning': 'buenos días',
+      'good afternoon': 'buenas tardes',
+      'good evening': 'buenas noches',
+      'good night': 'buenas noches',
+      'welcome': 'bienvenido',
+      'congratulations': 'felicidades'
+    },
+    'es_en': {
+      // Inverser les traductions
+      'organización': 'organization',
+      'desarrollar': 'develop',
+      'desarrollo': 'development',
+      'desarrollador': 'developer',
+      'propietario': 'proprietary',
+      'propiedad': 'property',
+      'propiedades': 'properties',
+      'artificial': 'artificial',
+      'inteligencia': 'intelligence',
+      'inteligencia artificial': 'artificial intelligence',
+      'fundado': 'founded',
+      'fundador': 'founder',
+      'fundación': 'foundation',
+      'con sede en': 'headquartered',
+      'sede': 'headquarters',
+      'empresa': 'company',
+      'corporación': 'corporation',
+      'negocio': 'business',
+      'hola': 'hello',
+      'adiós': 'goodbye',
+      'gracias': 'thank you',
+      'por favor': 'please',
+      'sí': 'yes',
+      'no': 'no',
+      'quizás': 'maybe',
+      'lo siento': 'sorry',
+      'disculpe': 'excuse me',
+      'buenos días': 'good morning',
+      'buenas tardes': 'good afternoon',
+      'buenas noches': 'good evening',
+      'bienvenido': 'welcome',
+      'felicidades': 'congratulations'
+    },
+    'fr_es': {
+      'organisation': 'organización',
+      'développer': 'desarrollar',
+      'développement': 'desarrollo',
+      'entreprise': 'empresa',
+      'société': 'sociedad',
+      'compagnie': 'compañía',
+      'bonjour': 'hola',
+      'au revoir': 'adiós',
+      'merci': 'gracias',
+      'merci beaucoup': 'muchas gracias',
+      's\'il vous plaît': 'por favor',
+      'oui': 'sí',
+      'non': 'no',
+      'peut-être': 'quizás',
+      'pardon': 'perdón',
+      'excusez-moi': 'disculpe',
+      'bonne journée': 'buen día',
+      'bonne soirée': 'buenas tardes',
+      'bonne nuit': 'buenas noches',
+      'bienvenue': 'bienvenido',
+      'félicitations': 'felicidades'
+    },
+    'es_fr': {
+      'organización': 'organisation',
+      'desarrollar': 'développer',
+      'desarrollo': 'développement',
+      'empresa': 'entreprise',
+      'sociedad': 'société',
+      'compañía': 'compagnie',
+      'hola': 'bonjour',
+      'adiós': 'au revoir',
+      'gracias': 'merci',
+      'muchas gracias': 'merci beaucoup',
+      'por favor': 's\'il vous plaît',
+      'sí': 'oui',
+      'no': 'non',
+      'quizás': 'peut-être',
+      'perdón': 'pardon',
+      'disculpe': 'excusez-moi',
+      'buen día': 'bonne journée',
+      'buenas tardes': 'bonne soirée',
+      'buenas noches': 'bonne nuit',
+      'bienvenido': 'bienvenue',
+      'felicidades': 'félicitations'
+    },
     'fr_en': {
       // Mots ambigus avec contexte
       'car': 'because', // En français, "car" signifie "parce que"
@@ -556,6 +711,18 @@ function getReliableTranslation(text, sourceLang, targetLang) {
 // Service de traduction principal avec fallback intelligent
 async function translateWithService(text, sourceLang = 'auto', targetLang = 'fr', contextData = null) {
   try {
+    // Vérifier le contexte
+    if (!isExtensionContextValid()) {
+      console.warn('⚠️ Extension context invalidated');
+      return {
+        translation: text + ' (Extension rechargée)',
+        detectedLanguage: sourceLang,
+        confidence: 0,
+        source: 'Extension Error',
+        originalText: text
+      };
+    }
+    
     console.log('🌐 Translation service:', { text, sourceLang, targetLang, isPro: userSettings.isPro });
     
     const cleanedText = cleanText(text);
@@ -662,7 +829,31 @@ async function translateWithService(text, sourceLang = 'auto', targetLang = 'fr'
     // 3. Services gratuits avec validation stricte
     console.log('🔄 Essai des services gratuits pour:', cleanedText);
     
-    // Essayer MyMemory d'abord (plus fiable)
+    // Essayer Google Translate via gtranslate.io
+    try {
+      const googleResult = await translateWithGoogleFree(cleanedText, sourceLang, targetLang);
+      if (googleResult && !isBadTranslation(cleanedText, googleResult.translation, sourceLang, targetLang)) {
+        console.log('✅ Google Translate réussi:', googleResult.translation);
+        translationCache.set(cacheKey, googleResult);
+        return googleResult;
+      }
+    } catch (error) {
+      console.warn('⚠️ Google Translate échoué');
+    }
+    
+    // Essayer LibreTranslate
+    try {
+      const libreResult = await translateWithLibreTranslate(cleanedText, sourceLang, targetLang);
+      if (libreResult && !isBadTranslation(cleanedText, libreResult.translation, sourceLang, targetLang)) {
+        console.log('✅ LibreTranslate réussi:', libreResult.translation);
+        translationCache.set(cacheKey, libreResult);
+        return libreResult;
+      }
+    } catch (error) {
+      console.warn('⚠️ LibreTranslate échoué');
+    }
+    
+    // Essayer MyMemory en dernier recours
     try {
       const myMemoryResult = await translateWithMyMemory(cleanedText, sourceLang, targetLang);
       if (myMemoryResult && !isBadTranslation(cleanedText, myMemoryResult.translation, sourceLang, targetLang)) {
@@ -672,18 +863,6 @@ async function translateWithService(text, sourceLang = 'auto', targetLang = 'fr'
       }
     } catch (error) {
       console.warn('⚠️ MyMemory échoué');
-    }
-    
-    // Essayer Lingva ensuite
-    try {
-      const lingvaResult = await translateWithLingva(cleanedText, sourceLang, targetLang);
-      if (lingvaResult && !isBadTranslation(cleanedText, lingvaResult.translation, sourceLang, targetLang)) {
-        console.log('✅ Lingva réussi:', lingvaResult.translation);
-        translationCache.set(cacheKey, lingvaResult);
-        return lingvaResult;
-      }
-    } catch (error) {
-      console.warn('⚠️ Lingva échoué');
     }
     
     // 4. Fallback final
@@ -721,30 +900,99 @@ async function quickTranslationTest(text, fromLang, toLang) {
   }
 }
 
+// Google Translate gratuit via proxy
+async function translateWithGoogleFree(text, sourceLang, targetLang) {
+  try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+    
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    
+    const data = await response.json();
+    
+    if (data && data[0] && data[0][0] && data[0][0][0]) {
+      return {
+        translation: data[0][0][0],
+        detectedLanguage: sourceLang,
+        confidence: 0.95,
+        source: 'Google Translate',
+        originalText: text
+      };
+    }
+    
+    throw new Error('No translation from Google');
+  } catch (error) {
+    console.error('❌ Google Translate error:', error);
+    throw error;
+  }
+}
+
+// LibreTranslate
+async function translateWithLibreTranslate(text, sourceLang, targetLang) {
+  try {
+    const url = 'https://libretranslate.de/translate';
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        q: text,
+        source: sourceLang,
+        target: targetLang,
+        format: 'text'
+      })
+    });
+    
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    
+    const data = await response.json();
+    
+    if (data.translatedText) {
+      return {
+        translation: data.translatedText,
+        detectedLanguage: sourceLang,
+        confidence: 0.9,
+        source: 'LibreTranslate',
+        originalText: text
+      };
+    }
+    
+    throw new Error('No translation from LibreTranslate');
+  } catch (error) {
+    console.error('❌ LibreTranslate error:', error);
+    throw error;
+  }
+}
+
 // MyMemory Translation API
 async function translateWithMyMemory(text, sourceLang, targetLang) {
   try {
-    // Convertir les codes de langue pour MyMemory
+    // Forcer les codes simples
     const langMap = {
-      'auto': 'auto',
-      'fr': 'fr-FR',
-      'en': 'en-GB',
-      'es': 'es-ES',
-      'de': 'de-DE',
-      'it': 'it-IT',
-      'pt': 'pt-PT',
-      'ru': 'ru-RU',
-      'ja': 'ja-JP',
-      'ko': 'ko-KR',
-      'zh': 'zh-CN',
-      'ar': 'ar-SA'
+      'auto': 'auto-detect',
+      'fr': 'fr',
+      'en': 'en',
+      'es': 'es',
+      'de': 'de',
+      'it': 'it',
+      'pt': 'pt'
     };
     
-    const source = langMap[sourceLang] || sourceLang;
-    const target = langMap[targetLang] || targetLang;
+    let source = langMap[sourceLang] || sourceLang;
+    let target = langMap[targetLang] || targetLang;
+    
+    // Si auto-detect, essayer de détecter
+    if (source === 'auto-detect') {
+      source = detectLanguage(text);
+    }
+    
     const langPair = `${source}|${target}`;
     
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`;
+    console.log('🌐 MyMemory translation:', { text, langPair });
+    
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}&de=votre-email@example.com`;
     
     const response = await fetch(url);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -752,8 +1000,25 @@ async function translateWithMyMemory(text, sourceLang, targetLang) {
     const data = await response.json();
     
     if (data.responseStatus === 200 && data.responseData?.translatedText) {
+      const translation = cleanText(data.responseData.translatedText);
+      
+      // Vérifier si c'est une bonne traduction
+      if (translation.toLowerCase() === text.toLowerCase() && sourceLang !== targetLang) {
+        throw new Error('Traduction identique - service non fiable');
+      }
+      
+      // Vérifier les mauvaises traductions connues
+      const badTranslations = {
+        'organization': ['propietaria', 'proprietary'],
+        'develop': ['crear', 'create']
+      };
+      
+      if (badTranslations[text.toLowerCase()]?.includes(translation.toLowerCase())) {
+        throw new Error('Traduction connue comme incorrecte');
+      }
+      
       return {
-        translation: cleanText(data.responseData.translatedText),
+        translation: translation,
         detectedLanguage: sourceLang,
         confidence: data.responseData.match || 0.8,
         source: 'MyMemory',
@@ -1237,7 +1502,7 @@ function getFlagEmoji(langCode) {
 // Sauvegarder en flashcard
 function saveToFlashcard(front, back, language) {
   try {
-    if (!chrome.storage || !chrome.storage.local) {
+    if (!chrome.storage || !chrome.storage.local || !isExtensionContextValid()) {
       console.warn('⚠️ Extension context invalidated');
       return;
     }
