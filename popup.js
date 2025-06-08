@@ -16,471 +16,6 @@ let practiceMode = {
   startTime: null
 };
 
-// IMPORTANT: Déclarer les fonctions globales AVANT leur utilisation
-window.toggleFolder = function(key) {
-  const folder = document.querySelector(`.language-folder[data-key="${key}"]`);
-  if (!folder) return;
-  
-  const content = document.getElementById(`folder-content-${key}`);
-  const arrow = folder.querySelector('.folder-arrow');
-  
-  if (!content) return;
-  
-  const isExpanded = folder.classList.contains('expanded');
-  
-  if (isExpanded) {
-    folder.classList.remove('expanded');
-    content.style.maxHeight = '0';
-    content.style.overflow = 'hidden';
-    setTimeout(() => {
-      content.style.display = 'none';
-    }, 300);
-    if (arrow) arrow.style.transform = 'rotate(0deg)';
-  } else {
-    folder.classList.add('expanded');
-    content.style.display = 'block';
-    const height = content.scrollHeight;
-    content.style.maxHeight = height + 'px';
-    content.style.overflow = 'visible';
-    if (arrow) arrow.style.transform = 'rotate(90deg)';
-  }
-};
-
-window.swapLanguages = function(key, currentDirection) {
-  const [fromLang, toLang] = currentDirection.split('_');
-  const newDirection = `${toLang}_${fromLang}`;
-  
-  // Sauvegarder la nouvelle direction
-  const savedDirections = JSON.parse(localStorage.getItem('folderDirections') || '{}');
-  savedDirections[key] = newDirection;
-  localStorage.setItem('folderDirections', JSON.stringify(savedDirections));
-  
-  // Mettre à jour l'affichage
-  const folderLangs = document.getElementById(`folder-langs-${key}`);
-  if (folderLangs) {
-    folderLangs.innerHTML = `
-      <span>${getFlagEmoji(toLang)} ${getLanguageName(toLang)}</span>
-      <span>→</span>
-      <span>${getFlagEmoji(fromLang)} ${getLanguageName(fromLang)}</span>
-      <button class="folder-swap" onclick="event.stopPropagation(); swapLanguages('${key}', '${newDirection}')">
-        ↔️
-      </button>
-    `;
-  }
-  
-  // Mettre à jour le data-direction du dossier
-  const folder = document.querySelector(`.language-folder[data-key="${key}"]`);
-  if (folder) {
-    folder.dataset.direction = newDirection;
-  }
-  
-  // Recharger le contenu
-  const folderItems = document.getElementById(`folder-items-${key}`);
-  if (folderItems) {
-    const group = translations.filter(t => {
-      const langs = [t.fromLang, t.toLang].sort();
-      return `${langs[0]}_${langs[1]}` === key;
-    });
-    
-    folderItems.innerHTML = renderFolderTranslations(group, toLang, fromLang);
-  }
-};
-
-window.toggleFlashcardFolder = function(key) {
-  const folder = document.querySelector(`.flashcard-language-folder[data-key="${key}"]`);
-  if (!folder) return;
-  
-  const content = document.getElementById(`flashcard-folder-content-${key}`);
-  const arrow = folder.querySelector('.folder-arrow');
-  
-  if (!content) return;
-  
-  const isExpanded = folder.classList.contains('expanded');
-  
-  if (isExpanded) {
-    folder.classList.remove('expanded');
-    content.style.maxHeight = '0';
-    content.style.overflow = 'hidden';
-    setTimeout(() => {
-      content.style.display = 'none';
-    }, 300);
-    if (arrow) arrow.style.transform = 'rotate(0deg)';
-  } else {
-    folder.classList.add('expanded');
-    content.style.display = 'block';
-    const height = content.scrollHeight;
-    content.style.maxHeight = height + 'px';
-    content.style.overflow = 'visible';
-    if (arrow) arrow.style.transform = 'rotate(90deg)';
-  }
-};
-
-window.swapFlashcardLanguages = function(key, currentDirection) {
-  const [fromLang, toLang] = currentDirection.split('_');
-  const newDirection = `${toLang}_${fromLang}`;
-  
-  // Sauvegarder la nouvelle direction
-  const savedDirections = JSON.parse(localStorage.getItem('flashcardDirections') || '{}');
-  savedDirections[key] = newDirection;
-  localStorage.setItem('flashcardDirections', JSON.stringify(savedDirections));
-  
-  // Mettre à jour l'affichage
-  const folderLangs = document.getElementById(`flashcard-folder-langs-${key}`);
-  if (folderLangs) {
-    folderLangs.innerHTML = `
-      <span>${getFlagEmoji(toLang)} ${getLanguageName(toLang)}</span>
-      <span>→</span>
-      <span>${getFlagEmoji(fromLang)} ${getLanguageName(fromLang)}</span>
-      <button class="folder-swap" onclick="event.stopPropagation(); swapFlashcardLanguages('${key}', '${newDirection}')">
-        ↔️
-      </button>
-    `;
-  }
-  
-  // Mettre à jour le data-direction du dossier
-  const folder = document.querySelector(`.flashcard-language-folder[data-key="${key}"]`);
-  if (folder) {
-    folder.dataset.direction = newDirection;
-  }
-  
-  // Recharger le contenu
-  const grid = document.getElementById(`flashcard-grid-${key}`);
-  if (grid) {
-    const cards = flashcards.map(card => ({
-      ...card,
-      fromLang: detectLanguage(card.front),
-      toLang: card.language
-    })).filter(card => {
-      const langs = [card.fromLang, card.toLang].sort();
-      return `${langs[0]}_${langs[1]}` === key;
-    });
-    
-    grid.innerHTML = renderFlashcards(cards, toLang, fromLang);
-  }
-};
-
-window.flipCard = function(cardId) {
-  const card = flashcards.find(c => c.id === parseInt(cardId));
-  if (!card) return;
-  
-  const front = document.getElementById(`front-${cardId}`);
-  const back = document.getElementById(`back-${cardId}`);
-  const cardEl = document.querySelector(`[data-id="${cardId}"]`);
-  
-  if (front && back && cardEl) {
-    if (front.style.display === 'none') {
-      // Retourner vers l'avant
-      front.style.display = 'block';
-      back.style.display = 'none';
-      cardEl.classList.remove('flipped');
-    } else {
-      // Retourner vers l'arrière
-      front.style.display = 'none';
-      back.style.display = 'block';
-      cardEl.classList.add('flipped');
-      
-      // Mettre à jour les statistiques de révision
-      card.reviews = (card.reviews || 0) + 1;
-      card.lastReview = new Date().toISOString();
-      saveFlashcards();
-    }
-  }
-};
-
-window.moveToFolder = function(cardId, folderId) {
-  const card = flashcards.find(c => c.id === parseInt(cardId));
-  if (!card) return;
-  
-  card.folder = folderId;
-  
-  // Mettre à jour la difficulté selon le dossier
-  if (folderId === 'difficult') {
-    card.difficulty = 'hard';
-  } else if (folderId === 'learned') {
-    card.difficulty = 'easy';
-  }
-  
-  saveFlashcards();
-  updateFlashcards();
-  
-  // Feedback visuel
-  showNotification(`Carte déplacée vers ${flashcardFolders[folderId].name}`, 'success');
-};
-
-window.deleteFlashcard = function(cardId) {
-  if (!confirm('Supprimer cette flashcard ?')) return;
-  
-  flashcards = flashcards.filter(c => c.id !== parseInt(cardId));
-  saveFlashcards();
-  updateFlashcards();
-  updateStats();
-  
-  showNotification('Flashcard supprimée', 'info');
-};
-
-window.showFlashcardTips = function() {
-  alert(`💡 Conseils pour utiliser les flashcards:
-
-1. 📝 Créez des flashcards après chaque traduction importante
-2. 🎯 Pratiquez régulièrement avec le Mode Pratique
-3. ⭐ Marquez vos cartes favorites pour les réviser plus souvent
-4. 🔥 Les cartes difficiles seront prioritaires en pratique
-5. ✅ Les cartes maîtrisées apparaîtront moins souvent
-
-Astuce: Utilisez les dossiers pour organiser vos cartes par thème!`);
-};
-
-window.startPracticeMode = function() {
-  if (flashcards.length === 0) {
-    showNotification('Aucune flashcard disponible pour la pratique!', 'warning');
-    return;
-  }
-  
-  // Afficher la sélection de langue
-  const container = document.getElementById('flashcardsList');
-  if (!container) return;
-  
-  // Obtenir toutes les langues disponibles
-  const languages = new Set();
-  flashcards.forEach(card => {
-    languages.add(card.language);
-    languages.add(detectLanguage(card.front));
-  });
-  
-  container.innerHTML = `
-    <div class="practice-setup">
-      <h2 style="text-align: center; margin-bottom: 24px;">🎮 Configuration du Mode Pratique</h2>
-      
-      <div style="background: var(--gray-50); padding: 24px; border-radius: 12px; margin-bottom: 24px;">
-        <h3 style="font-size: 16px; margin-bottom: 16px;">Sélectionnez les langues à pratiquer:</h3>
-        
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
-          ${Array.from(languages).map(lang => `
-            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 12px; background: white; border: 2px solid var(--gray-200); border-radius: 8px; transition: all 0.2s;">
-              <input type="checkbox" value="${lang}" checked style="cursor: pointer;">
-              <span>${getFlagEmoji(lang)} ${getLanguageName(lang)}</span>
-            </label>
-          `).join('')}
-        </div>
-      </div>
-      
-      <div style="background: var(--gray-50); padding: 24px; border-radius: 12px; margin-bottom: 24px;">
-        <h3 style="font-size: 16px; margin-bottom: 16px;">Options de pratique:</h3>
-        
-        <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-          <input type="checkbox" id="practiceRandom" checked>
-          <span>Ordre aléatoire des cartes</span>
-        </label>
-        
-        <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-          <input type="checkbox" id="practiceDifficult" checked>
-          <span>Priorité aux cartes difficiles</span>
-        </label>
-        
-        <label style="display: flex; align-items: center; gap: 8px;">
-          <input type="number" id="practiceLimit" value="20" min="5" max="50" style="width: 60px; padding: 4px 8px; border: 1px solid var(--gray-300); border-radius: 4px;">
-          <span>Nombre de cartes (max)</span>
-        </label>
-      </div>
-      
-      <div style="text-align: center;">
-        <button class="btn btn-primary btn-lg" onclick="launchPractice()" style="min-width: 200px;">
-          🚀 Commencer la pratique
-        </button>
-        <button class="btn btn-secondary" onclick="updateFlashcards()" style="margin-left: 12px;">
-          Annuler
-        </button>
-      </div>
-    </div>
-  `;
-};
-
-window.launchPractice = function() {
-  const selectedLangs = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
-    .filter(cb => cb.value && cb.value !== 'on')
-    .map(cb => cb.value);
-  
-  if (selectedLangs.length === 0) {
-    showNotification('Sélectionnez au moins une langue!', 'warning');
-    return;
-  }
-  
-  const randomOrder = document.getElementById('practiceRandom')?.checked ?? true;
-  const prioritizeDifficult = document.getElementById('practiceDifficult')?.checked ?? true;
-  const limit = parseInt(document.getElementById('practiceLimit')?.value || '20');
-  
-  // Filtrer les cartes par langue
-  let practiceCards = flashcards.filter(card => 
-    selectedLangs.includes(card.language) || 
-    selectedLangs.includes(detectLanguage(card.front))
-  );
-  
-  if (practiceCards.length === 0) {
-    showNotification('Aucune carte pour les langues sélectionnées!', 'warning');
-    return;
-  }
-  
-  // Trier par priorité si demandé
-  if (prioritizeDifficult) {
-    practiceCards.sort((a, b) => {
-      if (a.difficulty === 'hard' && b.difficulty !== 'hard') return -1;
-      if (b.difficulty === 'hard' && a.difficulty !== 'hard') return 1;
-      if (!a.lastReview && b.lastReview) return -1;
-      if (!b.lastReview && a.lastReview) return 1;
-      if (a.lastReview && b.lastReview) {
-        return new Date(a.lastReview) - new Date(b.lastReview);
-      }
-      return 0;
-    });
-  }
-  
-  // Limiter le nombre et mélanger si demandé
-  practiceCards = practiceCards.slice(0, limit);
-  if (randomOrder) {
-    practiceCards = practiceCards.sort(() => Math.random() - 0.5);
-  }
-  
-  practiceMode = {
-    active: true,
-    cards: practiceCards,
-    currentIndex: 0,
-    score: { correct: 0, incorrect: 0 },
-    startTime: Date.now()
-  };
-  
-  displayPracticeMode();
-};
-
-window.checkAnswer = function() {
-  const input = document.getElementById('practiceAnswer');
-  const resultDiv = document.getElementById('practiceResult');
-  const checkBtn = document.getElementById('checkBtn');
-  
-  if (!input || !resultDiv || !checkBtn) return;
-  
-  const userAnswer = normalizeAnswer(input.value.trim());
-  const currentCard = practiceMode.cards[practiceMode.currentIndex];
-  const correctAnswer = normalizeAnswer(currentCard.back);
-  
-  // Vérification plus flexible
-  const isCorrect = checkAnswerSimilarity(userAnswer, correctAnswer);
-  
-  if (isCorrect) {
-    practiceMode.score.correct++;
-    resultDiv.className = 'practice-result correct';
-    resultDiv.innerHTML = `
-      <div style="font-size: 18px; font-weight: bold; margin-bottom: 4px;">✅ Correct!</div>
-      <div>Excellente réponse!</div>
-    `;
-    
-    // Mettre à jour la difficulté de la carte
-    if (currentCard.difficulty === 'hard') {
-      currentCard.difficulty = 'normal';
-    } else if (currentCard.difficulty === 'normal') {
-      currentCard.difficulty = 'easy';
-    }
-  } else {
-    practiceMode.score.incorrect++;
-    resultDiv.className = 'practice-result incorrect';
-    resultDiv.innerHTML = `
-      <div style="font-size: 18px; font-weight: bold; margin-bottom: 4px;">❌ Incorrect</div>
-      <div>Réponse correcte: <strong>"${currentCard.back}"</strong></div>
-      ${userAnswer ? `<div style="margin-top: 4px;">Votre réponse: "${input.value}"</div>` : ''}
-    `;
-    
-    // Augmenter la difficulté si nécessaire
-    if (currentCard.difficulty !== 'hard') {
-      currentCard.difficulty = currentCard.difficulty === 'easy' ? 'normal' : 'hard';
-    }
-  }
-  
-  resultDiv.style.display = 'block';
-  input.disabled = true;
-  checkBtn.textContent = 'Suivant →';
-  checkBtn.onclick = nextQuestion;
-  
-  // Mettre à jour les statistiques de la carte
-  currentCard.lastReview = new Date().toISOString();
-  currentCard.reviews = (currentCard.reviews || 0) + 1;
-  saveFlashcards();
-};
-
-window.showHint = function() {
-  const currentCard = practiceMode.cards[practiceMode.currentIndex];
-  const hint = currentCard.back.substring(0, Math.ceil(currentCard.back.length / 3)) + '...';
-  
-  showNotification(`Indice: "${hint}"`, 'info');
-};
-
-window.skipQuestion = function() {
-  practiceMode.score.incorrect++;
-  nextQuestion();
-};
-
-window.nextQuestion = function() {
-  practiceMode.currentIndex++;
-  
-  if (practiceMode.currentIndex >= practiceMode.cards.length) {
-    showPracticeResults();
-  } else {
-    displayPracticeMode();
-  }
-};
-
-window.quitPractice = function() {
-  practiceMode.active = false;
-  updateFlashcards();
-};
-
-window.copyTranslation = function(text) {
-  navigator.clipboard.writeText(text).then(() => {
-    showNotification('Traduction copiée!', 'success');
-  }).catch(() => {
-    showNotification('Erreur lors de la copie', 'error');
-  });
-};
-
-window.createFlashcardFromHistory = function(original, translated, language) {
-  const flashcard = {
-    id: Date.now(),
-    front: original,
-    back: translated,
-    language: language,
-    created: new Date().toISOString(),
-    folder: 'default',
-    reviews: 0,
-    lastReview: null,
-    difficulty: 'normal'
-  };
-  
-  // Vérifier si elle existe déjà
-  const exists = flashcards.some(f => 
-    f.front.toLowerCase() === original.toLowerCase() && 
-    f.back.toLowerCase() === translated.toLowerCase()
-  );
-  
-  if (exists) {
-    showNotification('Cette flashcard existe déjà!', 'warning');
-    return;
-  }
-  
-  flashcards.unshift(flashcard);
-  saveFlashcards();
-  updateStats();
-  showNotification('Flashcard créée avec succès!', 'success');
-};
-
-window.deleteTranslation = function(id) {
-  if (!confirm('Supprimer cette traduction ?')) return;
-  
-  translations = translations.filter(t => t.id !== parseInt(id));
-  chrome.storage.local.set({ translations }, () => {
-    updateHistory();
-    updateStats();
-    showNotification('Traduction supprimée', 'info');
-  });
-};
-
 // Charger les données
 async function loadData() {
   return new Promise((resolve) => {
@@ -784,13 +319,13 @@ function updateHistory() {
     
     html += `
       <div class="language-folder" data-key="${key}" data-direction="${currentDirection}">
-        <div class="folder-header" onclick="toggleFolder('${key}')">
+        <div class="folder-header" data-folder-key="${key}">
           <div class="folder-info">
             <div class="folder-langs" id="folder-langs-${key}">
               <span>${getFlagEmoji(fromLang)} ${getLanguageName(fromLang)}</span>
               <span>→</span>
               <span>${getFlagEmoji(toLang)} ${getLanguageName(toLang)}</span>
-              <button class="folder-swap" onclick="event.stopPropagation(); swapLanguages('${key}', '${currentDirection}')">
+              <button class="folder-swap" data-swap-key="${key}" data-direction="${currentDirection}">
                 ↔️
               </button>
             </div>
@@ -812,6 +347,27 @@ function updateHistory() {
   });
   
   container.innerHTML = html;
+  
+  // Ajouter les event listeners après avoir créé le HTML
+  container.querySelectorAll('.folder-header').forEach(header => {
+    header.addEventListener('click', function(e) {
+      // Ignorer si on clique sur le bouton swap
+      if (e.target.classList.contains('folder-swap')) return;
+      
+      const key = this.dataset.folderKey;
+      toggleFolder(key);
+    });
+  });
+  
+  // Event listeners pour les boutons swap
+  container.querySelectorAll('.folder-swap').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const key = this.dataset.swapKey;
+      const direction = this.dataset.direction;
+      swapLanguages(key, direction);
+    });
+  });
 }
 
 // Rendre les traductions d'un dossier
@@ -880,6 +436,8 @@ function toggleFolder(key) {
   } else {
     folder.classList.add('expanded');
     content.style.display = 'block';
+    // Force reflow
+    content.offsetHeight;
     const height = content.scrollHeight;
     content.style.maxHeight = height + 'px';
     content.style.overflow = 'visible';
@@ -904,10 +462,17 @@ function swapLanguages(key, currentDirection) {
       <span>${getFlagEmoji(toLang)} ${getLanguageName(toLang)}</span>
       <span>→</span>
       <span>${getFlagEmoji(fromLang)} ${getLanguageName(fromLang)}</span>
-      <button class="folder-swap" onclick="event.stopPropagation(); swapLanguages('${key}', '${newDirection}')">
+      <button class="folder-swap" data-swap-key="${key}" data-direction="${newDirection}">
         ↔️
       </button>
     `;
+    
+    // Réattacher l'event listener au nouveau bouton
+    const newSwapBtn = folderLangs.querySelector('.folder-swap');
+    newSwapBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      swapLanguages(key, newDirection);
+    });
   }
   
   // Mettre à jour le data-direction du dossier
@@ -946,11 +511,17 @@ function updateFlashcards() {
         <div class="empty-state-text">
           Cliquez sur "Flashcard" après une traduction pour l'ajouter
         </div>
-        <button class="btn btn-primary" style="margin-top: 16px;" onclick="showFlashcardTips()">
+        <button class="btn btn-primary" style="margin-top: 16px;" id="showTipsBtn">
           💡 Comment utiliser les flashcards
         </button>
       </div>
     `;
+    
+    // Ajouter l'event listener pour le bouton tips
+    const tipsBtn = document.getElementById('showTipsBtn');
+    if (tipsBtn) {
+      tipsBtn.addEventListener('click', showFlashcardTips);
+    }
     return;
   }
   
@@ -993,13 +564,13 @@ function updateFlashcards() {
     
     html += `
       <div class="language-folder flashcard-language-folder" data-key="${key}" data-direction="${currentDirection}">
-        <div class="folder-header" onclick="toggleFlashcardFolder('${key}')">
+        <div class="folder-header" data-flashcard-folder-key="${key}">
           <div class="folder-info">
             <div class="folder-langs" id="flashcard-folder-langs-${key}">
               <span>${getFlagEmoji(fromLang)} ${getLanguageName(fromLang)}</span>
               <span>→</span>
               <span>${getFlagEmoji(toLang)} ${getLanguageName(toLang)}</span>
-              <button class="folder-swap" onclick="event.stopPropagation(); swapFlashcardLanguages('${key}', '${currentDirection}')">
+              <button class="folder-swap" data-flashcard-swap-key="${key}" data-direction="${currentDirection}">
                 ↔️
               </button>
             </div>
@@ -1021,6 +592,42 @@ function updateFlashcards() {
   });
   
   container.innerHTML = html || '<div class="empty-state"><div class="empty-state-icon">🎴</div><div>Aucune flashcard valide</div></div>';
+  
+  // Ajouter les event listeners après avoir créé le HTML
+  container.querySelectorAll('.folder-header').forEach(header => {
+    header.addEventListener('click', function(e) {
+      // Ignorer si on clique sur le bouton swap
+      if (e.target.classList.contains('folder-swap')) return;
+      
+      const key = this.dataset.flashcardFolderKey;
+      toggleFlashcardFolder(key);
+    });
+  });
+  
+  // Event listeners pour les boutons swap
+  container.querySelectorAll('.folder-swap').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const key = this.dataset.flashcardSwapKey;
+      const direction = this.dataset.direction;
+      swapFlashcardLanguages(key, direction);
+    });
+  });
+  
+  // Event listeners pour les flashcards
+  container.querySelectorAll('.flashcard').forEach(card => {
+    card.addEventListener('click', function() {
+      const cardId = this.dataset.id;
+      flipCard(cardId);
+    });
+  });
+  
+  // Event listeners pour les boutons d'action des flashcards
+  container.querySelectorAll('.flashcard-actions button').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+    });
+  });
 }
 
 // Rendre les flashcards pour un groupe de langues
@@ -1035,7 +642,7 @@ function renderFlashcards(cards, fromLang, toLang) {
     const displayToLang = isReversed ? card.fromLang : card.toLang;
     
     return `
-      <div class="flashcard" data-id="${card.id}" onclick="flipCard(${card.id})">
+      <div class="flashcard" data-id="${card.id}">
         <div class="flashcard-difficulty difficulty-${card.difficulty || 'normal'}"></div>
         <div class="flashcard-content" id="card-content-${card.id}">
           <div class="flashcard-front" id="front-${card.id}">
@@ -1052,10 +659,10 @@ function renderFlashcards(cards, fromLang, toLang) {
               <span>${getLanguageName(displayToLang)}</span>
             </div>
             <div class="flashcard-actions" style="margin-top: 12px; display: flex; justify-content: center; gap: 8px;">
-              <button class="btn btn-sm" onclick="event.stopPropagation(); moveToFolder(${card.id}, 'favorites')" title="Favori">⭐</button>
-              <button class="btn btn-sm" onclick="event.stopPropagation(); moveToFolder(${card.id}, 'difficult')" title="Difficile">🔥</button>
-              <button class="btn btn-sm" onclick="event.stopPropagation(); moveToFolder(${card.id}, 'learned')" title="Maîtrisée">✅</button>
-              <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteFlashcard(${card.id})" title="Supprimer">🗑️</button>
+              <button class="btn btn-sm" data-move-card="${card.id}" data-folder="favorites" title="Favori">⭐</button>
+              <button class="btn btn-sm" data-move-card="${card.id}" data-folder="difficult" title="Difficile">🔥</button>
+              <button class="btn btn-sm" data-move-card="${card.id}" data-folder="learned" title="Maîtrisée">✅</button>
+              <button class="btn btn-sm btn-danger" data-delete-card="${card.id}" title="Supprimer">🗑️</button>
             </div>
           </div>
         </div>
@@ -1087,6 +694,8 @@ function toggleFlashcardFolder(key) {
   } else {
     folder.classList.add('expanded');
     content.style.display = 'block';
+    // Force reflow
+    content.offsetHeight;
     const height = content.scrollHeight;
     content.style.maxHeight = height + 'px';
     content.style.overflow = 'visible';
@@ -1111,10 +720,17 @@ function swapFlashcardLanguages(key, currentDirection) {
       <span>${getFlagEmoji(toLang)} ${getLanguageName(toLang)}</span>
       <span>→</span>
       <span>${getFlagEmoji(fromLang)} ${getLanguageName(fromLang)}</span>
-      <button class="folder-swap" onclick="event.stopPropagation(); swapFlashcardLanguages('${key}', '${newDirection}')">
+      <button class="folder-swap" data-flashcard-swap-key="${key}" data-direction="${newDirection}">
         ↔️
       </button>
     `;
+    
+    // Réattacher l'event listener au nouveau bouton
+    const newSwapBtn = folderLangs.querySelector('.folder-swap');
+    newSwapBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      swapFlashcardLanguages(key, newDirection);
+    });
   }
   
   // Mettre à jour le data-direction du dossier
@@ -1136,6 +752,32 @@ function swapFlashcardLanguages(key, currentDirection) {
     });
     
     grid.innerHTML = renderFlashcards(cards, toLang, fromLang);
+    
+    // Réattacher les event listeners pour les nouvelles cartes
+    grid.querySelectorAll('.flashcard').forEach(card => {
+      card.addEventListener('click', function() {
+        const cardId = this.dataset.id;
+        flipCard(cardId);
+      });
+    });
+    
+    // Event listeners pour les boutons d'action
+    grid.querySelectorAll('[data-move-card]').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const cardId = parseInt(this.dataset.moveCard);
+        const folder = this.dataset.folder;
+        moveToFolder(cardId, folder);
+      });
+    });
+    
+    grid.querySelectorAll('[data-delete-card]').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const cardId = parseInt(this.dataset.deleteCard);
+        deleteFlashcard(cardId);
+      });
+    });
   }
 }
 
@@ -1263,15 +905,19 @@ function startPracticeMode() {
       </div>
       
       <div style="text-align: center;">
-        <button class="btn btn-primary btn-lg" onclick="launchPractice()" style="min-width: 200px;">
+        <button class="btn btn-primary btn-lg" id="launchPracticeBtn" style="min-width: 200px;">
           🚀 Commencer la pratique
         </button>
-        <button class="btn btn-secondary" onclick="updateFlashcards()" style="margin-left: 12px;">
+        <button class="btn btn-secondary" id="cancelPracticeBtn" style="margin-left: 12px;">
           Annuler
         </button>
       </div>
     </div>
   `;
+  
+  // Ajouter les event listeners
+  document.getElementById('launchPracticeBtn')?.addEventListener('click', launchPractice);
+  document.getElementById('cancelPracticeBtn')?.addEventListener('click', updateFlashcards);
 }
 
 // Lancer la pratique avec les options sélectionnées
@@ -1384,16 +1030,16 @@ function displayPracticeMode() {
         <div id="practiceResult" style="display: none;"></div>
         
         <div class="practice-actions">
-          <button onclick="checkAnswer()" id="checkBtn" class="btn btn-primary">
+          <button id="checkBtn" class="btn btn-primary">
             Vérifier
           </button>
-          <button onclick="showHint()" class="btn btn-secondary">
+          <button id="hintBtn" class="btn btn-secondary">
             💡 Indice
           </button>
-          <button onclick="skipQuestion()" class="btn btn-secondary">
+          <button id="skipBtn" class="btn btn-secondary">
             Passer →
           </button>
-          <button onclick="quitPractice()" class="btn btn-danger">
+          <button id="quitBtn" class="btn btn-danger">
             Quitter
           </button>
         </div>
@@ -1401,14 +1047,18 @@ function displayPracticeMode() {
     </div>
   `;
   
-  // Focus sur l'input et gérer Enter
+  // Focus sur l'input et ajouter les event listeners
   setTimeout(() => {
     const input = document.getElementById('practiceAnswer');
+    const checkBtn = document.getElementById('checkBtn');
+    const hintBtn = document.getElementById('hintBtn');
+    const skipBtn = document.getElementById('skipBtn');
+    const quitBtn = document.getElementById('quitBtn');
+    
     if (input) {
       input.focus();
       input.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
-          const checkBtn = document.getElementById('checkBtn');
           if (checkBtn.textContent === 'Vérifier') {
             checkAnswer();
           } else {
@@ -1417,6 +1067,11 @@ function displayPracticeMode() {
         }
       });
     }
+    
+    if (checkBtn) checkBtn.addEventListener('click', checkAnswer);
+    if (hintBtn) hintBtn.addEventListener('click', showHint);
+    if (skipBtn) skipBtn.addEventListener('click', skipQuestion);
+    if (quitBtn) quitBtn.addEventListener('click', quitPractice);
   }, 100);
 }
 
@@ -1475,69 +1130,6 @@ function checkAnswer() {
   saveFlashcards();
 }
 
-// Normaliser une réponse pour la comparaison
-function normalizeAnswer(answer) {
-  return answer
-    .toLowerCase()
-    .trim()
-    .replace(/[.,!?;:'"]/g, '')
-    .replace(/\s+/g, ' ')
-    .replace(/^(le |la |les |l'|un |une |des |the |a |an )/i, '');
-}
-
-// Vérifier la similarité entre deux réponses
-function checkAnswerSimilarity(userAnswer, correctAnswer) {
-  // Correspondance exacte
-  if (userAnswer === correctAnswer) return true;
-  
-  // Correspondance sans articles
-  const userWords = userAnswer.split(' ');
-  const correctWords = correctAnswer.split(' ');
-  
-  // Si l'utilisateur a donné tous les mots importants
-  const importantWords = correctWords.filter(w => w.length > 2);
-  const matchedWords = importantWords.filter(w => userAnswer.includes(w));
-  
-  if (matchedWords.length >= importantWords.length * 0.8) return true;
-  
-  // Distance de Levenshtein pour les mots courts
-  if (correctAnswer.length < 10) {
-    const distance = levenshteinDistance(userAnswer, correctAnswer);
-    return distance <= Math.ceil(correctAnswer.length * 0.2);
-  }
-  
-  return false;
-}
-
-// Calculer la distance de Levenshtein
-function levenshteinDistance(a, b) {
-  const matrix = [];
-  
-  for (let i = 0; i <= b.length; i++) {
-    matrix[i] = [i];
-  }
-  
-  for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j;
-  }
-  
-  for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j] + 1
-        );
-      }
-    }
-  }
-  
-  return matrix[b.length][a.length];
-}
-
 // Afficher un indice
 function showHint() {
   const currentCard = practiceMode.cards[practiceMode.currentIndex];
@@ -1561,6 +1153,12 @@ function nextQuestion() {
   } else {
     displayPracticeMode();
   }
+}
+
+// Quitter le mode pratique
+function quitPractice() {
+  practiceMode.active = false;
+  updateFlashcards();
 }
 
 // Afficher les résultats de la pratique
@@ -1615,21 +1213,41 @@ function showPracticeResults() {
       </p>
       
       <div style="display: flex; gap: 12px; justify-content: center;">
-        <button onclick="startPracticeMode()" class="btn btn-primary">
+        <button id="restartPracticeBtn" class="btn btn-primary">
           🔄 Recommencer
         </button>
-        <button onclick="quitPractice()" class="btn btn-secondary">
+        <button id="backToFlashcardsBtn" class="btn btn-secondary">
           📚 Retour aux flashcards
         </button>
       </div>
     </div>
   `;
+  
+  // Ajouter les event listeners
+  document.getElementById('restartPracticeBtn')?.addEventListener('click', startPracticeMode);
+  document.getElementById('backToFlashcardsBtn')?.addEventListener('click', quitPractice);
 }
 
-// Quitter le mode pratique
-function quitPractice() {
-  practiceMode.active = false;
-  updateFlashcards();
+// Afficher les conseils pour les flashcards
+function showFlashcardTips() {
+  alert(`💡 Conseils pour utiliser les flashcards:
+
+1. 📝 Créez des flashcards après chaque traduction importante
+2. 🎯 Pratiquez régulièrement avec le Mode Pratique
+3. ⭐ Marquez vos cartes favorites pour les réviser plus souvent
+4. 🔥 Les cartes difficiles seront prioritaires en pratique
+5. ✅ Les cartes maîtrisées apparaîtront moins souvent
+
+Astuce: Utilisez les dossiers pour organiser vos cartes par thème!`);
+}
+
+// Copier une traduction
+function copyTranslation(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    showNotification('Traduction copiée!', 'success');
+  }).catch(() => {
+    showNotification('Erreur lors de la copie', 'error');
+  });
 }
 
 // Créer une flashcard depuis l'historique
@@ -1661,6 +1279,18 @@ function createFlashcardFromHistory(original, translated, language) {
   saveFlashcards();
   updateStats();
   showNotification('Flashcard créée avec succès!', 'success');
+}
+
+// Supprimer une traduction
+function deleteTranslation(id) {
+  if (!confirm('Supprimer cette traduction ?')) return;
+  
+  translations = translations.filter(t => t.id !== parseInt(id));
+  chrome.storage.local.set({ translations }, () => {
+    updateHistory();
+    updateStats();
+    showNotification('Traduction supprimée', 'info');
+  });
 }
 
 // Utilitaires
@@ -1785,25 +1415,67 @@ function showNotification(message, type = 'info') {
   }, 3000);
 }
 
-// Copier une traduction
-function copyTranslation(text) {
-  navigator.clipboard.writeText(text).then(() => {
-    showNotification('Traduction copiée!', 'success');
-  }).catch(() => {
-    showNotification('Erreur lors de la copie', 'error');
-  });
+// Normaliser une réponse pour la comparaison
+function normalizeAnswer(answer) {
+  return answer
+    .toLowerCase()
+    .trim()
+    .replace(/[.,!?;:'"]/g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/^(le |la |les |l'|un |une |des |the |a |an )/i, '');
 }
 
-// Supprimer une traduction
-function deleteTranslation(id) {
-  if (!confirm('Supprimer cette traduction ?')) return;
+// Vérifier la similarité entre deux réponses
+function checkAnswerSimilarity(userAnswer, correctAnswer) {
+  // Correspondance exacte
+  if (userAnswer === correctAnswer) return true;
   
-  translations = translations.filter(t => t.id !== parseInt(id));
-  chrome.storage.local.set({ translations }, () => {
-    updateHistory();
-    updateStats();
-    showNotification('Traduction supprimée', 'info');
-  });
+  // Correspondance sans articles
+  const userWords = userAnswer.split(' ');
+  const correctWords = correctAnswer.split(' ');
+  
+  // Si l'utilisateur a donné tous les mots importants
+  const importantWords = correctWords.filter(w => w.length > 2);
+  const matchedWords = importantWords.filter(w => userAnswer.includes(w));
+  
+  if (matchedWords.length >= importantWords.length * 0.8) return true;
+  
+  // Distance de Levenshtein pour les mots courts
+  if (correctAnswer.length < 10) {
+    const distance = levenshteinDistance(userAnswer, correctAnswer);
+    return distance <= Math.ceil(correctAnswer.length * 0.2);
+  }
+  
+  return false;
+}
+
+// Calculer la distance de Levenshtein
+function levenshteinDistance(a, b) {
+  const matrix = [];
+  
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+  
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+  
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+  
+  return matrix[b.length][a.length];
 }
 
 // Effacer tout l'historique
@@ -1938,19 +1610,6 @@ function resetApp() {
   });
 }
 
-// Afficher les conseils pour les flashcards
-function showFlashcardTips() {
-  alert(`💡 Conseils pour utiliser les flashcards:
-
-1. 📝 Créez des flashcards après chaque traduction importante
-2. 🎯 Pratiquez régulièrement avec le Mode Pratique
-3. ⭐ Marquez vos cartes favorites pour les réviser plus souvent
-4. 🔥 Les cartes difficiles seront prioritaires en pratique
-5. ✅ Les cartes maîtrisées apparaîtront moins souvent
-
-Astuce: Utilisez les dossiers pour organiser vos cartes par thème!`);
-}
-
 // Gestion des onglets
 function switchTab(tabName) {
   document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
@@ -1976,6 +1635,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Navigation
     document.querySelectorAll('.nav-tab').forEach(tab => {
       tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+    });
+    
+    // Event delegation pour tous les conteneurs dynamiques
+    document.body.addEventListener('click', function(e) {
+      // Gestion des boutons move-card
+      if (e.target.matches('[data-move-card]')) {
+        e.stopPropagation();
+        const cardId = parseInt(e.target.dataset.moveCard);
+        const folder = e.target.dataset.folder;
+        moveToFolder(cardId, folder);
+      }
+      
+      // Gestion des boutons delete-card
+      if (e.target.matches('[data-delete-card]')) {
+        e.stopPropagation();
+        const cardId = parseInt(e.target.dataset.deleteCard);
+        deleteFlashcard(cardId);
+      }
     });
     
     // Event listener pour les traductions récentes
@@ -2164,23 +1841,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     showNotification('Erreur lors du chargement', 'error');
   }
 });
-
-// Rendre les fonctions globales pour les onclick
-window.toggleFolder = toggleFolder;
-window.swapLanguages = swapLanguages;
-window.toggleFlashcardFolder = toggleFlashcardFolder;
-window.swapFlashcardLanguages = swapFlashcardLanguages;
-window.flipCard = flipCard;
-window.moveToFolder = moveToFolder;
-window.deleteFlashcard = deleteFlashcard;
-window.startPracticeMode = startPracticeMode;
-window.launchPractice = launchPractice;
-window.checkAnswer = checkAnswer;
-window.showHint = showHint;
-window.skipQuestion = skipQuestion;
-window.nextQuestion = nextQuestion;
-window.quitPractice = quitPractice;
-window.showFlashcardTips = showFlashcardTips;
-window.copyTranslation = copyTranslation;
-window.createFlashcardFromHistory = createFlashcardFromHistory;
-window.deleteTranslation = deleteTranslation;

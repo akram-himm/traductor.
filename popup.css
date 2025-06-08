@@ -151,3 +151,52 @@
     padding: 14px 28px;
     font-size: 16px;
 }
+
+/* Checkbox styles for batch delete */
+.translation-checkbox,
+.flashcard-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--primary-color);
+}
+
+/* Translation item with checkbox */
+.translation-item[data-id] {
+    transition: padding-left 0.2s ease;
+}
+
+/* Service source display */
+.translation-domain {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--gray-500);
+}
+
+/* DeepSeek indicator */
+.deepseek-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    background: linear-gradient(135deg, #00d4ff 0%, #090979 100%);
+    color: white;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+/* Settings improvements */
+.setting-label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.setting-description {
+    font-size: 11px;
+    color: var(--gray-500);
+    line-height: 1.4;
+}
