@@ -16,8 +16,8 @@ let practiceMode = {
   startTime: null
 };
 
-// IMPORTANT: Déclarer les fonctions globales AVANT leur utilisation
-window.toggleFolder = function(key) {
+// Fonction pour basculer un dossier
+function toggleFolder(key) {
   console.log('toggleFolder appelé avec key:', key);
   const folder = document.querySelector(`.language-folder[data-key="${key}"]`);
   if (!folder) {
@@ -50,9 +50,10 @@ window.toggleFolder = function(key) {
     content.style.overflow = 'visible';
     if (arrow) arrow.style.transform = 'rotate(90deg)';
   }
-};
+}
 
-window.swapLanguages = function(key, currentDirection) {
+// Fonction pour échanger les langues
+function swapLanguages(key, currentDirection) {
   console.log('swapLanguages appelé:', key, currentDirection);
   const [fromLang, toLang] = currentDirection.split('_');
   const newDirection = `${toLang}_${fromLang}`;
@@ -69,7 +70,7 @@ window.swapLanguages = function(key, currentDirection) {
       <span>${getFlagEmoji(toLang)} ${getLanguageName(toLang)}</span>
       <span>→</span>
       <span>${getFlagEmoji(fromLang)} ${getLanguageName(fromLang)}</span>
-      <button class="folder-swap" onclick="event.stopPropagation(); swapLanguages('${key}', '${newDirection}')">
+      <button class="folder-swap js-swap-btn" data-key="${key}" data-direction="${newDirection}" style="background: #3b82f6; color: white;">
         ↔️
       </button>
     `;
@@ -91,10 +92,10 @@ window.swapLanguages = function(key, currentDirection) {
     
     folderItems.innerHTML = renderFolderTranslations(group, toLang, fromLang);
   }
-};
+}
 
 // Menu contextuel pour les dossiers
-window.showFolderMenu = function(event, key, type) {
+function showFolderMenu(event, key, type) {
   event.stopPropagation();
   
   // Supprimer les menus existants
@@ -121,38 +122,51 @@ window.showFolderMenu = function(event, key, type) {
   // Options du menu
   if (type === 'history') {
     menu.innerHTML = `
-      <div class="menu-item" onclick="deleteHistoryFolder('${key}')" style="padding: 8px 16px; cursor: pointer; transition: background 0.2s;">
+      <div class="menu-item js-delete-folder" data-key="${key}" style="padding: 8px 16px; cursor: pointer; transition: background 0.2s;">
         <span style="margin-right: 8px;">🗑️</span>
         Supprimer ce dossier
       </div>
-      <div class="menu-item" onclick="exportFolderData('${key}', 'history')" style="padding: 8px 16px; cursor: pointer; transition: background 0.2s;">
+      <div class="menu-item js-export-folder" data-key="${key}" data-type="history" style="padding: 8px 16px; cursor: pointer; transition: background 0.2s;">
         <span style="margin-right: 8px;">📤</span>
         Exporter ce dossier
       </div>
     `;
   } else if (type === 'flashcards') {
     menu.innerHTML = `
-      <div class="menu-item" onclick="deleteFlashcardFolder('${key}')" style="padding: 8px 16px; cursor: pointer; transition: background 0.2s;">
+      <div class="menu-item js-delete-flashcard-folder" data-key="${key}" style="padding: 8px 16px; cursor: pointer; transition: background 0.2s;">
         <span style="margin-right: 8px;">🗑️</span>
         Supprimer ce dossier
       </div>
-      <div class="menu-item" onclick="practiceFolder('${key}')" style="padding: 8px 16px; cursor: pointer; transition: background 0.2s;">
+      <div class="menu-item js-practice-folder" data-key="${key}" style="padding: 8px 16px; cursor: pointer; transition: background 0.2s;">
         <span style="margin-right: 8px;">🎮</span>
         Pratiquer ce dossier
       </div>
-      <div class="menu-item" onclick="exportFolderData('${key}', 'flashcards')" style="padding: 8px 16px; cursor: pointer; transition: background 0.2s;">
+      <div class="menu-item js-export-folder" data-key="${key}" data-type="flashcards" style="padding: 8px 16px; cursor: pointer; transition: background 0.2s;">
         <span style="margin-right: 8px;">📤</span>
         Exporter ce dossier
       </div>
     `;
   }
   
-  // Ajouter le style hover
-  const style = document.createElement('style');
-  style.textContent = '.menu-item:hover { background: #f3f4f6 !important; }';
-  document.head.appendChild(style);
-  
   document.body.appendChild(menu);
+  
+  // Attacher les event listeners
+  menu.addEventListener('click', (e) => {
+    const item = e.target.closest('.menu-item');
+    if (!item) return;
+    
+    if (item.classList.contains('js-delete-folder')) {
+      deleteHistoryFolder(item.dataset.key);
+    } else if (item.classList.contains('js-delete-flashcard-folder')) {
+      deleteFlashcardFolder(item.dataset.key);
+    } else if (item.classList.contains('js-practice-folder')) {
+      practiceFolder(item.dataset.key);
+    } else if (item.classList.contains('js-export-folder')) {
+      exportFolderData(item.dataset.key, item.dataset.type);
+    }
+    
+    menu.remove();
+  });
   
   // Fermer le menu en cliquant ailleurs
   setTimeout(() => {
@@ -161,10 +175,10 @@ window.showFolderMenu = function(event, key, type) {
       document.removeEventListener('click', closeMenu);
     }, { once: true });
   }, 100);
-};
+}
 
 // Fonctions pour gérer les actions du menu
-window.deleteHistoryFolder = function(key) {
+function deleteHistoryFolder(key) {
   const count = translations.filter(t => {
     const langs = [t.fromLang, t.toLang].sort();
     return `${langs[0]}_${langs[1]}` === key;
@@ -182,9 +196,9 @@ window.deleteHistoryFolder = function(key) {
     updateStats();
     showNotification('Dossier supprimé', 'info');
   });
-};
+}
 
-window.deleteFlashcardFolder = function(key) {
+function deleteFlashcardFolder(key) {
   const cards = flashcards.filter(card => {
     const fromLang = detectLanguage(card.front);
     const toLang = card.language;
@@ -205,9 +219,9 @@ window.deleteFlashcardFolder = function(key) {
   updateFlashcards();
   updateStats();
   showNotification('Dossier de flashcards supprimé', 'info');
-};
+}
 
-window.practiceFolder = function(key) {
+function practiceFolder(key) {
   const cards = flashcards.filter(card => {
     const fromLang = detectLanguage(card.front);
     const toLang = card.language;
@@ -230,9 +244,9 @@ window.practiceFolder = function(key) {
   
   switchTab('flashcards');
   displayPracticeMode();
-};
+}
 
-window.exportFolderData = function(key, type) {
+function exportFolderData(key, type) {
   let data = {};
   
   if (type === 'history') {
@@ -263,9 +277,9 @@ window.exportFolderData = function(key, type) {
   
   URL.revokeObjectURL(url);
   showNotification('Dossier exporté avec succès!', 'success');
-};
+}
 
-window.toggleFlashcardFolder = function(key) {
+function toggleFlashcardFolder(key) {
   console.log('toggleFlashcardFolder appelé avec key:', key);
   const folder = document.querySelector(`.flashcard-language-folder[data-key="${key}"]`);
   if (!folder) {
@@ -298,9 +312,9 @@ window.toggleFlashcardFolder = function(key) {
     content.style.overflow = 'visible';
     if (arrow) arrow.style.transform = 'rotate(90deg)';
   }
-};
+}
 
-window.swapFlashcardLanguages = function(key, currentDirection) {
+function swapFlashcardLanguages(key, currentDirection) {
   console.log('swapFlashcardLanguages appelé:', key, currentDirection);
   const [fromLang, toLang] = currentDirection.split('_');
   const newDirection = `${toLang}_${fromLang}`;
@@ -317,7 +331,7 @@ window.swapFlashcardLanguages = function(key, currentDirection) {
       <span>${getFlagEmoji(toLang)} ${getLanguageName(toLang)}</span>
       <span>→</span>
       <span>${getFlagEmoji(fromLang)} ${getLanguageName(fromLang)}</span>
-      <button class="folder-swap" onclick="event.stopPropagation(); swapFlashcardLanguages('${key}', '${newDirection}')">
+      <button class="folder-swap flashcard-swap js-flashcard-swap" data-key="${key}" data-direction="${newDirection}" style="background: #3b82f6; color: white;">
         ↔️
       </button>
     `;
@@ -343,37 +357,45 @@ window.swapFlashcardLanguages = function(key, currentDirection) {
     
     grid.innerHTML = renderFlashcards(cards, toLang, fromLang);
   }
-};
+}
 
-window.flipCard = function(cardId) {
+function flipCard(cardId) {
+  console.log('flipCard appelé avec cardId:', cardId);
+  
   const card = flashcards.find(c => c.id === parseInt(cardId));
-  if (!card) return;
+  if (!card) {
+    console.error('Carte non trouvée:', cardId);
+    return;
+  }
   
   const front = document.getElementById(`front-${cardId}`);
   const back = document.getElementById(`back-${cardId}`);
   const cardEl = document.querySelector(`[data-id="${cardId}"]`);
   
-  if (front && back && cardEl) {
-    if (front.style.display === 'none') {
-      // Retourner vers l'avant
-      front.style.display = 'block';
-      back.style.display = 'none';
-      cardEl.classList.remove('flipped');
-    } else {
-      // Retourner vers l'arrière
-      front.style.display = 'none';
-      back.style.display = 'block';
-      cardEl.classList.add('flipped');
-      
-      // Mettre à jour les statistiques de révision
-      card.reviews = (card.reviews || 0) + 1;
-      card.lastReview = new Date().toISOString();
-      saveFlashcards();
-    }
+  if (!front || !back) {
+    console.error('Éléments front/back non trouvés:', { front, back });
+    return;
   }
-};
+  
+  if (front.style.display === 'none') {
+    // Retourner vers l'avant
+    front.style.display = 'block';
+    back.style.display = 'none';
+    if (cardEl) cardEl.classList.remove('flipped');
+  } else {
+    // Retourner vers l'arrière
+    front.style.display = 'none';
+    back.style.display = 'block';
+    if (cardEl) cardEl.classList.add('flipped');
+    
+    // Mettre à jour les statistiques de révision
+    card.reviews = (card.reviews || 0) + 1;
+    card.lastReview = new Date().toISOString();
+    saveFlashcards();
+  }
+}
 
-window.moveToFolder = function(cardId, folderId) {
+function moveToFolder(cardId, folderId) {
   const card = flashcards.find(c => c.id === parseInt(cardId));
   if (!card) return;
   
@@ -391,9 +413,9 @@ window.moveToFolder = function(cardId, folderId) {
   
   // Feedback visuel
   showNotification(`Carte déplacée vers ${flashcardFolders[folderId].name}`, 'success');
-};
+}
 
-window.deleteFlashcard = function(cardId) {
+function deleteFlashcard(cardId) {
   if (!confirm('Supprimer cette flashcard ?')) return;
   
   flashcards = flashcards.filter(c => c.id !== parseInt(cardId));
@@ -402,9 +424,9 @@ window.deleteFlashcard = function(cardId) {
   updateStats();
   
   showNotification('Flashcard supprimée', 'info');
-};
+}
 
-window.showFlashcardTips = function() {
+function showFlashcardTips() {
   alert(`💡 Conseils pour utiliser les flashcards:
 
 1. 📝 Créez des flashcards après chaque traduction importante
@@ -414,9 +436,9 @@ window.showFlashcardTips = function() {
 5. ✅ Les cartes maîtrisées apparaîtront moins souvent
 
 Astuce: Utilisez les dossiers pour organiser vos cartes par thème!`);
-};
+}
 
-window.startPracticeMode = function() {
+function startPracticeMode() {
   if (flashcards.length === 0) {
     showNotification('Aucune flashcard disponible pour la pratique!', 'warning');
     return;
@@ -470,18 +492,22 @@ window.startPracticeMode = function() {
       </div>
       
       <div style="text-align: center;">
-        <button class="btn btn-primary btn-lg" onclick="launchPractice()" style="min-width: 200px;">
+        <button class="btn btn-primary btn-lg js-launch-practice" style="min-width: 200px;">
           🚀 Commencer la pratique
         </button>
-        <button class="btn btn-secondary" onclick="updateFlashcards()" style="margin-left: 12px;">
+        <button class="btn btn-secondary js-cancel-practice" style="margin-left: 12px;">
           Annuler
         </button>
       </div>
     </div>
   `;
-};
+  
+  // Attacher les event listeners
+  container.querySelector('.js-launch-practice').addEventListener('click', launchPractice);
+  container.querySelector('.js-cancel-practice').addEventListener('click', updateFlashcards);
+}
 
-window.launchPractice = function() {
+function launchPractice() {
   const selectedLangs = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
     .filter(cb => cb.value && cb.value !== 'on')
     .map(cb => cb.value);
@@ -535,9 +561,9 @@ window.launchPractice = function() {
   };
   
   displayPracticeMode();
-};
+}
 
-window.checkAnswer = function() {
+function checkAnswer() {
   const input = document.getElementById('practiceAnswer');
   const resultDiv = document.getElementById('practiceResult');
   const checkBtn = document.getElementById('checkBtn');
@@ -589,21 +615,21 @@ window.checkAnswer = function() {
   currentCard.lastReview = new Date().toISOString();
   currentCard.reviews = (currentCard.reviews || 0) + 1;
   saveFlashcards();
-};
+}
 
-window.showHint = function() {
+function showHint() {
   const currentCard = practiceMode.cards[practiceMode.currentIndex];
   const hint = currentCard.back.substring(0, Math.ceil(currentCard.back.length / 3)) + '...';
   
   showNotification(`Indice: "${hint}"`, 'info');
-};
+}
 
-window.skipQuestion = function() {
+function skipQuestion() {
   practiceMode.score.incorrect++;
   nextQuestion();
-};
+}
 
-window.nextQuestion = function() {
+function nextQuestion() {
   practiceMode.currentIndex++;
   
   if (practiceMode.currentIndex >= practiceMode.cards.length) {
@@ -611,22 +637,22 @@ window.nextQuestion = function() {
   } else {
     displayPracticeMode();
   }
-};
+}
 
-window.quitPractice = function() {
+function quitPractice() {
   practiceMode.active = false;
   updateFlashcards();
-};
+}
 
-window.copyTranslation = function(text) {
+function copyTranslation(text) {
   navigator.clipboard.writeText(text).then(() => {
     showNotification('Traduction copiée!', 'success');
   }).catch(() => {
     showNotification('Erreur lors de la copie', 'error');
   });
-};
+}
 
-window.createFlashcardFromHistory = function(original, translated, language) {
+function createFlashcardFromHistory(original, translated, language) {
   // Vérifier les limites pour les utilisateurs gratuits
   if (!checkLimits('flashcard')) return;
   
@@ -657,9 +683,9 @@ window.createFlashcardFromHistory = function(original, translated, language) {
   saveFlashcards();
   updateStats();
   showNotification('Flashcard créée avec succès!', 'success');
-};
+}
 
-window.deleteTranslation = function(id) {
+function deleteTranslation(id) {
   if (!confirm('Supprimer cette traduction ?')) return;
   
   translations = translations.filter(t => t.id !== parseInt(id));
@@ -668,7 +694,7 @@ window.deleteTranslation = function(id) {
     updateStats();
     showNotification('Traduction supprimée', 'info');
   });
-};
+}
 
 // Vérifier le statut Premium
 async function checkPremiumStatus() {
@@ -725,6 +751,7 @@ function showPremiumPrompt() {
   if (!container) return;
   
   const prompt = document.createElement('div');
+  prompt.className = 'premium-prompt';
   prompt.style.cssText = `
     position: fixed;
     top: 50%;
@@ -755,16 +782,26 @@ function showPremiumPrompt() {
     </div>
     
     <div style="display: flex; gap: 12px;">
-      <button class="btn btn-primary btn-block" onclick="switchTab('settings'); this.parentElement.parentElement.remove();">
+      <button class="btn btn-primary btn-block js-go-to-settings">
         Activer Premium →
       </button>
-      <button class="btn btn-secondary" onclick="this.parentElement.parentElement.remove();">
+      <button class="btn btn-secondary js-close-prompt">
         Plus tard
       </button>
     </div>
   `;
   
   document.body.appendChild(prompt);
+  
+  // Event listeners
+  prompt.querySelector('.js-go-to-settings').addEventListener('click', () => {
+    switchTab('settings');
+    prompt.remove();
+  });
+  
+  prompt.querySelector('.js-close-prompt').addEventListener('click', () => {
+    prompt.remove();
+  });
 }
 
 // Charger les données
@@ -1079,7 +1116,7 @@ function updateHistory() {
               <span>${getFlagEmoji(fromLang)} ${getLanguageName(fromLang)}</span>
               <span>→</span>
               <span>${getFlagEmoji(toLang)} ${getLanguageName(toLang)}</span>
-              <button class="folder-swap" data-key="${key}" data-direction="${currentDirection}" style="background: #3b82f6; color: white;">
+              <button class="folder-swap js-swap-btn" data-key="${key}" data-direction="${currentDirection}" style="background: #3b82f6; color: white;">
                 ↔️
               </button>
             </div>
@@ -1088,7 +1125,7 @@ function updateHistory() {
             </div>
           </div>
           <div class="folder-toggle">
-            <button class="folder-menu-btn" data-key="${key}" data-type="history" style="background: none; border: none; cursor: pointer; padding: 4px 8px; margin-right: 8px; border-radius: 4px; transition: background 0.2s;">
+            <button class="folder-menu-btn js-menu-btn" data-key="${key}" data-type="history" style="background: none; border: none; cursor: pointer; padding: 4px 8px; margin-right: 8px; border-radius: 4px; transition: background 0.2s;">
               ⋮
             </button>
             <span class="folder-arrow">▶</span>
@@ -1102,14 +1139,6 @@ function updateHistory() {
       </div>
     `;
   });
-  
-  // Ajouter le style pour le bouton menu
-  if (!document.getElementById('folder-menu-style')) {
-    const style = document.createElement('style');
-    style.id = 'folder-menu-style';
-    style.textContent = '.folder-menu-btn:hover { background: var(--gray-100) !important; }';
-    document.head.appendChild(style);
-  }
   
   container.innerHTML = html;
   
@@ -1127,24 +1156,25 @@ function updateHistory() {
       });
     });
     
-    // Event listeners pour changer de direction
-    container.querySelectorAll('.folder-swap').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+    // Utiliser la délégation d'événements pour les boutons
+    container.addEventListener('click', (e) => {
+      // Gérer les boutons swap
+      if (e.target.closest('.js-swap-btn')) {
         e.stopPropagation();
+        const btn = e.target.closest('.js-swap-btn');
         const key = btn.dataset.key;
         const direction = btn.dataset.direction;
         swapLanguages(key, direction);
-      });
-    });
-    
-    // Event listeners pour le menu
-    container.querySelectorAll('.folder-menu-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      }
+      
+      // Gérer les boutons menu
+      if (e.target.closest('.js-menu-btn')) {
         e.stopPropagation();
+        const btn = e.target.closest('.js-menu-btn');
         const key = btn.dataset.key;
         const type = btn.dataset.type;
         showFolderMenu(e, key, type);
-      });
+      }
     });
   }, 100);
 }
@@ -1210,11 +1240,17 @@ function updateFlashcards() {
         <div class="empty-state-text">
           Cliquez sur "Flashcard" après une traduction pour l'ajouter
         </div>
-        <button class="btn btn-primary" style="margin-top: 16px;" onclick="showFlashcardTips()">
+        <button class="btn btn-primary js-tips-btn" style="margin-top: 16px;">
           💡 Comment utiliser les flashcards
         </button>
       </div>
     `;
+    
+    // Attacher l'event listener
+    const tipsBtn = container.querySelector('.js-tips-btn');
+    if (tipsBtn) {
+      tipsBtn.addEventListener('click', showFlashcardTips);
+    }
     return;
   }
   
@@ -1263,7 +1299,7 @@ function updateFlashcards() {
               <span>${getFlagEmoji(fromLang)} ${getLanguageName(fromLang)}</span>
               <span>→</span>
               <span>${getFlagEmoji(toLang)} ${getLanguageName(toLang)}</span>
-              <button class="folder-swap flashcard-swap" data-key="${key}" data-direction="${currentDirection}" style="background: #3b82f6; color: white;">
+              <button class="folder-swap flashcard-swap js-flashcard-swap" data-key="${key}" data-direction="${currentDirection}" style="background: #3b82f6; color: white;">
                 ↔️
               </button>
             </div>
@@ -1272,7 +1308,7 @@ function updateFlashcards() {
             </div>
           </div>
           <div class="folder-toggle">
-            <button class="folder-menu-btn flashcard-menu-btn" data-key="${key}" data-type="flashcards" style="background: none; border: none; cursor: pointer; padding: 4px 8px; margin-right: 8px; border-radius: 4px; transition: background 0.2s;">
+            <button class="folder-menu-btn flashcard-menu-btn js-flashcard-menu" data-key="${key}" data-type="flashcards" style="background: none; border: none; cursor: pointer; padding: 4px 8px; margin-right: 8px; border-radius: 4px; transition: background 0.2s;">
               ⋮
             </button>
             <span class="folder-arrow">▶</span>
@@ -1303,25 +1339,64 @@ function updateFlashcards() {
       });
     });
     
-    // Event listeners pour changer de direction
-    container.querySelectorAll('.flashcard-swap').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const key = btn.dataset.key;
-        const direction = btn.dataset.direction;
-        swapFlashcardLanguages(key, direction);
+    // Attacher un seul event listener sur le container principal
+    if (!container.dataset.listenersAttached) {
+      container.dataset.listenersAttached = 'true';
+      
+      container.addEventListener('click', (e) => {
+        // Gérer les clics sur les flashcards - IMPORTANT: vérifier qu'on n'a pas cliqué sur un bouton
+        const flashcard = e.target.closest('.flashcard');
+        if (flashcard && !e.target.closest('button')) {
+          e.stopPropagation();
+          e.preventDefault();
+          const cardId = flashcard.dataset.id;
+          console.log('Clic sur flashcard détecté, id:', cardId);
+          flipCard(parseInt(cardId));
+          return;
+        }
+        
+        // Gérer les boutons swap flashcard
+        if (e.target.closest('.js-flashcard-swap')) {
+          e.stopPropagation();
+          const btn = e.target.closest('.js-flashcard-swap');
+          const key = btn.dataset.key;
+          const direction = btn.dataset.direction;
+          swapFlashcardLanguages(key, direction);
+        }
+        
+        // Gérer les boutons menu flashcard
+        if (e.target.closest('.js-flashcard-menu')) {
+          e.stopPropagation();
+          const btn = e.target.closest('.js-flashcard-menu');
+          const key = btn.dataset.key;
+          const type = btn.dataset.type;
+          showFolderMenu(e, key, type);
+        }
+        
+        // Gérer les boutons d'action des flashcards
+        if (e.target.closest('.js-card-action')) {
+          e.stopPropagation();
+          const btn = e.target.closest('.js-card-action');
+          const action = btn.dataset.action;
+          const cardId = parseInt(btn.dataset.cardId);
+          
+          switch(action) {
+            case 'favorite':
+              moveToFolder(cardId, 'favorites');
+              break;
+            case 'difficult':
+              moveToFolder(cardId, 'difficult');
+              break;
+            case 'learned':
+              moveToFolder(cardId, 'learned');
+              break;
+            case 'delete':
+              deleteFlashcard(cardId);
+              break;
+          }
+        }
       });
-    });
-    
-    // Event listeners pour le menu
-    container.querySelectorAll('.flashcard-menu-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const key = btn.dataset.key;
-        const type = btn.dataset.type;
-        showFolderMenu(e, key, type);
-      });
-    });
+    }
   }, 100);
 }
 
@@ -1337,7 +1412,7 @@ function renderFlashcards(cards, fromLang, toLang) {
     const displayToLang = isReversed ? card.fromLang : card.toLang;
     
     return `
-      <div class="flashcard" data-id="${card.id}" onclick="flipCard(${card.id})">
+      <div class="flashcard" data-id="${card.id}" style="cursor: pointer;">
         <div class="flashcard-difficulty difficulty-${card.difficulty || 'normal'}"></div>
         <div class="flashcard-content" id="card-content-${card.id}">
           <div class="flashcard-front" id="front-${card.id}">
@@ -1354,10 +1429,10 @@ function renderFlashcards(cards, fromLang, toLang) {
               <span>${getLanguageName(displayToLang)}</span>
             </div>
             <div class="flashcard-actions" style="margin-top: 12px; display: flex; justify-content: center; gap: 8px;">
-              <button class="btn btn-sm" onclick="event.stopPropagation(); moveToFolder(${card.id}, 'favorites')" title="Favori">⭐</button>
-              <button class="btn btn-sm" onclick="event.stopPropagation(); moveToFolder(${card.id}, 'difficult')" title="Difficile">🔥</button>
-              <button class="btn btn-sm" onclick="event.stopPropagation(); moveToFolder(${card.id}, 'learned')" title="Maîtrisée">✅</button>
-              <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteFlashcard(${card.id})" title="Supprimer">🗑️</button>
+              <button class="btn btn-sm js-card-action" data-action="favorite" data-card-id="${card.id}" title="Favori">⭐</button>
+              <button class="btn btn-sm js-card-action" data-action="difficult" data-card-id="${card.id}" title="Difficile">🔥</button>
+              <button class="btn btn-sm js-card-action" data-action="learned" data-card-id="${card.id}" title="Maîtrisée">✅</button>
+              <button class="btn btn-sm btn-danger js-card-action" data-action="delete" data-card-id="${card.id}" title="Supprimer">🗑️</button>
             </div>
           </div>
         </div>
@@ -1426,16 +1501,16 @@ function displayPracticeMode() {
         <div id="practiceResult" style="display: none;"></div>
         
         <div class="practice-actions">
-          <button onclick="checkAnswer()" id="checkBtn" class="btn btn-primary">
+          <button class="btn btn-primary js-check-answer" id="checkBtn">
             Vérifier
           </button>
-          <button onclick="showHint()" class="btn btn-secondary">
+          <button class="btn btn-secondary js-show-hint">
             💡 Indice
           </button>
-          <button onclick="skipQuestion()" class="btn btn-secondary">
+          <button class="btn btn-secondary js-skip-question">
             Passer →
           </button>
-          <button onclick="quitPractice()" class="btn btn-danger">
+          <button class="btn btn-danger js-quit-practice">
             Quitter
           </button>
         </div>
@@ -1459,6 +1534,12 @@ function displayPracticeMode() {
         }
       });
     }
+    
+    // Event listeners pour les boutons
+    container.querySelector('.js-check-answer')?.addEventListener('click', checkAnswer);
+    container.querySelector('.js-show-hint')?.addEventListener('click', showHint);
+    container.querySelector('.js-skip-question')?.addEventListener('click', skipQuestion);
+    container.querySelector('.js-quit-practice')?.addEventListener('click', quitPractice);
   }, 100);
 }
 
@@ -1577,15 +1658,19 @@ function showPracticeResults() {
       </p>
       
       <div style="display: flex; gap: 12px; justify-content: center;">
-        <button onclick="startPracticeMode()" class="btn btn-primary">
+        <button class="btn btn-primary js-restart-practice">
           🔄 Recommencer
         </button>
-        <button onclick="quitPractice()" class="btn btn-secondary">
+        <button class="btn btn-secondary js-quit-results">
           📚 Retour aux flashcards
         </button>
       </div>
     </div>
   `;
+  
+  // Event listeners
+  container.querySelector('.js-restart-practice')?.addEventListener('click', startPracticeMode);
+  container.querySelector('.js-quit-results')?.addEventListener('click', quitPractice);
 }
 
 // Utilitaires
@@ -2059,29 +2144,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     showNotification('Erreur lors du chargement', 'error');
   }
 });
-
-// Rendre les fonctions globales pour les onclick
-window.toggleFolder = toggleFolder;
-window.swapLanguages = swapLanguages;
-window.toggleFlashcardFolder = toggleFlashcardFolder;
-window.swapFlashcardLanguages = swapFlashcardLanguages;
-window.flipCard = flipCard;
-window.moveToFolder = moveToFolder;
-window.deleteFlashcard = deleteFlashcard;
-window.startPracticeMode = startPracticeMode;
-window.launchPractice = launchPractice;
-window.checkAnswer = checkAnswer;
-window.showHint = showHint;
-window.skipQuestion = skipQuestion;
-window.nextQuestion = nextQuestion;
-window.quitPractice = quitPractice;
-window.showFlashcardTips = showFlashcardTips;
-window.copyTranslation = copyTranslation;
-window.createFlashcardFromHistory = createFlashcardFromHistory;
-window.deleteTranslation = deleteTranslation;
-window.showFolderMenu = showFolderMenu;
-window.deleteHistoryFolder = deleteHistoryFolder;
-window.deleteFlashcardFolder = deleteFlashcardFolder;
-window.practiceFolder = practiceFolder;
-window.exportFolderData = exportFolderData;
-window.switchTab = switchTab;
