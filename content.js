@@ -167,9 +167,9 @@ function detectLanguage(text) {
     }
   };
   
-  // Vérifier si c'est un mot ambigu
+  // Vérifier si c'est un mot ambigu ET si la détection intelligente est activée
   const lowerText = text.toLowerCase();
-  if (ambiguousWords[lowerText]) {
+  if (ambiguousWords[lowerText] && userSettings.autoDetectSameLanguage) {
     // Analyser le contexte pour déterminer la langue
     const selection = window.getSelection();
     if (selection.rangeCount > 0) {
@@ -206,7 +206,12 @@ function detectLanguage(text) {
     'es': /[áéíóúñ¡¿]/i,
     'de': /[äöüß]/i,
     'it': /[àèéìíîòóù]/i,
-    'pt': /[àáâãçéêíõôú]/i
+    'pt': /[àáâãçéêíõôú]/i,
+    'ru': /[а-яё]/i,
+    'ja': /[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/,
+    'ko': /[\uac00-\ud7af\u1100-\u11ff]/,
+    'zh': /[\u4e00-\u9fff]/,
+    'ar': /[\u0600-\u06ff]/
   };
   
   for (const [lang, pattern] of Object.entries(charPatterns)) {
@@ -723,7 +728,7 @@ async function translateWithService(text, sourceLang = 'auto', targetLang = 'fr'
       };
     }
     
-    console.log('🌐 Translation service:', { text, sourceLang, targetLang, isPro: userSettings.isPro });
+    console.log('🌐 Translation service:', { text, sourceLang, targetLang, deepSeekEnabled: userSettings.deepSeekEnabled });
     
     const cleanedText = cleanText(text);
     if (!cleanedText) throw new Error('Texte vide');
@@ -798,9 +803,10 @@ async function translateWithService(text, sourceLang = 'auto', targetLang = 'fr'
       }
     }
     
-    // 1. Essayer DeepSeek si Premium activé
-    if (userSettings.isPro && userSettings.deepSeekEnabled && userSettings.deepSeekApiKey) {
+    // 1. Essayer DeepSeek si activé avec clé API (MODIFIÉ: pas de vérification isPro)
+    if (userSettings.deepSeekEnabled && userSettings.deepSeekApiKey) {
       try {
+        console.log('🤖 Tentative de traduction avec DeepSeek AI...');
         const deepSeekResult = await translateWithDeepSeek(cleanedText, sourceLang, targetLang, contextData);
         if (deepSeekResult) {
           translationCache.set(cacheKey, deepSeekResult);
@@ -903,7 +909,19 @@ async function quickTranslationTest(text, fromLang, toLang) {
 // Google Translate gratuit via proxy
 async function translateWithGoogleFree(text, sourceLang, targetLang) {
   try {
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+    // Mapper les codes de langue pour Google
+    const googleLangMap = {
+      'zh': 'zh-CN',
+      'ja': 'ja',
+      'ko': 'ko',
+      'ar': 'ar',
+      'ru': 'ru'
+    };
+    
+    const googleSourceLang = googleLangMap[sourceLang] || sourceLang;
+    const googleTargetLang = googleLangMap[targetLang] || targetLang;
+    
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${googleSourceLang}&tl=${googleTargetLang}&dt=t&q=${encodeURIComponent(text)}`;
     
     const response = await fetch(url);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -977,7 +995,12 @@ async function translateWithMyMemory(text, sourceLang, targetLang) {
       'es': 'es',
       'de': 'de',
       'it': 'it',
-      'pt': 'pt'
+      'pt': 'pt',
+      'ru': 'ru',
+      'ja': 'ja',
+      'ko': 'ko',
+      'zh': 'zh-CN',
+      'ar': 'ar'
     };
     
     let source = langMap[sourceLang] || sourceLang;
@@ -1265,7 +1288,7 @@ function positionBubble(selection) {
   bubble.style.visibility = 'visible';
 }
 
-// Afficher le résultat de traduction
+// Afficher le résultat de traduction (MODIFIÉ: ajout du badge DeepSeek)
 function displayTranslationResult(result, bubble, contextData) {
   currentTranslationData = {
     original: selectedText,
@@ -1273,11 +1296,10 @@ function displayTranslationResult(result, bubble, contextData) {
     language: userSettings.targetLanguage
   };
   
-  const isPremium = userSettings.isPro && userSettings.deepSeekEnabled;
-  const isAI = result.isAI || result.source === 'DeepSeek AI';
-  const serviceIcon = isAI ? '🤖' : '🌐';
+  const isDeepSeek = result.source === 'DeepSeek AI' || result.isAI;
+  const serviceIcon = isDeepSeek ? '🤖' : '🌐';
   const serviceName = result.source || 'Service de traduction';
-  const sourceLabel = isAI ? 'DeepSeek AI • Intelligence artificielle' : serviceName;
+  const sourceLabel = isDeepSeek ? 'DeepSeek AI • Intelligence artificielle' : serviceName;
   
   // Animations pour les éléments
   const animClass = userSettings.animationsEnabled ? 'qt-fade-in' : '';
@@ -1287,7 +1309,7 @@ function displayTranslationResult(result, bubble, contextData) {
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
         <span style="font-weight: 600; color: #374151;">
           ${serviceIcon} ${result.sameLanguage ? 'Même langue détectée' : 'Traduction'}
-          ${isAI && !result.sameLanguage ? '<span style="font-size: 10px; color: #6b7280; margin-left: 8px;">par IA</span>' : ''}
+          ${isDeepSeek && !result.sameLanguage ? '<span style="background: linear-gradient(135deg, #00d4ff 0%, #090979 100%); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; margin-left: 8px;">DEEPSEEK AI</span>' : ''}
         </span>
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 11px; color: #9ca3af;">
@@ -1308,19 +1330,17 @@ function displayTranslationResult(result, bubble, contextData) {
         </div>
       </div>
       
-      <div class="${animClass}" style="color: #111827; padding: 12px; background: ${result.sameLanguage ? '#fef3c7' : '#f8fafc'}; border-radius: 8px; font-weight: 500; font-size: 15px;">
+      <div class="${animClass}" style="color: #111827; padding: 12px; background: ${result.sameLanguage ? '#fef3c7' : (isDeepSeek ? '#f0f9ff' : '#f8fafc')}; border-radius: 8px; font-weight: 500; font-size: 15px; ${isDeepSeek ? 'border: 1px solid #93c5fd;' : ''}">
         ${result.translation}
       </div>
       
       ${userSettings.showConfidence && result.confidence ? `
       <div style="font-size: 10px; color: #9ca3af; margin-top: 4px; text-align: right;">
         ${sourceLabel} (${Math.round(result.confidence * 100)}% de confiance)
-        ${isPremium ? ' • Intelligence artificielle' : ''}
       </div>
       ` : `
       <div style="font-size: 10px; color: #9ca3af; margin-top: 4px; text-align: right;">
         ${sourceLabel}
-        ${isPremium ? ' • Intelligence artificielle' : ''}
       </div>
       `}
     </div>
@@ -1359,11 +1379,11 @@ function displayTranslationResult(result, bubble, contextData) {
       </div>
       
       <div style="font-size: 10px; color: #9ca3af;">
-        Quick Translator ${isPremium ? 'Premium 🤖' : 'Free'}
+        Quick Translator ${isDeepSeek ? 'Premium 🤖' : 'Free'}
       </div>
     </div>
     
-    ${!isPremium ? `
+    ${!userSettings.deepSeekEnabled ? `
     <div style="margin-top: 12px; padding: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; text-align: center;">
       <div style="color: white; font-size: 12px; margin-bottom: 4px;">
         🤖 Passez à Premium avec DeepSeek AI!
@@ -1493,6 +1513,7 @@ function getFlagEmoji(langCode) {
     'ja': '🇯🇵',
     'ko': '🇰🇷',
     'zh': '🇨🇳',
+    'ar': '🇸🇦',
     'auto': '🌐'
   };
   
@@ -1593,10 +1614,10 @@ async function handleTranslation(event) {
     // Afficher le chargement avec animation
     bubble.innerHTML = `
       <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="width: 20px; height: 20px; border: 3px solid ${userSettings.buttonColor}; border-top: 3px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        <div style="width: 20px; height: 20px; border: 3px solid ${userSettings.buttonColor}; border-top: 3px solid transparent; border-radius: 50%; animation: ${userSettings.animationsEnabled ? 'spin 1s linear infinite' : 'none'};"></div>
         <div>
           <div style="font-weight: 600; color: #374151;">
-            ${userSettings.isPro && userSettings.deepSeekEnabled ? '🤖 DeepSeek AI analyse...' : '🌐 Traduction en cours...'}
+            ${userSettings.deepSeekEnabled && userSettings.deepSeekApiKey ? '🤖 DeepSeek AI analyse...' : '🌐 Traduction en cours...'}
           </div>
           <div style="font-size: 12px; color: #6b7280;">Analyse du contexte linguistique</div>
         </div>
@@ -1722,10 +1743,10 @@ if ('speechSynthesis' in window) {
     await loadSettings();
     console.log('🚀 Quick Translator Pro initialisé avec succès!');
     console.log('⚙️ Configuration:', {
-      isPro: userSettings.isPro,
       deepSeekEnabled: userSettings.deepSeekEnabled,
       hasApiKey: !!userSettings.deepSeekApiKey,
-      animationsEnabled: userSettings.animationsEnabled
+      animationsEnabled: userSettings.animationsEnabled,
+      autoDetectSameLanguage: userSettings.autoDetectSameLanguage
     });
   } catch (error) {
     console.error('❌ Erreur initialisation:', error);

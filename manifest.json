@@ -11,7 +11,11 @@
   "host_permissions": [
     "https://api.deepseek.com/*",
     "https://api.mymemory.translated.net/*",
-    "https://lingva.ml/*"
+    "https://lingva.ml/*",
+    "https://translate.googleapis.com/*",
+    "https://libretranslate.de/*",
+    "https://translate.google.com/*",
+    "https://api.fanyi.baidu.com/*"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -23,14 +27,5 @@
       "js": ["content.js"],
       "run_at": "document_end"
     }
-  ],
-  "commands": {
-    "translate-selection": {
-      "suggested_key": {
-        "default": "Ctrl+T",
-        "mac": "Command+T"
-      },
-      "description": "Traduire le texte sélectionné"
-    }
-  }
+  ]
 }

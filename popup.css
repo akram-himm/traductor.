@@ -152,51 +152,250 @@
     font-size: 16px;
 }
 
-/* Checkbox styles for batch delete */
-.translation-checkbox,
-.flashcard-checkbox {
-    width: 16px;
-    height: 16px;
+/* Folder Menu */
+.folder-menu {
+    animation: fadeIn 0.2s ease-out;
+}
+
+.menu-item:hover {
+    background: var(--gray-50) !important;
+}
+
+.folder-menu-btn {
+    background: none;
+    border: none;
     cursor: pointer;
-    accent-color: var(--primary-color);
+    padding: 4px 8px;
+    margin-right: 8px;
+    border-radius: 4px;
+    transition: background 0.2s;
 }
 
-/* Translation item with checkbox */
-.translation-item[data-id] {
-    transition: padding-left 0.2s ease;
+.folder-menu-btn:hover {
+    background: var(--gray-100) !important;
 }
 
-/* Service source display */
-.translation-domain {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    color: var(--gray-500);
-}
-
-/* DeepSeek indicator */
-.deepseek-indicator {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 8px;
+/* Premium Indicator */
+.premium-indicator {
     background: linear-gradient(135deg, #00d4ff 0%, #090979 100%);
     color: white;
-    border-radius: 12px;
+    padding: 2px 8px;
+    border-radius: 4px;
     font-size: 10px;
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* Settings improvements */
-.setting-label {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+/* DeepSeek Badge Animation */
+.deepseek-badge {
+    animation: pulse 2s ease-in-out infinite;
 }
 
-.setting-description {
-    font-size: 11px;
-    color: var(--gray-500);
-    line-height: 1.4;
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Premium Prompt Modal */
+.premium-prompt {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 32px;
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+    z-index: 10000;
+    max-width: 400px;
+    text-align: center;
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Practice Mode Improvements */
+.practice-mode {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.practice-card {
+    background: white;
+    border: 2px solid var(--gray-200);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    animation: slideIn 0.3s ease-out;
+}
+
+/* Flashcard Grid Improvements */
+.flashcard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+    padding: 16px;
+}
+
+/* Responsive Flashcards */
+@media (max-width: 600px) {
+    .flashcard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Translation Item Hover Effects */
+.translation-item {
+    position: relative;
+    overflow: hidden;
+}
+
+.translation-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 3px;
+    background: var(--gradient-primary);
+    transform: scaleY(0);
+    transition: transform 0.2s ease;
+}
+
+.translation-item:hover::before {
+    transform: scaleY(1);
+}
+
+/* Folder Swap Button Fix */
+.folder-swap {
+    padding: 4px 8px;
+    background: #3b82f6 !important;
+    border: 1px solid #2563eb !important;
+    color: white !important;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: var(--transition-base);
+    font-size: 14px;
+    margin-left: 8px;
+}
+
+.folder-swap:hover {
+    background: #2563eb !important;
+    transform: scale(1.1);
+}
+
+.folder-swap:active {
+    transform: scale(0.95);
+}
+
+/* Folder Header Clickable Area */
+.folder-header {
+    cursor: pointer;
+    user-select: none;
+}
+
+.folder-header:hover {
+    background: var(--gray-100);
+}
+
+/* Folder Content Animation */
+.folder-content {
+    transition: max-height 0.3s ease;
+    overflow: hidden;
+}
+
+/* Folder Arrow Animation */
+.folder-arrow {
+    display: inline-block;
+    transition: transform 0.3s ease;
+    user-select: none;
+}
+
+.language-folder.expanded .folder-arrow,
+.flashcard-language-folder.expanded .folder-arrow {
+    transform: rotate(90deg);
+}
+
+/* Badge Animations */
+.pro-badge, .deepseek-badge {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Empty State Improvements */
+.empty-state {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.empty-state-icon {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Practice Input Focus State */
+.practice-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    transform: scale(1.02);
+}
+
+/* Button Hover States */
+.btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* Stat Card Hover */
+.stat-card {
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Language Folder Expanded State */
+.language-folder.expanded {
+    box-shadow: var(--shadow-md);
+}
+
+/* DeepSeek Status Animation */
+.deepseek-status {
+    transition: all 0.3s ease;
+}
+
+.deepseek-status.checking {
+    animation: pulse 1s ease-in-out infinite;
+}
+
+/* Tab Transition */
+.tab-content {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Scroll Animations */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
 }
