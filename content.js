@@ -844,22 +844,10 @@ async function translateWithService(text, sourceLang = 'auto', targetLang = 'fr'
         return googleResult;
       }
     } catch (error) {
-      console.warn('⚠️ Google Translate échoué');
+      console.warn('⚠️ Google Translate échoué:', error.message);
     }
     
-    // Essayer LibreTranslate
-    try {
-      const libreResult = await translateWithLibreTranslate(cleanedText, sourceLang, targetLang);
-      if (libreResult && !isBadTranslation(cleanedText, libreResult.translation, sourceLang, targetLang)) {
-        console.log('✅ LibreTranslate réussi:', libreResult.translation);
-        translationCache.set(cacheKey, libreResult);
-        return libreResult;
-      }
-    } catch (error) {
-      console.warn('⚠️ LibreTranslate échoué');
-    }
-    
-    // Essayer MyMemory en dernier recours
+    // Essayer MyMemory en priorité car plus stable
     try {
       const myMemoryResult = await translateWithMyMemory(cleanedText, sourceLang, targetLang);
       if (myMemoryResult && !isBadTranslation(cleanedText, myMemoryResult.translation, sourceLang, targetLang)) {
@@ -868,15 +856,62 @@ async function translateWithService(text, sourceLang = 'auto', targetLang = 'fr'
         return myMemoryResult;
       }
     } catch (error) {
-      console.warn('⚠️ MyMemory échoué');
+      console.warn('⚠️ MyMemory échoué:', error.message);
+    }
+    
+    // Essayer LibreTranslate en dernier
+    try {
+      const libreResult = await translateWithLibreTranslate(cleanedText, sourceLang, targetLang);
+      if (libreResult && !isBadTranslation(cleanedText, libreResult.translation, sourceLang, targetLang)) {
+        console.log('✅ LibreTranslate réussi:', libreResult.translation);
+        translationCache.set(cacheKey, libreResult);
+        return libreResult;
+      }
+    } catch (error) {
+      console.warn('⚠️ LibreTranslate échoué:', error.message);
+    }
+    
+    // Essayer Lingva comme dernier recours
+    try {
+      const lingvaResult = await translateWithLingva(cleanedText, sourceLang, targetLang);
+      if (lingvaResult && !isBadTranslation(cleanedText, lingvaResult.translation, sourceLang, targetLang)) {
+        console.log('✅ Lingva réussi:', lingvaResult.translation);
+        translationCache.set(cacheKey, lingvaResult);
+        return lingvaResult;
+      }
+    } catch (error) {
+      console.warn('⚠️ Lingva échoué:', error.message);
     }
     
     // 4. Fallback final
+    console.warn('⚠️ Tous les services ont échoué, utilisation du fallback');
+    
+    // Essayer de donner une traduction basique si possible
+    const basicTranslations = {
+      'hello': { fr: 'bonjour', es: 'hola', de: 'hallo', it: 'ciao' },
+      'yes': { fr: 'oui', es: 'sí', de: 'ja', it: 'sì' },
+      'no': { fr: 'non', es: 'no', de: 'nein', it: 'no' },
+      'thank you': { fr: 'merci', es: 'gracias', de: 'danke', it: 'grazie' },
+      'goodbye': { fr: 'au revoir', es: 'adiós', de: 'auf wiedersehen', it: 'arrivederci' }
+    };
+    
+    const lowerText = cleanedText.toLowerCase();
+    if (basicTranslations[lowerText] && basicTranslations[lowerText][targetLang]) {
+      return {
+        translation: basicTranslations[lowerText][targetLang],
+        detectedLanguage: sourceLang,
+        confidence: 1.0,
+        source: 'Dictionnaire de base',
+        originalText: cleanedText
+      };
+    }
+    
     return {
-      translation: `${cleanedText} (traduction indisponible)`,
+      translation: `[Traduction temporairement indisponible]`,
       detectedLanguage: sourceLang,
-      confidence: 0.1,
-      source: 'Fallback',
+      confidence: 0,
+      source: 'Service indisponible',
+      error: true,
       originalText: cleanedText
     };
     
@@ -921,24 +956,59 @@ async function translateWithGoogleFree(text, sourceLang, targetLang) {
     const googleSourceLang = googleLangMap[sourceLang] || sourceLang;
     const googleTargetLang = googleLangMap[targetLang] || targetLang;
     
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${googleSourceLang}&tl=${googleTargetLang}&dt=t&q=${encodeURIComponent(text)}`;
+    // Essayer plusieurs endpoints Google
+    const endpoints = [
+      `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${googleSourceLang}&tl=${googleTargetLang}&dt=t&q=${encodeURIComponent(text)}`,
+      `https://translate.google.com/translate_a/single?client=at&sl=${googleSourceLang}&tl=${googleTargetLang}&dt=t&q=${encodeURIComponent(text)}`,
+      `https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=${googleSourceLang}&tl=${googleTargetLang}&q=${encodeURIComponent(text)}`
+    ];
     
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    let lastError = null;
     
-    const data = await response.json();
-    
-    if (data && data[0] && data[0][0] && data[0][0][0]) {
-      return {
-        translation: data[0][0][0],
-        detectedLanguage: sourceLang,
-        confidence: 0.95,
-        source: 'Google Translate',
-        originalText: text
-      };
+    for (const url of endpoints) {
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8'
+          }
+        });
+        
+        if (!response.ok) {
+          lastError = new Error(`HTTP ${response.status}`);
+          continue;
+        }
+        
+        const data = await response.json();
+        
+        // Différents formats de réponse selon l'endpoint
+        let translation = null;
+        
+        if (data && data[0] && data[0][0] && data[0][0][0]) {
+          translation = data[0][0][0];
+        } else if (data && data.sentences && data.sentences[0] && data.sentences[0].trans) {
+          translation = data.sentences[0].trans;
+        } else if (typeof data === 'string') {
+          translation = data;
+        }
+        
+        if (translation) {
+          return {
+            translation: translation,
+            detectedLanguage: sourceLang,
+            confidence: 0.9,
+            source: 'Google Translate',
+            originalText: text
+          };
+        }
+      } catch (error) {
+        lastError = error;
+        console.warn(`⚠️ Google endpoint failed: ${url.split('?')[0]}`);
+      }
     }
     
-    throw new Error('No translation from Google');
+    throw lastError || new Error('No translation from Google');
   } catch (error) {
     console.error('❌ Google Translate error:', error);
     throw error;
@@ -1011,13 +1081,21 @@ async function translateWithMyMemory(text, sourceLang, targetLang) {
       source = detectLanguage(text);
     }
     
+    // Limite de caractères pour MyMemory
+    const truncatedText = text.substring(0, 500);
     const langPair = `${source}|${target}`;
     
-    console.log('🌐 MyMemory translation:', { text, langPair });
+    console.log('🌐 MyMemory translation:', { text: truncatedText, langPair });
     
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}&de=votre-email@example.com`;
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(truncatedText)}&langpair=${langPair}&de=votre-email@example.com`;
     
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+    
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     
     const data = await response.json();
@@ -1297,13 +1375,91 @@ function displayTranslationResult(result, bubble, contextData) {
   };
   
   const isDeepSeek = result.source === 'DeepSeek AI' || result.isAI;
-  const serviceIcon = isDeepSeek ? '🤖' : '🌐';
+  const hasError = result.error || result.confidence === 0;
+  const serviceIcon = isDeepSeek ? '🤖' : hasError ? '⚠️' : '🌐';
   const serviceName = result.source || 'Service de traduction';
   const sourceLabel = isDeepSeek ? 'DeepSeek AI • Intelligence artificielle' : serviceName;
   
   // Animations pour les éléments
   const animClass = userSettings.animationsEnabled ? 'qt-fade-in' : '';
   
+  // Message d'erreur amélioré
+  if (hasError) {
+    bubble.innerHTML = `
+      <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-weight: 600; color: #dc2626;">
+            ${serviceIcon} Service temporairement indisponible
+          </span>
+        </div>
+        
+        <div class="${animClass}" style="color: #dc2626; padding: 12px; background: #fee2e2; border-radius: 8px; font-size: 14px; margin-bottom: 12px;">
+          Les services de traduction sont momentanément inaccessibles. Veuillez réessayer dans quelques instants.
+        </div>
+        
+        <div style="font-size: 13px; color: #6b7280; margin-bottom: 12px;">
+          <strong>Suggestions:</strong>
+          <ul style="margin: 8px 0 0 20px; line-height: 1.6;">
+            <li>Vérifiez votre connexion internet</li>
+            <li>Réessayez dans quelques secondes</li>
+            <li>Activez DeepSeek AI pour une meilleure fiabilité</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div style="margin-bottom: 12px;">
+        <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Texte sélectionné:</div>
+        <div style="font-size: 13px; color: #4b5563; font-style: italic;">
+          "${selectedText}"
+        </div>
+      </div>
+      
+      <div style="display: flex; gap: 8px;">
+        <button id="qt-retry" style="background: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s;">
+          🔄 Réessayer
+        </button>
+        <button id="qt-copy-original" style="background: #6b7280; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s;">
+          📋 Copier l'original
+        </button>
+      </div>
+      
+      ${!userSettings.deepSeekEnabled ? `
+      <div style="margin-top: 12px; padding: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; text-align: center;">
+        <div style="color: white; font-size: 12px; margin-bottom: 4px;">
+          🤖 Évitez ces erreurs avec DeepSeek AI Premium!
+        </div>
+        <button id="qt-upgrade-pro" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 4px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; transition: all 0.2s;">
+          En savoir plus →
+        </button>
+      </div>
+      ` : ''}
+    `;
+    
+    // Event listeners pour l'erreur
+    setTimeout(() => {
+      document.getElementById('qt-retry')?.addEventListener('click', () => {
+        hideElements();
+        handleTranslation(new Event('click'));
+      });
+      
+      document.getElementById('qt-copy-original')?.addEventListener('click', () => {
+        navigator.clipboard.writeText(selectedText);
+        const btn = document.getElementById('qt-copy-original');
+        if (btn) {
+          btn.textContent = '✅ Copié!';
+          btn.style.background = '#059669';
+        }
+      });
+      
+      document.getElementById('qt-upgrade-pro')?.addEventListener('click', () => {
+        window.open('https://quick-translator-pro.com/pricing', '_blank');
+      });
+    }, 100);
+    
+    return;
+  }
+  
+  // Affichage normal pour les traductions réussies
   bubble.innerHTML = `
     <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 12px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
