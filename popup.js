@@ -1724,6 +1724,7 @@ function getFlagEmoji(langCode) {
   const flags = {
     'fr': '🇫🇷',
     'en': '🇺🇸',
+    'ar': '🇸🇦',
     'es': '🇪🇸',
     'de': '🇩🇪',
     'it': '🇮🇹',
@@ -1732,7 +1733,6 @@ function getFlagEmoji(langCode) {
     'ja': '🇯🇵',
     'ko': '🇰🇷',
     'zh': '🇨🇳',
-    'ar': '🇸🇦',
     'auto': '🌐'
   };
   
@@ -1743,6 +1743,7 @@ function getLanguageName(langCode) {
   const names = {
     'fr': 'Français',
     'en': 'English',
+    'ar': 'العربية',
     'es': 'Español',
     'de': 'Deutsch',
     'it': 'Italiano',
@@ -1751,7 +1752,6 @@ function getLanguageName(langCode) {
     'ja': '日本語',
     'ko': '한국어',
     'zh': '中文',
-    'ar': 'العربية',
     'auto': 'Auto'
   };
   
@@ -2032,7 +2032,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           resetApp();
           break;
         case 'startPracticeMode':
-          startPracticeMode();
+          // Fonctionnalité temporairement désactivée
+          showNotification('Cette fonctionnalité arrive bientôt! 🚀', 'info');
           break;
       }
     });

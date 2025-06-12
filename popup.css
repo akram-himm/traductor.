@@ -52,6 +52,76 @@
     }
 }
 
+/* Button Disabled State */
+.btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed !important;
+    position: relative;
+}
+
+.btn.disabled:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.btn.disabled::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    margin-bottom: 8px;
+    z-index: 1000;
+}
+
+.btn.disabled:hover::after {
+    opacity: 1;
+}
+
+/* Toggle Switch Fix */
+.toggle-switch {
+    position: relative;
+    width: 48px;
+    height: 24px;
+    background: var(--gray-300);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--transition-base);
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+.toggle-switch.active {
+    background: var(--primary-color);
+}
+
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 10px;
+    transition: var(--transition-base);
+    box-shadow: var(--shadow-sm);
+}
+
+.toggle-switch.active::after {
+    transform: translateX(24px);
+}
+
 /* Practice Mode Styles */
 .practice-setup {
     padding: 20px;

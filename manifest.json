@@ -6,7 +6,9 @@
   "permissions": [
     "storage",
     "activeTab",
-    "clipboardWrite"
+    "clipboardWrite",
+    "alarms",
+    "tabs"
   ],
   "host_permissions": [
     "https://api.deepseek.com/*",
@@ -15,8 +17,11 @@
     "https://translate.googleapis.com/*",
     "https://libretranslate.de/*",
     "https://translate.google.com/*",
-    "https://api.fanyi.baidu.com/*"
+    "https://clients5.google.com/*"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_popup": "popup.html",
     "default_title": "Quick Translator Pro"
@@ -27,5 +32,14 @@
       "js": ["content.js"],
       "run_at": "document_end"
     }
-  ]
+  ],
+  "commands": {
+    "translate-selection": {
+      "suggested_key": {
+        "default": "Ctrl+Q",
+        "mac": "Command+Q"
+      },
+      "description": "Traduire le texte sélectionné"
+    }
+  }
 }

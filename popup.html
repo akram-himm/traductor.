@@ -644,9 +644,15 @@
         .setting-row {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             padding: 12px 0;
             border-bottom: 1px solid var(--gray-200);
+            gap: 16px;
+        }
+        
+        .setting-info {
+            flex: 1;
+            min-width: 0;
         }
         
         .setting-row:last-child {
@@ -1314,9 +1320,10 @@
                     <span>Mes Flashcards</span>
                 </h3>
                 <div class="setting-control">
-                    <button class="btn btn-primary" data-action="startPracticeMode">
+                    <button class="btn btn-primary disabled" data-action="startPracticeMode" disabled title="Bientôt disponible! Cette fonctionnalité arrive dans la prochaine mise à jour.">
                         <span>🎮</span>
                         <span>Mode Pratique</span>
+                        <span style="font-size: 10px; margin-left: 4px;">🔒</span>
                     </button>
                 </div>
             </div>
@@ -1345,6 +1352,7 @@
                 <select class="select" id="targetLanguage">
                     <option value="fr">🇫🇷 Français</option>
                     <option value="en">🇺🇸 English</option>
+                    <option value="ar">🇸🇦 العربية</option>
                     <option value="es">🇪🇸 Español</option>
                     <option value="de">🇩🇪 Deutsch</option>
                     <option value="it">🇮🇹 Italiano</option>
@@ -1353,7 +1361,6 @@
                     <option value="ja">🇯🇵 日本語</option>
                     <option value="ko">🇰🇷 한국어</option>
                     <option value="zh">🇨🇳 中文</option>
-                    <option value="ar">🇸🇦 العربية</option>
                 </select>
             </div>
             

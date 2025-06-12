@@ -3,6 +3,7 @@ function getLanguageName(langCode) {
   const names = {
     'fr': 'français',
     'en': 'anglais',
+    'ar': 'arabe',
     'es': 'espagnol',
     'de': 'allemand',
     'it': 'italien',
@@ -353,7 +354,8 @@ function buildSmartPrompt(text, sourceLang, targetLang, contextData) {
   const languageNames = {
     'fr': 'français',
     'en': 'anglais',
-    'es': 'espagnol', 
+    'ar': 'arabe',
+    'es': 'espagnol',
     'de': 'allemand',
     'it': 'italien',
     'pt': 'portugais',
@@ -474,6 +476,109 @@ function isBadTranslation(original, translation, sourceLang, targetLang) {
 // Dictionnaire de traductions fiables (étendu)
 function getReliableTranslation(text, sourceLang, targetLang) {
   const translations = {
+    'en_ar': {
+      // Mots courants anglais vers arabe
+      'hello': 'مرحبا',
+      'goodbye': 'وداعا',
+      'thank you': 'شكرا لك',
+      'thanks': 'شكرا',
+      'please': 'من فضلك',
+      'yes': 'نعم',
+      'no': 'لا',
+      'maybe': 'ربما',
+      'sorry': 'آسف',
+      'excuse me': 'عفوا',
+      'good morning': 'صباح الخير',
+      'good evening': 'مساء الخير',
+      'good night': 'تصبح على خير',
+      'welcome': 'مرحبا',
+      'how are you': 'كيف حالك',
+      'water': 'ماء',
+      'food': 'طعام',
+      'house': 'منزل',
+      'car': 'سيارة',
+      'school': 'مدرسة',
+      'book': 'كتاب',
+      'computer': 'حاسوب',
+      'love': 'حب',
+      'peace': 'سلام',
+      'friend': 'صديق'
+    },
+    'ar_en': {
+      // Mots arabes vers anglais
+      'مرحبا': 'hello',
+      'وداعا': 'goodbye',
+      'شكرا': 'thank you',
+      'من فضلك': 'please',
+      'نعم': 'yes',
+      'لا': 'no',
+      'ربما': 'maybe',
+      'آسف': 'sorry',
+      'عفوا': 'excuse me',
+      'صباح الخير': 'good morning',
+      'مساء الخير': 'good evening',
+      'تصبح على خير': 'good night',
+      'كيف حالك': 'how are you',
+      'ماء': 'water',
+      'طعام': 'food',
+      'منزل': 'house',
+      'سيارة': 'car',
+      'مدرسة': 'school',
+      'كتاب': 'book',
+      'حاسوب': 'computer',
+      'حب': 'love',
+      'سلام': 'peace',
+      'صديق': 'friend'
+    },
+    'fr_ar': {
+      // Mots français vers arabe
+      'bonjour': 'مرحبا',
+      'au revoir': 'وداعا',
+      'merci': 'شكرا',
+      'merci beaucoup': 'شكرا جزيلا',
+      's\'il vous plaît': 'من فضلك',
+      'oui': 'نعم',
+      'non': 'لا',
+      'peut-être': 'ربما',
+      'pardon': 'عفوا',
+      'excusez-moi': 'المعذرة',
+      'bonne journée': 'يوم سعيد',
+      'bonne nuit': 'تصبح على خير',
+      'bienvenue': 'مرحبا',
+      'eau': 'ماء',
+      'maison': 'منزل',
+      'voiture': 'سيارة',
+      'école': 'مدرسة',
+      'livre': 'كتاب',
+      'ordinateur': 'حاسوب',
+      'amour': 'حب',
+      'paix': 'سلام',
+      'ami': 'صديق'
+    },
+    'ar_fr': {
+      // Mots arabes vers français
+      'مرحبا': 'bonjour',
+      'وداعا': 'au revoir',
+      'شكرا': 'merci',
+      'شكرا جزيلا': 'merci beaucoup',
+      'من فضلك': 's\'il vous plaît',
+      'نعم': 'oui',
+      'لا': 'non',
+      'ربما': 'peut-être',
+      'عفوا': 'pardon',
+      'المعذرة': 'excusez-moi',
+      'يوم سعيد': 'bonne journée',
+      'تصبح على خير': 'bonne nuit',
+      'ماء': 'eau',
+      'منزل': 'maison',
+      'سيارة': 'voiture',
+      'مدرسة': 'école',
+      'كتاب': 'livre',
+      'حاسوب': 'ordinateur',
+      'حب': 'amour',
+      'سلام': 'paix',
+      'صديق': 'ami'
+    },
     'en_es': {
       // Mots qui posent problème
       'organization': 'organización',
@@ -888,11 +993,11 @@ async function translateWithService(text, sourceLang = 'auto', targetLang = 'fr'
     
     // Essayer de donner une traduction basique si possible
     const basicTranslations = {
-      'hello': { fr: 'bonjour', es: 'hola', de: 'hallo', it: 'ciao' },
-      'yes': { fr: 'oui', es: 'sí', de: 'ja', it: 'sì' },
-      'no': { fr: 'non', es: 'no', de: 'nein', it: 'no' },
-      'thank you': { fr: 'merci', es: 'gracias', de: 'danke', it: 'grazie' },
-      'goodbye': { fr: 'au revoir', es: 'adiós', de: 'auf wiedersehen', it: 'arrivederci' }
+      'hello': { fr: 'bonjour', ar: 'مرحبا', es: 'hola', de: 'hallo', it: 'ciao' },
+      'yes': { fr: 'oui', ar: 'نعم', es: 'sí', de: 'ja', it: 'sì' },
+      'no': { fr: 'non', ar: 'لا', es: 'no', de: 'nein', it: 'no' },
+      'thank you': { fr: 'merci', ar: 'شكرا', es: 'gracias', de: 'danke', it: 'grazie' },
+      'goodbye': { fr: 'au revoir', ar: 'وداعا', es: 'adiós', de: 'auf wiedersehen', it: 'arrivederci' }
     };
     
     const lowerText = cleanedText.toLowerCase();
@@ -1062,6 +1167,7 @@ async function translateWithMyMemory(text, sourceLang, targetLang) {
       'auto': 'auto-detect',
       'fr': 'fr',
       'en': 'en',
+      'ar': 'ar',
       'es': 'es',
       'de': 'de',
       'it': 'it',
@@ -1069,8 +1175,7 @@ async function translateWithMyMemory(text, sourceLang, targetLang) {
       'ru': 'ru',
       'ja': 'ja',
       'ko': 'ko',
-      'zh': 'zh-CN',
-      'ar': 'ar'
+      'zh': 'zh-CN'
     };
     
     let source = langMap[sourceLang] || sourceLang;
@@ -1471,9 +1576,10 @@ function displayTranslationResult(result, bubble, contextData) {
           <span style="font-size: 11px; color: #9ca3af;">
             ${getFlagEmoji(result.detectedLanguage)} →
           </span>
-          <select id="qt-lang-selector" style="font-size: 11px; padding: 2px 4px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+          <select id="qt-lang-selector" style="font-size: 11px; padding: 2px 4px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer; max-height: none;">
             <option value="fr" ${userSettings.targetLanguage === 'fr' ? 'selected' : ''}>🇫🇷 FR</option>
             <option value="en" ${userSettings.targetLanguage === 'en' ? 'selected' : ''}>🇺🇸 EN</option>
+            <option value="ar" ${userSettings.targetLanguage === 'ar' ? 'selected' : ''}>🇸🇦 AR</option>
             <option value="es" ${userSettings.targetLanguage === 'es' ? 'selected' : ''}>🇪🇸 ES</option>
             <option value="de" ${userSettings.targetLanguage === 'de' ? 'selected' : ''}>🇩🇪 DE</option>
             <option value="it" ${userSettings.targetLanguage === 'it' ? 'selected' : ''}>🇮🇹 IT</option>
@@ -1661,6 +1767,7 @@ function getFlagEmoji(langCode) {
   const flags = {
     'fr': '🇫🇷',
     'en': '🇺🇸',
+    'ar': '🇸🇦',
     'es': '🇪🇸',
     'de': '🇩🇪',
     'it': '🇮🇹',
@@ -1669,7 +1776,6 @@ function getFlagEmoji(langCode) {
     'ja': '🇯🇵',
     'ko': '🇰🇷',
     'zh': '🇨🇳',
-    'ar': '🇸🇦',
     'auto': '🌐'
   };
   
