@@ -56,21 +56,28 @@ Créer l'extension de traduction la plus intuitive et complète du marché, comb
 
 ## 🚧 En cours de développement
 
-### Priorité 1 - Site Web
-- ❌ **Landing page** (selon cahier des charges)
-- ❌ **Pages légales** (CGU, Politique de confidentialité)
-- ❌ **FAQ et Support**
-- ❌ **Blog/Actualités**
-- ❌ **Dashboard utilisateur**
+### ✅ Phase 1 - Site Web (COMPLÉTÉ)
+- ✅ **Landing page** créée avec Flask
+- ✅ **Pages légales** (CGU, Politique de confidentialité)
+- ✅ **FAQ et Support** implémentés
+- ✅ **Page Tarifs** avec comparaison Free/Premium
+- 🔄 **Améliorations en cours** (par Manus) :
+  - Correction prix Early Bird (2.99€)
+  - Page "Coming Soon" pour collecte emails
+  - Animations et visuels
+  - SEO et métadonnées
 
-### Priorité 2 - Infrastructure Backend
-- ❌ **Système d'authentification** (Google OAuth + Email)
-- ❌ **Gestion des abonnements** (Stripe/PayPal)
-- ❌ **Backend API** (Node.js/Express ou similaire)
-- ❌ **Base de données** (PostgreSQL/MongoDB)
-- ❌ **Gestion des limites** (flashcards, traductions)
+### 🚧 Phase 2 - Infrastructure Backend (EN COURS)
+- ✅ **Architecture définie** : Node.js + Express + PostgreSQL
+- ✅ **Structure créée** : Models, Routes, Middleware
+- ✅ **Authentification** : JWT + Bcrypt
+- ✅ **Gestion des limites** : 50/200 flashcards
+- 🔄 **En développement** :
+  - Intégration Stripe pour paiements
+  - Webhooks et synchronisation
+  - Tests unitaires
 
-### Priorité 3 - Fonctionnalités Premium Extension
+### 📅 Phase 3 - Fonctionnalités Premium Extension (À FAIRE)
 - ❌ **Mode Pratique des flashcards** (à activer et finaliser)
 - ❌ **Traduction longue** (paragraphes et pages entières)
 - ❌ **Prononciation audio** (text-to-speech)
@@ -106,53 +113,65 @@ Créer l'extension de traduction la plus intuitive et complète du marché, comb
 - Chrome Extension Manifest V3
 - Chrome Storage API (sync + local)
 
-### Frontend (Site Web) - À définir
-- React/Vue/Vanilla ?
-- Tailwind CSS ?
-- Vite ?
+### Frontend (Site Web)
+- **Flask** (Python) pour le serveur
+- **HTML/CSS** vanilla
+- **JavaScript** pour interactivité (FAQ, formulaires)
+- **Responsive Design** mobile-first
 
-### Backend - À définir
-- Node.js + Express ?
-- PostgreSQL/MongoDB ?
-- Stripe/PayPal pour paiements
-- JWT pour authentification
+### Backend (EN DÉVELOPPEMENT)
+- **Node.js + Express** pour l'API REST
+- **PostgreSQL** pour la base de données
+- **Sequelize** comme ORM
+- **JWT** pour l'authentification
+- **Bcrypt** pour le hashage des mots de passe
+- **Stripe** pour les paiements
+- **Nodemailer** pour les emails
 
 ### Services externes
 - DeepSeek AI (traduction premium)
 - Google Translate (proxy gratuit)
 - MyMemory, LibreTranslate, Lingva (fallback)
+- Stripe (paiements)
+
+### Hébergement prévu
+- **Site web** : Vercel ou Netlify
+- **Backend API** : Heroku ou DigitalOcean
+- **Base de données** : PostgreSQL sur Heroku/Supabase
 
 ## 📝 TODO List
 
-### Phase 1 - Site Web (2-3 semaines)
-- [ ] Développer landing page selon cahier des charges
-- [ ] Créer pages : Features, Pricing, FAQ, Support, About
-- [ ] Implémenter pages légales (CGU, Politique de confidentialité)
-- [ ] Optimiser SEO et performance
-- [ ] Design responsive mobile/desktop
+### ✅ Phase 1 - Site Web (COMPLÉTÉ - 15 juin 2025)
+- [x] Développer landing page selon cahier des charges
+- [x] Créer pages : Features, Pricing, FAQ, Support, About
+- [x] Implémenter pages légales (CGU, Politique de confidentialité)
+- [x] Structure Flask + routing
+- [ ] Améliorations visuelles (en cours par Manus)
 
-### Phase 2 - Backend & Auth (1 mois)
-- [ ] Créer API REST
-- [ ] Implémenter authentification (Google OAuth + Email)
-- [ ] Intégrer Stripe/PayPal
-- [ ] Système de gestion des abonnements
+### 🚧 Phase 2 - Backend & Auth (EN COURS - Début 16 juin 2025)
+- [x] Définir architecture (Node.js + Express + PostgreSQL)
+- [x] Créer structure de base avec models/routes/middleware
+- [x] Implémenter authentification JWT
+- [x] Créer système de gestion des limites
+- [ ] Intégrer Stripe pour paiements
+- [ ] Implémenter webhooks
 - [ ] Dashboard utilisateur
-- [ ] Système de limitations (50/200 flashcards)
+- [ ] Tests et documentation API
 
-### Phase 3 - Compléter l'extension (1-2 mois)
+### 📅 Phase 3 - Compléter l'extension (Prévu : Juillet 2025)
+- [ ] Connecter l'extension au backend
 - [ ] Activer et finaliser le Mode Pratique
 - [ ] Implémenter la traduction longue
 - [ ] Ajouter la prononciation audio
-- [ ] Créer système de limitation flashcards
-- [ ] Intégrer avec backend pour Premium
-- [ ] Tester et débugger
+- [ ] Remplacer clé API utilisateur par auth backend
+- [ ] Tests d'intégration complets
 
-### Phase 4 - Lancement (2 semaines)
+### 🚀 Phase 4 - Lancement (Prévu : Août 2025)
 - [ ] Beta testing avec early adopters
-- [ ] Corrections bugs
-- [ ] Campagne early bird (2.99€/mois)
 - [ ] Publication Chrome Web Store
+- [ ] Campagne early bird (2.99€/mois)
 - [ ] Monitoring et support
+- [ ] Itérations selon feedback
 
 ## 🐛 Bugs connus
 
