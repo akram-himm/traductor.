@@ -1,15 +1,482 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <title>LexiFlow - L'Extension de Traduction Révolutionnaire Arrive Bientôt !</title>
+    <meta name="description" content="Rejoignez la liste d'attente pour LexiFlow et bénéficiez de l'offre Early Bird à 2.99€/mois au lieu de 4.99€. Extension Chrome de traduction avec IA.">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0A2C4D 0%, #1a3a5c 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated background */
+        .bg-animation {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 0;
+        }
+
+        .bg-animation span {
+            position: absolute;
+            display: block;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.02);
+            animation: float 20s infinite;
+            bottom: -40px;
+        }
+
+        .bg-animation span:nth-child(1) {
+            left: 10%;
+            width: 80px;
+            height: 80px;
+            animation-delay: 0s;
+        }
+
+        .bg-animation span:nth-child(2) {
+            left: 30%;
+            width: 60px;
+            height: 60px;
+            animation-delay: 2s;
+            animation-duration: 25s;
+        }
+
+        .bg-animation span:nth-child(3) {
+            left: 50%;
+            animation-delay: 4s;
+        }
+
+        .bg-animation span:nth-child(4) {
+            left: 70%;
+            width: 100px;
+            height: 100px;
+            animation-delay: 0s;
+            animation-duration: 30s;
+        }
+
+        .bg-animation span:nth-child(5) {
+            left: 90%;
+            animation-delay: 3s;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.1;
+            }
+            90% {
+                opacity: 0.1;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            z-index: 1;
+            position: relative;
+        }
+
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .tagline {
+            font-size: 1.25rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        .countdown {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .countdown-title {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+
+        .countdown-boxes {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .countdown-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            min-width: 80px;
+        }
+
+        .countdown-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        .countdown-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .early-bird {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #0A2C4D;
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+        }
+
+        .early-bird h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+
+        .price-comparison {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin: 20px 0;
+            font-size: 1.5rem;
+        }
+
+        .old-price {
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .arrow {
+            font-size: 2rem;
+        }
+
+        .new-price {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+
+        .limited-offer {
+            font-size: 1rem;
+            margin-top: 15px;
+            font-style: italic;
+        }
+
+        .email-form {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .email-form h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .email-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 15px 20px;
+            font-size: 1rem;
+            border: 2px solid transparent;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #0A2C4D;
+            transition: all 0.3s ease;
+        }
+
+        .email-input:focus {
+            outline: none;
+            border-color: #FFD700;
+            background: #ffffff;
+        }
+
+        .submit-btn {
+            padding: 15px 40px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            background: #FFD700;
+            color: #0A2C4D;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .submit-btn:hover {
+            background: #FFA500;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .feature {
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .feature-text {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .footer {
+            margin-top: 60px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .success-message {
+            background: #00C896;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .countdown-boxes {
+                gap: 10px;
+            }
+            
+            .countdown-box {
+                min-width: 60px;
+                padding: 15px;
+            }
+            
+            .countdown-number {
+                font-size: 2rem;
+            }
+            
+            .form-group {
+                flex-direction: column;
+            }
+            
+            .email-input {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="coming-soon">
-        <h1>Coming Soon</h1>
-        <p>Our website is under construction. Stay tuned!</p>
+    <div class="bg-animation">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
     </div>
+
+    <div class="container">
+        <div class="logo">🌐</div>
+        <h1>LexiFlow Arrive Bientôt !</h1>
+        <p class="tagline">L'extension Chrome qui révolutionne la traduction instantanée avec l'IA</p>
+
+        <div class="countdown">
+            <p class="countdown-title">Lancement officiel dans :</p>
+            <div class="countdown-boxes">
+                <div class="countdown-box">
+                    <div class="countdown-number" id="days">15</div>
+                    <div class="countdown-label">Jours</div>
+                </div>
+                <div class="countdown-box">
+                    <div class="countdown-number" id="hours">12</div>
+                    <div class="countdown-label">Heures</div>
+                </div>
+                <div class="countdown-box">
+                    <div class="countdown-number" id="minutes">45</div>
+                    <div class="countdown-label">Minutes</div>
+                </div>
+                <div class="countdown-box">
+                    <div class="countdown-number" id="seconds">30</div>
+                    <div class="countdown-label">Secondes</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="early-bird">
+            <h2>🐦 Offre Early Bird Exclusive !</h2>
+            <div class="price-comparison">
+                <span class="old-price">4.99€/mois</span>
+                <span class="arrow">→</span>
+                <span class="new-price">2.99€/mois</span>
+            </div>
+            <p class="limited-offer">À vie pour les 1000 premiers inscrits !</p>
+        </div>
+
+        <div class="email-form">
+            <div class="success-message" id="successMessage">
+                ✅ Merci ! Vous êtes inscrit(e) sur la liste d'attente.
+            </div>
+            <h3>Rejoignez la liste d'attente</h3>
+            <form id="waitlistForm">
+                <div class="form-group">
+                    <input 
+                        type="email" 
+                        class="email-input" 
+                        placeholder="votre@email.com" 
+                        required
+                        id="emailInput"
+                    >
+                    <button type="submit" class="submit-btn">
+                        M'inscrire
+                    </button>
+                </div>
+            </form>
+            <p style="font-size: 0.9rem; opacity: 0.8; margin-top: 10px;">
+                Soyez parmi les premiers à découvrir LexiFlow et profitez de l'offre spéciale !
+            </p>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-text">Traduction instantanée</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🧠</div>
+                <div class="feature-text">IA contextuelle</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📚</div>
+                <div class="feature-text">Flashcards intelligentes</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🌍</div>
+                <div class="feature-text">11 langues</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 LexiFlow. Tous droits réservés.</p>
+        </div>
+    </div>
+
+    <script>
+        // Countdown timer
+        const launchDate = new Date('2025-07-01T00:00:00').getTime();
+        
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = launchDate - now;
+            
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            document.getElementById('days').textContent = days;
+            document.getElementById('hours').textContent = hours;
+            document.getElementById('minutes').textContent = minutes;
+            document.getElementById('seconds').textContent = seconds;
+            
+            if (distance < 0) {
+                document.querySelector('.countdown').innerHTML = '<h2>🚀 LexiFlow est maintenant disponible !</h2>';
+            }
+        }
+        
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+
+        // Form submission
+        document.getElementById('waitlistForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('emailInput').value;
+            
+            // TODO: Envoyer l'email au backend
+            console.log('Email inscrit:', email);
+            
+            // Afficher le message de succès
+            document.getElementById('successMessage').style.display = 'block';
+            document.getElementById('emailInput').value = '';
+            
+            // Cacher le message après 5 secondes
+            setTimeout(() => {
+                document.getElementById('successMessage').style.display = 'none';
+            }, 5000);
+        });
+    </script>
 </body>
 </html>
