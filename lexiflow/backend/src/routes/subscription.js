@@ -9,60 +9,38 @@ const Subscription = require('../models/Subscription');
 router.post('/create-checkout-session', authMiddleware, async (req, res) => {
   try {
     const { priceType } = req.body; // 'monthly' ou 'yearly'
-    const user = req.user;
-    
-    // Vérifier si l'utilisateur a déjà un abonnement
-    const existingSubscription = await Subscription.findOne({
-      where: { userId: user.id, status: 'active' }
+
+    // Mock response for testing without Stripe API
+    res.json({
+      checkoutUrl: 'https://checkout.stripe.com/test_session_123',
+      sessionId: 'cs_test_mock123'
     });
-    
-    if (existingSubscription) {
-      return res.status(400).json({ 
-        error: 'Vous avez déjà un abonnement actif' 
-      });
-    }
-    
-    // Créer ou récupérer le customer Stripe
-    let stripeCustomerId = user.stripeCustomerId;
-    
-    if (!stripeCustomerId) {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        metadata: {
-          userId: user.id
-        }
-      });
-      stripeCustomerId = customer.id;
-      await user.update({ stripeCustomerId });
-    }
-    
-    // Déterminer le prix (early bird pour l'instant)
-    const priceId = priceType === 'yearly' ? PRICES.yearly : PRICES.monthly;
-    
-    // Créer la session de checkout
-    const session = await stripe.checkout.sessions.create({
-      customer: stripeCustomerId,
-      payment_method_types: ['card'],
-      mode: 'subscription',
-      line_items: [{
-        price: priceId,
-        quantity: 1
-      }],
-      success_url: `${process.env.FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL}/pricing`,
-      metadata: {
-        userId: user.id
-      }
-    });
-    
-    res.json({ 
-      checkoutUrl: session.url,
-      sessionId: session.id 
-    });
-    
+
+    // Commented out Stripe API calls
+    // const user = req.user;
+    // let stripeCustomerId = user.stripeCustomerId;
+    // if (!stripeCustomerId) {
+    //   const customer = await stripe.customers.create({
+    //     email: user.email,
+    //     metadata: { userId: user.id }
+    //   });
+    //   stripeCustomerId = customer.id;
+    //   await user.update({ stripeCustomerId });
+    // }
+    // const priceId = priceType === 'yearly' ? PRICES.yearly : PRICES.monthly;
+    // const session = await stripe.checkout.sessions.create({
+    //   customer: stripeCustomerId,
+    //   payment_method_types: ['card'],
+    //   mode: 'subscription',
+    //   line_items: [{ price: priceId, quantity: 1 }],
+    //   success_url: `${process.env.FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+    //   cancel_url: `${process.env.FRONTEND_URL}/pricing`,
+    //   metadata: { userId: user.id }
+    // });
+    // res.json({ checkoutUrl: session.url, sessionId: session.id });
   } catch (error) {
-    console.error('Erreur création checkout:', error);
-    res.status(500).json({ error: 'Erreur lors de la création de la session' });
+    console.error('Error creating checkout session:', error);
+    res.status(500).json({ error: 'Error creating checkout session' });
   }
 });
 

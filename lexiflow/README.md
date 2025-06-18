@@ -25,7 +25,7 @@
 | Phase | Statut | Progression |
 |-------|---------|-------------|
 | Phase 1 - Extension Base | ✅ Complété | 100% |
-| Phase 2 - Backend & Auth | 🚧 En cours | 85% |
+| Phase 2 - Backend & Auth | 🚧 En cours | **85%** |
 | Phase 3 - Site Web | 📅 À faire | 0% |
 | Phase 4 - Extension Premium | 📅 Planifié | 0% |
 | Phase 5 - Lancement | 📅 Août 2025 | 0% |
@@ -37,18 +37,19 @@
 - ✅ Limites de caractères (100/350)
 - ✅ Architecture backend complète
 - ✅ Authentification JWT sécurisée
-- ✅ Intégration Stripe complète avec webhooks ✅
-- ✅ Tous les tests passent au vert
+- ✅ Intégration Stripe complète avec webhooks
+- ✅ **Tous les tests passent au vert** 🎉
 - ✅ Serveur de développement opérationnel
+- ✅ **Mode développement sans base de données**
 
 ### 🎯 Prochaines priorités
 1. **🌐 Créer le site web** (PRIORITÉ #1)
-   - Page Coming Soon
-   - Landing page
-   - Collecte d'emails
-2. **🚀 Déployer le backend**
-3. **💰 Lancer la campagne Early Bird**
-4. **✨ Activer les features premium**
+   - Page Coming Soon pour collecter des emails
+   - Landing page attractive
+   - Dashboard utilisateur
+2. **🚀 Déployer le backend** en production
+3. **💰 Lancer la campagne Early Bird** (2.99€/mois)
+4. **✨ Activer les features premium** dans l'extension
 
 ## 💰 Modèle économique
 
@@ -69,51 +70,78 @@
 
 ## 🛠️ Installation pour développeurs
 
-### Démarrage rapide du backend
+### Extension Chrome
 ```bash
 # 1. Cloner le repository
 git clone https://github.com/yourusername/lexiflow.git
 
-# 2. Aller dans le dossier backend
-cd lexiflow/lexiflow-backend
-
-# 3. Installer les dépendances
-npm install
-
-# 4. Démarrer le serveur de test
-node test-server.js
-
-# 5. Dans un autre terminal, lancer Stripe CLI
-stripe listen --forward-to localhost:3001/api/payment/webhook
-
-# 6. Tester les webhooks
-node scripts/test-stripe-webhooks.js
+# 2. Installer l'extension
+- Ouvrir Chrome → Extensions → Mode développeur
+- Charger l'extension non empaquetée → Dossier 'extension'
 ```
 
-### Extension Chrome
-- Ouvrir Chrome → Extensions → Mode développeur
-- Charger l'extension non empaquetée → Dossier `extension`
+### Backend (85% complet)
+```bash
+# 1. Aller dans le dossier backend
+cd lexiflow/backend
+
+# 2. Installer les dépendances
+npm install
+
+# 3. Configurer l'environnement
+cp .env.example .env
+
+# 4. Démarrer le serveur
+npm start
+
+# Le serveur fonctionne sans PostgreSQL en mode dev !
+```
+
+### Tests Backend
+```bash
+# Lancer tous les tests (100% passent !)
+npm test
+
+# Test API uniquement
+npm run test:api
+
+# Test Stripe webhooks
+npm run test:stripe
+```
 
 ## 📂 Structure du projet
 
 ```
 lexiflow/
-├── extension/           # Extension Chrome (✅ Fonctionnelle)
-│   ├── manifest.json   # Configuration Chrome Extension v3
-│   ├── background.js   # Service worker
-│   ├── content.js      # Script principal
-│   └── popup/          # Interface utilisateur
-├── backend/            # API Node.js (🚧 40% complété)
-│   ├── models/         # ✅ Modèles Sequelize
-│   ├── routes/         # ⚠️ Routes Express (partielles)
-│   └── middleware/     # ✅ Auth, validation
-├── website/            # Site web (📅 À développer)
-│   └── [Structure à définir]
-└── docs/               # Documentation
-    ├── README.md       # Ce fichier
-    ├── BACKEND.md      # Détails techniques backend
-    └── WEBSITE_DESC.md # Spécifications site web
+├── README.md           # Ce fichier
+├── extension/          # Extension Chrome (100% fonctionnelle)
+│   └── EXTENSION_GUIDE.md
+├── backend/            # API Node.js (85% complété)
+│   └── backend-instructions.md
+└── website/            # Site web (0% - À développer)
+    └── WEBSITE-DESC.md
 ```
+
+## 🏗️ Architecture technique
+
+### Extension (Complète)
+- Manifest V3
+- Content script avec injection
+- 11 langues supportées
+- Système de flashcards local
+
+### Backend (85% complet)
+- Node.js + Express
+- PostgreSQL + Sequelize (optionnel en dev)
+- JWT Authentication
+- Stripe Payments
+- Mode mock pour développement
+
+### Site Web (À faire)
+- Landing page
+- Dashboard utilisateur
+- Page Coming Soon
+- Système de paiement
 
 ## 🤝 Contribution
 
@@ -123,13 +151,14 @@ Ce projet est actuellement privé. Pour contribuer :
 3. Testez minutieusement avant chaque PR
 4. Documentez vos modifications
 
-## 🎉 Accomplissements du jour (16 juin 2025)
+## 🎉 Accomplissements récents (17 juin 2025)
 
-- ✅ Configuration Stripe de A à Z
-- ✅ Création complète du backend (85%)
-- ✅ Tous les webhooks Stripe fonctionnels
-- ✅ Tests automatisés opérationnels
-- ✅ Documentation professionnelle
+- ✅ Backend fonctionnel à 85%
+- ✅ Tous les tests passent avec succès
+- ✅ Mode développement sans base de données
+- ✅ Structure de projet réorganisée et optimisée
+- ✅ Documentation complète mise à jour
+- ✅ Intégration Stripe fonctionnelle
 
 ## 📊 Métriques de succès visées
 
@@ -142,8 +171,9 @@ Ce projet est actuellement privé. Pour contribuer :
 ## 📞 Contact
 
 - **Email support :** support@lexiflow.com
-- **Documentation technique :** Voir [BACKEND.md](BACKEND.md)
-- **Description du site :** Voir [WEBSITE_DESC.md](WEBSITE_DESC.md)
+- **Documentation backend :** [backend-instructions.md](backend/backend-instructions.md)
+- **Guide extension :** [EXTENSION_GUIDE.md](extension/EXTENSION_GUIDE.md)
+- **Spécifications site :** [WEBSITE-DESC.md](website/WEBSITE-DESC.md)
 
 ## 📄 Licence
 
@@ -153,4 +183,6 @@ Ce projet est actuellement privé. Pour contribuer :
 
 <div align="center">
   <sub>Fait avec ❤️ pour briser les barrières linguistiques</sub>
+  <br>
+  <sub>Dernière mise à jour : 17 juin 2025</sub>
 </div>

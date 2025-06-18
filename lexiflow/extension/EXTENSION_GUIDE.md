@@ -1,0 +1,3 @@
+# LexiFlow Extension Guide
+
+...existing content from README.md in extension folder...

@@ -7,8 +7,8 @@ const os = require('os');
   console.log('========================');
 
   try {
-    const usersResponse = await axios.get('http://localhost:3000/api/users/stats');
-    const flashcardsResponse = await axios.get('http://localhost:3000/api/flashcards/stats');
+    const usersResponse = await axios.get('http://localhost:3001/api/users/stats');
+    const flashcardsResponse = await axios.get('http://localhost:3001/api/flashcards/stats');
 
     console.log(chalk.green(`Users:`));
     console.log(`- Total: ${usersResponse.data.total}`);

@@ -1,7 +1,10 @@
+require('dotenv').config();
 const chalk = require('chalk');
 const { Sequelize } = require('sequelize');
 const Stripe = require('stripe');
 const nodemailer = require('nodemailer');
+
+console.log('Current working directory:', process.cwd());
 
 (async () => {
   console.log(chalk.blue('🔍 ENVIRONMENT VALIDATION'));
@@ -15,7 +18,7 @@ const nodemailer = require('nodemailer');
     'EMAIL_HOST',
     'EMAIL_PORT',
     'EMAIL_USER',
-    'EMAIL_PASSWORD'
+    'EMAIL_PASS' // Updated from EMAIL_PASSWORD
   ];
 
   let allValid = true;
@@ -65,7 +68,7 @@ const nodemailer = require('nodemailer');
       port: process.env.EMAIL_PORT,
       auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD
+        pass: process.env.EMAIL_PASS // Updated from EMAIL_PASSWORD
       }
     });
     await transporter.verify();

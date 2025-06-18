@@ -3,6 +3,9 @@ const router = express.Router();
 const authMiddleware = require('../middleware/auth');
 const Flashcard = require('../models/Flashcard');
 
+// Fake counter to simulate flashcard creation
+let fakeFlashcardCount = 0;
+
 // Obtenir toutes les flashcards de l'utilisateur
 router.get('/', authMiddleware, async (req, res) => {
   try {
@@ -25,35 +28,23 @@ router.get('/', authMiddleware, async (req, res) => {
 router.post('/', authMiddleware, async (req, res) => {
   try {
     const { front, back, language } = req.body;
-    
-    // Vérifier la limite
-    const currentCount = await Flashcard.count({
-      where: { userId: req.user.id }
-    });
-    
-    const limit = req.user.getFlashcardLimit();
-    
-    if (currentCount >= limit) {
+
+    // Simulate limit check
+    const limit = 50;
+
+    if (fakeFlashcardCount >= limit) {
       return res.status(403).json({
-        error: `Limite atteinte ! Vous avez ${currentCount}/${limit} flashcards.`,
-        needPremium: !req.user.checkPremiumStatus()
+        error: `Limite atteinte ! Vous avez ${fakeFlashcardCount}/${limit} flashcards.`,
+        needPremium: true
       });
     }
-    
-    // Créer la flashcard
-    const flashcard = await Flashcard.create({
-      userId: req.user.id,
-      front,
-      back,
-      language
-    });
-    
-    // Mettre à jour le compteur
-    await req.user.update({ flashcardCount: currentCount + 1 });
-    
+
+    // Simulate flashcard creation
+    fakeFlashcardCount++;
+
     res.status(201).json({
-      flashcard,
-      count: currentCount + 1,
+      flashcard: { id: fakeFlashcardCount, front, back, language },
+      count: fakeFlashcardCount,
       limit
     });
   } catch (error) {

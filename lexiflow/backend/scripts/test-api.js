@@ -6,20 +6,15 @@ const chalk = require('chalk');
   console.log('========================');
 
   try {
-    // Clear test data
-    console.log(chalk.blue('🔄 Clearing test data...'));
-    await axios.post('http://localhost:3000/api/test/clear');
-    console.log(chalk.green('✅ Test data cleared.'));
-
     // Test Authentication Flow
     console.log(chalk.blue('🔑 Testing Authentication Flow...'));
-    const registerResponse = await axios.post('http://localhost:3000/api/auth/register', {
+    const registerResponse = await axios.post('http://localhost:3001/api/auth/register', {
       email: 'test@lexiflow.test',
       password: 'password123',
     });
     console.log(chalk.green('✅ User registration successful.'));
 
-    const loginResponse = await axios.post('http://localhost:3000/api/auth/login', {
+    const loginResponse = await axios.post('http://localhost:3001/api/auth/login', {
       email: 'test@lexiflow.test',
       password: 'password123',
     });
@@ -31,7 +26,7 @@ const chalk = require('chalk');
     console.log(chalk.blue('📋 Testing Free User Limits...'));
     for (let i = 1; i <= 50; i++) {
       await axios.post(
-        'http://localhost:3000/api/flashcards',
+        'http://localhost:3001/api/flashcards',
         { question: `Question ${i}`, answer: `Answer ${i}` },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -40,7 +35,7 @@ const chalk = require('chalk');
 
     try {
       await axios.post(
-        'http://localhost:3000/api/flashcards',
+        'http://localhost:3001/api/flashcards',
         { question: 'Question 51', answer: 'Answer 51' },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -52,7 +47,7 @@ const chalk = require('chalk');
     // Test Stripe Integration
     console.log(chalk.blue('💳 Testing Stripe Integration...'));
     const checkoutResponse = await axios.post(
-      'http://localhost:3000/api/subscription/create-checkout-session',
+      'http://localhost:3001/api/subscription/create-checkout-session',
       { priceType: 'monthly' },
       { headers: { Authorization: `Bearer ${token}` } }
     );

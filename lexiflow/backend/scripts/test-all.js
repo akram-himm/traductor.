@@ -1,6 +1,8 @@
 const { execSync } = require('child_process');
 const chalk = require('chalk');
 
+process.chdir(__dirname + '/..');
+
 (async () => {
   try {
     console.log(chalk.blue('🔍 Validating environment...'));
@@ -19,7 +21,7 @@ const chalk = require('chalk');
     execSync('node scripts/test-stripe-webhooks.js', { stdio: 'inherit' });
 
     console.log(chalk.blue('📊 Generating dashboard summary...'));
-    execSync('node scripts/dashboard.js', { stdio: 'inherit' });
+    execSync('node ./dashboard.js', { stdio: 'inherit' });
 
     console.log(chalk.green('🎉 All tests completed successfully.'));
   } catch (error) {
