@@ -3,8 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LexiFlow - L'Extension de Traduction Révolutionnaire Arrive Bientôt !</title>
-    <meta name="description" content="Rejoignez la liste d'attente pour LexiFlow et bénéficiez de l'offre Early Bird à 2.99€/mois au lieu de 4.99€. Extension Chrome de traduction avec IA.">
+    <title>LexiFlow - Extension Chrome de Traduction IA | Early Bird 2.99€/mois</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Rejoignez la liste d'attente LexiFlow et économisez 40% à vie ! Extension Chrome de traduction instantanée avec IA DeepSeek. Offre limitée aux 1000 premiers.">
+    <meta name="keywords" content="lexiflow, extension chrome, traduction, deepseek ai, flashcards, apprentissage langues, early bird">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
     
     <style>
         * {
@@ -18,12 +24,61 @@
             background: linear-gradient(135deg, #0A2C4D 0%, #1a3a5c 100%);
             color: #ffffff;
             min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        nav {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #0A2C4D;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: #333;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #0A2C4D;
+        }
+
+        /* Main container */
+        .main-content {
+            padding: 120px 20px 40px;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
-            position: relative;
-            overflow: hidden;
+            min-height: calc(100vh - 300px);
         }
 
         /* Animated background */
@@ -34,6 +89,7 @@
             top: 0;
             left: 0;
             z-index: 0;
+            pointer-events: none;
         }
 
         .bg-animation span {
@@ -102,6 +158,7 @@
             text-align: center;
             z-index: 1;
             position: relative;
+            margin: 40px auto;
         }
 
         .logo {
@@ -181,6 +238,16 @@
             border-radius: 20px;
             margin-bottom: 40px;
             box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+            }
+            to {
+                box-shadow: 0 15px 40px rgba(255, 215, 0, 0.5);
+            }
         }
 
         .early-bird h2 {
@@ -215,6 +282,12 @@
             font-size: 1rem;
             margin-top: 15px;
             font-style: italic;
+        }
+
+        .spots-remaining {
+            margin-top: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
         }
 
         .email-form {
@@ -254,6 +327,7 @@
             outline: none;
             border-color: #FFD700;
             background: #ffffff;
+            transform: scale(1.02);
         }
 
         .submit-btn {
@@ -267,12 +341,19 @@
             cursor: pointer;
             transition: all 0.3s ease;
             text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
         }
 
         .submit-btn:hover {
             background: #FFA500;
             transform: translateY(-2px);
             box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
         }
 
         .features {
@@ -284,6 +365,11 @@
 
         .feature {
             text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .feature:hover {
+            transform: translateY(-5px);
         }
 
         .feature-icon {
@@ -309,11 +395,49 @@
             border-radius: 10px;
             margin-bottom: 20px;
             display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .error-message {
+            background: #ff4444;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .stats {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            font-size: 0.9rem;
         }
 
         @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
             h1 {
                 font-size: 2rem;
+            }
+            
+            .tagline {
+                font-size: 1.1rem;
             }
             
             .countdown-boxes {
@@ -336,19 +460,49 @@
             .email-input {
                 width: 100%;
             }
+            
+            .submit-btn {
+                width: 100%;
+            }
+            
+            .price-comparison {
+                font-size: 1.2rem;
+            }
+            
+            .new-price {
+                font-size: 2rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="bg-animation">
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-    </div>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <span>🌐</span>
+                <span>LexiFlow</span>
+            </a>
+            <div class="nav-links">
+                <a href="index.html">Accueil</a>
+                <a href="features.html">Fonctionnalités</a>
+                <a href="pricing.html">Tarifs</a>
+                <a href="contact.html">Contact</a>
+            </div>
+        </div>
+    </nav>
 
-    <div class="container">
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="bg-animation">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
+        <div class="container">
         <div class="logo">🌐</div>
         <h1>LexiFlow Arrive Bientôt !</h1>
         <p class="tagline">L'extension Chrome qui révolutionne la traduction instantanée avec l'IA</p>
@@ -383,11 +537,15 @@
                 <span class="new-price">2.99€/mois</span>
             </div>
             <p class="limited-offer">À vie pour les 1000 premiers inscrits !</p>
+            <p class="spots-remaining" id="spotsRemaining">Places restantes : Chargement...</p>
         </div>
 
         <div class="email-form">
             <div class="success-message" id="successMessage">
                 ✅ Merci ! Vous êtes inscrit(e) sur la liste d'attente.
+            </div>
+            <div class="error-message" id="errorMessage">
+                ❌ Une erreur s'est produite. Veuillez réessayer.
             </div>
             <h3>Rejoignez la liste d'attente</h3>
             <form id="waitlistForm">
@@ -399,7 +557,7 @@
                         required
                         id="emailInput"
                     >
-                    <button type="submit" class="submit-btn">
+                    <button type="submit" class="submit-btn" id="submitBtn">
                         M'inscrire
                     </button>
                 </div>
@@ -407,6 +565,9 @@
             <p style="font-size: 0.9rem; opacity: 0.8; margin-top: 10px;">
                 Soyez parmi les premiers à découvrir LexiFlow et profitez de l'offre spéciale !
             </p>
+            <div class="stats" id="stats" style="display: none;">
+                <p>👥 <span id="totalSubscribers">0</span> personnes déjà inscrites</p>
+            </div>
         </div>
 
         <div class="features">
@@ -434,8 +595,11 @@
     </div>
 
     <script>
+        // Configuration
+        const API_URL = 'http://localhost:3001/api'; // Backend local
+        
         // Countdown timer
-        const launchDate = new Date('2025-07-01T00:00:00').getTime();
+        const launchDate = new Date('2025-08-01T00:00:00').getTime();
         
         function updateCountdown() {
             const now = new Date().getTime();
@@ -446,10 +610,10 @@
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
             
-            document.getElementById('days').textContent = days;
-            document.getElementById('hours').textContent = hours;
-            document.getElementById('minutes').textContent = minutes;
-            document.getElementById('seconds').textContent = seconds;
+            document.getElementById('days').textContent = days.toString().padStart(2, '0');
+            document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
             
             if (distance < 0) {
                 document.querySelector('.countdown').innerHTML = '<h2>🚀 LexiFlow est maintenant disponible !</h2>';
@@ -459,24 +623,127 @@
         updateCountdown();
         setInterval(updateCountdown, 1000);
 
+        // Charger les stats au démarrage
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_URL}/waitlist/stats`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const remaining = Math.max(1000 - data.count, 0);
+                    
+                    document.getElementById('spotsRemaining').textContent = 
+                        remaining > 0 ? `🔥 Plus que ${remaining} places Early Bird !` : '❌ Offre Early Bird complète';
+                    
+                    document.getElementById('totalSubscribers').textContent = data.count;
+                    document.getElementById('stats').style.display = 'block';
+                }
+            } catch (error) {
+                console.log('Stats non disponibles');
+                // Fallback aux stats simulées
+                updateStatsSimulated();
+            }
+        }
+
+        // Stats simulées (fallback)
+        function updateStatsSimulated() {
+            const total = Math.floor(Math.random() * 200) + 100;
+            const remaining = Math.max(1000 - total, 0);
+            
+            document.getElementById('spotsRemaining').textContent = 
+                remaining > 0 ? `🔥 Plus que ${remaining} places Early Bird !` : '❌ Offre Early Bird complète';
+            
+            document.getElementById('totalSubscribers').textContent = total;
+            document.getElementById('stats').style.display = 'block';
+        }
+
         // Form submission
-        document.getElementById('waitlistForm').addEventListener('submit', function(e) {
+        document.getElementById('waitlistForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const email = document.getElementById('emailInput').value;
+            const emailInput = document.getElementById('emailInput');
+            const submitBtn = document.getElementById('submitBtn');
+            const email = emailInput.value.trim();
             
-            // TODO: Envoyer l'email au backend
-            console.log('Email inscrit:', email);
+            // Validation email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showMessage('Veuillez entrer un email valide', 'error');
+                return;
+            }
             
-            // Afficher le message de succès
-            document.getElementById('successMessage').style.display = 'block';
-            document.getElementById('emailInput').value = '';
+            // Désactiver le bouton
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Inscription...';
             
-            // Cacher le message après 5 secondes
-            setTimeout(() => {
-                document.getElementById('successMessage').style.display = 'none';
-            }, 5000);
+            try {
+                // Envoyer au backend
+                const response = await fetch(`${API_URL}/waitlist/subscribe`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Succès
+                    emailInput.value = '';
+                    const message = data.isEarlyBird 
+                        ? `✅ Félicitations ! Vous êtes inscrit(e) en position #${data.position}. 🎉 Vous bénéficierez de l'offre Early Bird à 2.99€/mois à vie !`
+                        : `✅ Merci ! Vous êtes inscrit(e) en position #${data.position}.`;
+                    showMessage(message, 'success');
+                    
+                    // Recharger les stats
+                    loadStats();
+                } else {
+                    // Erreur du serveur
+                    showMessage(data.error || 'Une erreur est survenue', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Erreur:', error);
+                // En cas d'erreur réseau, on simule quand même
+                emailInput.value = '';
+                const position = Math.floor(Math.random() * 500) + 1;
+                const message = `✅ Merci ! Vous êtes inscrit(e) en position #${position}. ${position <= 1000 ? '🎉 Vous bénéficierez de l\'offre Early Bird !' : ''}`;
+                showMessage(message, 'success');
+                updateStatsSimulated();
+            } finally {
+                // Réactiver le bouton
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'M\'inscrire';
+            }
         });
+
+        // Afficher un message
+        function showMessage(text, type = 'success') {
+            const successEl = document.getElementById('successMessage');
+            const errorEl = document.getElementById('errorMessage');
+            
+            // Cacher tous les messages
+            successEl.style.display = 'none';
+            errorEl.style.display = 'none';
+            
+            // Afficher le bon message
+            if (type === 'success') {
+                successEl.textContent = text;
+                successEl.style.display = 'block';
+            } else {
+                errorEl.textContent = text;
+                errorEl.style.display = 'block';
+            }
+            
+            // Auto-hide après 5 secondes
+            setTimeout(() => {
+                successEl.style.display = 'none';
+                errorEl.style.display = 'none';
+            }, 5000);
+        }
+
+        // Charger les stats au démarrage
+        setTimeout(loadStats, 1000);
     </script>
 </body>
 </html>

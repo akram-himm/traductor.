@@ -13,7 +13,7 @@ app.use('/api/subscription/webhook', express.raw({ type: 'application/json' }));
 // Middleware de sécurité
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5000',
+  origin: ['http://localhost:5000', 'http://localhost:8000'],
   credentials: true,
   // Ajouter l'extension Chrome aux origines autorisées
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -36,6 +36,7 @@ app.use('/api/flashcards', require('./routes/flashcards'));
 app.use('/api/translations', require('./routes/translations'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/sync', require('./routes/sync'));
+app.use('/api/waitlist', require('./routes/waitlist'));
 
 // Ensure all routes are loaded from src/routes
 const healthRoute = require('./routes/health');

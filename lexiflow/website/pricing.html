@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarifs - LexiFlow | Offre Early Bird -40%</title>
+    <meta name="description" content="Découvrez nos tarifs. Offre Early Bird limitée : Premium à 2.99€/mois au lieu de 4.99€. Essai gratuit disponible.">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #0A2C4D;
+            --secondary-color: #FFD700;
+            --accent-color: #00C896;
+            --text-color: #333333;
+            --bg-color: #F8F9FA;
+            --white: #FFFFFF;
+            --success: #00C896;
+            --premium-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background: var(--bg-color);
+        }
+
+        /* Navigation */
+        nav {
+            background: var(--white);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-color);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        /* Hero Pricing */
+        .pricing-hero {
+            padding: 120px 2rem 40px;
+            text-align: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        .pricing-hero h1 {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .pricing-hero p {
+            font-size: 1.25rem;
+            color: #666;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .early-bird-banner {
+            background: var(--secondary-color);
+            color: var(--primary-color);
+            padding: 1rem 2rem;
+            display: inline-block;
+            border-radius: 50px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+            margin-bottom: 2rem;
+        }
+
+        /* Pricing Toggle */
+        .pricing-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: #ccc;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch.annual {
+            background: var(--accent-color);
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle-switch.annual .toggle-slider {
+            transform: translateX(30px);
+        }
+
+        .save-badge {
+            background: var(--accent-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+        }
+
+        /* Pricing Cards */
+        .pricing-section {
+            padding: 60px 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .pricing-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .pricing-card.premium {
+            background: var(--premium-gradient);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--secondary-color);
+            color: var(--primary-color);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 0.875rem;
+        }
+
+        .plan-name {
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .price-container {
+            margin: 2rem 0;
+        }
+
+        .price {
+            font-size: 3rem;
+            font-weight: bold;
+        }
+
+        .price-period {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        .old-price {
+            text-decoration: line-through;
+            opacity: 0.6;
+            font-size: 1.25rem;
+        }
+
+        .features-list {
+            list-style: none;
+            margin: 2rem 0;
+        }
+
+        .features-list li {
+            padding: 0.75rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .check-icon {
+            color: var(--success);
+            font-size: 1.25rem;
+        }
+
+        .x-icon {
+            color: #ff4444;
+            font-size: 1.25rem;
+        }
+
+        .pricing-card.premium .check-icon {
+            color: #90EE90;
+        }
+
+        .cta-button {
+            background: var(--secondary-color);
+            color: var(--primary-color);
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: block;
+            text-align: center;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .cta-button.secondary {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .pricing-card.premium .cta-button {
+            background: white;
+            color: var(--primary-color);
+        }
+
+        /* Comparison Table */
+        .comparison-section {
+            padding: 60px 2rem;
+            background: white;
+        }
+
+        .comparison-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .comparison-section h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 3rem;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .comparison-table th {
+            background: var(--primary-color);
+            color: white;
+            padding: 1.5rem 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .comparison-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .table-check {
+            color: var(--success);
+            font-size: 1.5rem;
+        }
+
+        .table-x {
+            color: #ff4444;
+            font-size: 1.5rem;
+        }
+
+        /* FAQ Section */
+        .faq-section {
+            padding: 60px 2rem;
+            background: var(--bg-color);
+        }
+
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-section h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 3rem;
+        }
+
+        .faq-item {
+            background: white;
+            margin-bottom: 1rem;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .faq-question {
+            padding: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .faq-question:hover {
+            background: #f8f9fa;
+        }
+
+        .faq-answer {
+            padding: 0 1.5rem;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 200px;
+            padding: 0 1.5rem 1.5rem;
+        }
+
+        .faq-icon {
+            transition: transform 0.3s;
+        }
+
+        .faq-item.active .faq-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Trust Section */
+        .trust-section {
+            padding: 60px 2rem;
+            background: white;
+            text-align: center;
+        }
+
+        .trust-badges {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .trust-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .trust-icon {
+            font-size: 2.5rem;
+        }
+
+        /* Footer */
+        footer {
+            padding: 60px 2rem 40px;
+            background: #1a1a1a;
+            color: white;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-section h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--secondary-color);
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-section a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .footer-section a:hover {
+            opacity: 1;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #333;
+            padding-top: 2rem;
+            text-align: center;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .pricing-hero h1 {
+                font-size: 2rem;
+            }
+
+            .pricing-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-card.premium {
+                transform: scale(1);
+            }
+
+            .comparison-table {
+                font-size: 0.875rem;
+            }
+
+            .comparison-table th,
+            .comparison-table td {
+                padding: 0.75rem 0.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <span>🌐</span>
+                <span>LexiFlow</span>
+            </a>
+            <div class="nav-links">
+                <a href="index.html">Accueil</a>
+                <a href="features.html">Fonctionnalités</a>
+                <a href="pricing.html" style="color: var(--primary-color); font-weight: bold;">Tarifs</a>
+                <a href="contact.html">Contact</a>
+                <a href="coming-soon.html" class="cta-button" style="background: var(--secondary-color); color: var(--primary-color); padding: 0.75rem 1.5rem; border-radius: 50px; text-decoration: none; font-weight: bold;">Early Bird -40%</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Pricing Hero -->
+    <section class="pricing-hero">
+        <h1>Choisissez le Plan Parfait pour Vous</h1>
+        <p>Commencez gratuitement, passez au Premium quand vous êtes prêt</p>
+        <div class="early-bird-banner">
+            🐦 OFFRE EARLY BIRD : -40% sur Premium (Places limitées : 998/1000)
+        </div>
+    </section>
+
+    <!-- Pricing Toggle -->
+    <div class="pricing-toggle">
+        <span>Mensuel</span>
+        <div class="toggle-switch" id="billingToggle">
+            <div class="toggle-slider"></div>
+        </div>
+        <span>Annuel</span>
+        <span class="save-badge">Économisez 17%</span>
+    </div>
+
+    <!-- Pricing Cards -->
+    <section class="pricing-section">
+        <div class="pricing-cards">
+            <!-- Free Plan -->
+            <div class="pricing-card">
+                <h2 class="plan-name">LexiFlow Gratuit</h2>
+                <p style="opacity: 0.8;">Parfait pour découvrir LexiFlow</p>
+                <div class="price-container">
+                    <div class="price">0€</div>
+                    <div class="price-period">pour toujours</div>
+                </div>
+                <ul class="features-list">
+                    <li><span class="check-icon">✓</span> Traductions instantanées illimitées</li>
+                    <li><span class="check-icon">✓</span> 50 flashcards maximum</li>
+                    <li><span class="check-icon">✓</span> 100 caractères par traduction</li>
+                    <li><span class="check-icon">✓</span> Google Translate & MyMemory</li>
+                    <li><span class="check-icon">✓</span> Historique local</li>
+                    <li><span class="x-icon">✗</span> DeepSeek AI</li>
+                    <li><span class="x-icon">✗</span> Mode Pratique</li>
+                    <li><span class="x-icon">✗</span> Prononciation audio</li>
+                    <li><span class="x-icon">✗</span> Synchronisation cloud</li>
+                </ul>
+                <a href="#" class="cta-button secondary">Installer Gratuitement</a>
+            </div>
+
+            <!-- Premium Plan -->
+            <div class="pricing-card premium">
+                <div class="popular-badge">🔥 LE PLUS POPULAIRE</div>
+                <h2 class="plan-name">LexiFlow Premium</h2>
+                <p style="opacity: 0.9;">Pour les apprenants sérieux</p>
+                <div class="price-container">
+                    <div class="old-price">4.99€</div>
+                    <div class="price" id="premiumPrice">2.99€</div>
+                    <div class="price-period" id="pricePeriod">/mois</div>
+                </div>
+                <ul class="features-list">
+                    <li><span class="check-icon">✓</span> <strong>Tout du plan gratuit</strong></li>
+                    <li><span class="check-icon">✓</span> <strong>200 flashcards</strong> (4x plus !)</li>
+                    <li><span class="check-icon">✓</span> <strong>350 caractères</strong> par traduction</li>
+                    <li><span class="check-icon">✓</span> <strong>DeepSeek AI</strong> ultra-précis</li>
+                    <li><span class="check-icon">✓</span> <strong>Mode Pratique</strong> interactif</li>
+                    <li><span class="check-icon">✓</span> <strong>Prononciation audio</strong> native</li>
+                    <li><span class="check-icon">✓</span> <strong>Synchronisation cloud</strong></li>
+                    <li><span class="check-icon">✓</span> <strong>Support prioritaire</strong> 24h</li>
+                    <li><span class="check-icon">✓</span> <strong>Nouvelles features</strong> en avant-première</li>
+                </ul>
+                <button class="cta-button" onclick="subscribePremium()">
+                    Commencer l'Essai Gratuit
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Comparison Table -->
+    <section class="comparison-section">
+        <div class="comparison-container">
+            <h2>Comparaison Détaillée</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Fonctionnalités</th>
+                        <th>Gratuit</th>
+                        <th style="background: var(--secondary-color); color: var(--primary-color);">Premium</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Traductions</strong></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Nombre de traductions</td>
+                        <td>Illimitées</td>
+                        <td>Illimitées</td>
+                    </tr>
+                    <tr>
+                        <td>Limite de caractères</td>
+                        <td>100</td>
+                        <td><strong>350</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Services de traduction</td>
+                        <td>Google, MyMemory</td>
+                        <td><strong>DeepSeek AI + tous</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Traduction de pages entières</td>
+                        <td><span class="table-x">✗</span></td>
+                        <td><span class="table-check">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Apprentissage</strong></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Nombre de flashcards</td>
+                        <td>50</td>
+                        <td><strong>200</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Mode Pratique</td>
+                        <td><span class="table-x">✗</span></td>
+                        <td><span class="table-check">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td>Révision espacée</td>
+                        <td><span class="table-x">✗</span></td>
+                        <td><span class="table-check">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td>Statistiques d'apprentissage</td>
+                        <td>Basiques</td>
+                        <td><strong>Avancées</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Fonctionnalités</strong></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Prononciation audio</td>
+                        <td><span class="table-x">✗</span></td>
+                        <td><span class="table-check">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td>Synchronisation multi-appareils</td>
+                        <td><span class="table-x">✗</span></td>
+                        <td><span class="table-check">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td>Export des données</td>
+                        <td><span class="table-x">✗</span></td>
+                        <td><span class="table-check">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td>Support client</td>
+                        <td>Email (48h)</td>
+                        <td><strong>Prioritaire (24h)</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <div class="faq-container">
+            <h2>Questions Fréquentes sur les Tarifs</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>Puis-je essayer Premium gratuitement ?</span>
+                    <span class="faq-icon">▼</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Oui ! Nous offrons un essai gratuit de 7 jours pour découvrir toutes les fonctionnalités Premium. Une carte bancaire est requise mais vous pouvez annuler à tout moment pendant l'essai.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>Qu'est-ce que l'offre Early Bird ?</span>
+                    <span class="faq-icon">▼</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Les 1000 premiers utilisateurs bénéficient d'une réduction de 40% à vie ! Vous payez seulement 2.99€/mois au lieu de 4.99€, pour toujours. Il reste actuellement 998 places.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>Puis-je annuler à tout moment ?</span>
+                    <span class="faq-icon">▼</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Absolument ! Vous pouvez annuler votre abonnement à tout moment depuis votre dashboard. Vous conserverez l'accès Premium jusqu'à la fin de votre période de facturation.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>Comment fonctionne DeepSeek AI ?</span>
+                    <span class="faq-icon">▼</span>
+                </div>
+                <div class="faq-answer">
+                    <p>DeepSeek AI utilise l'intelligence artificielle avancée pour comprendre le contexte et fournir des traductions plus précises et naturelles que les services traditionnels. C'est particulièrement utile pour les expressions idiomatiques et le langage technique.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>Y a-t-il une politique de remboursement ?</span>
+                    <span class="faq-icon">▼</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Avec notre essai gratuit de 7 jours, vous avez tout le temps de tester LexiFlow Premium. Après l'essai, les paiements ne sont pas remboursables. Nous vous encourageons à profiter pleinement de la période d'essai.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trust Section -->
+    <section class="trust-section">
+        <h2>Pourquoi nous faire confiance ?</h2>
+        <div class="trust-badges">
+            <div class="trust-badge">
+                <div class="trust-icon">🔒</div>
+                <strong>Paiement Sécurisé</strong>
+                <p>Via Stripe</p>
+            </div>
+            <div class="trust-badge">
+                <div class="trust-icon">🛡️</div>
+                <strong>Données Protégées</strong>
+                <p>Chiffrement SSL</p>
+            </div>
+            <div class="trust-badge">
+                <div class="trust-icon">❌</div>
+                <strong>Annulation Facile</strong>
+                <p>Sans engagement</p>
+            </div>
+            <div class="trust-badge">
+                <div class="trust-icon">💬</div>
+                <strong>Support Réactif</strong>
+                <p>Réponse en 24h</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-grid">
+                <!-- À propos -->
+                <div class="footer-section">
+                    <h3>À propos de LexiFlow</h3>
+                    <p style="opacity: 0.8; line-height: 1.6;">Extension Chrome révolutionnaire pour la traduction instantanée et l'apprentissage des langues avec flashcards intelligentes.</p>
+                </div>
+                
+                <!-- Liens rapides -->
+                <div class="footer-section">
+                    <h3>Liens Rapides</h3>
+                    <ul>
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="pricing.html">Tarifs</a></li>
+                        <li><a href="coming-soon.html" style="color: var(--secondary-color);">🐦 Offre Early Bird</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Légal -->
+                <div class="footer-section">
+                    <h3>Informations Légales</h3>
+                    <ul>
+                        <li><a href="terms.html">Conditions d'utilisation</a></li>
+                        <li><a href="privacy.html">Politique de confidentialité</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Contact -->
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <p style="opacity: 0.8; margin-bottom: 0.5rem;">Email: support@lexiflow.com</p>
+                    <p style="opacity: 0.8;">Réponse sous 24-48h</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p style="opacity: 0.6; margin-bottom: 0.5rem;">&copy; 2025 LexiFlow. Tous droits réservés.</p>
+                <p style="opacity: 0.4; font-size: 0.875rem;">Fait avec ❤️ pour briser les barrières linguistiques</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Toggle billing period
+        const billingToggle = document.getElementById('billingToggle');
+        const premiumPrice = document.getElementById('premiumPrice');
+        const pricePeriod = document.getElementById('pricePeriod');
+        let isAnnual = false;
+
+        billingToggle.addEventListener('click', () => {
+            isAnnual = !isAnnual;
+            billingToggle.classList.toggle('annual');
+            
+            if (isAnnual) {
+                premiumPrice.textContent = '29.90€';
+                pricePeriod.textContent = '/an';
+            } else {
+                premiumPrice.textContent = '2.99€';
+                pricePeriod.textContent = '/mois';
+            }
+        });
+
+        // FAQ Toggle
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                const faqItem = question.parentElement;
+                faqItem.classList.toggle('active');
+                
+                // Close other items
+                document.querySelectorAll('.faq-item').forEach(item => {
+                    if (item !== faqItem) {
+                        item.classList.remove('active');
+                    }
+                });
+            });
+        });
+
+        // Subscribe to Premium (temporary - redirect to coming soon)
+        function subscribePremium() {
+            // TODO: Intégrer avec Stripe Checkout
+            window.location.href = 'coming-soon.html';
+        }
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

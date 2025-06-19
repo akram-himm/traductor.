@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LexiFlow - Extension Chrome de Traduction Instantanée avec IA</title>
+    <meta name="description" content="Traduisez instantanément n'importe quel mot sur le web. Flashcards intelligentes, 11 langues, IA DeepSeek. Essayez gratuitement !">
+    <meta name="keywords" content="lexiflow, extension chrome, traduction, flashcards, deepseek ai, apprentissage langues">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #0A2C4D;
+            --secondary-color: #FFD700;
+            --accent-color: #00C896;
+            --text-color: #333333;
+            --bg-color: #F8F9FA;
+            --white: #FFFFFF;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        nav {
+            background: var(--white);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-color);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        .cta-button {
+            background: var(--secondary-color);
+            color: var(--primary-color);
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 120px 2rem 80px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            text-align: center;
+        }
+
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            animation: fadeInUp 0.8s;
+        }
+
+        .hero .subtitle {
+            font-size: 1.25rem;
+            color: #666;
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s 0.2s both;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s 0.4s both;
+        }
+
+        .early-bird-badge {
+            background: var(--accent-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 80px 2rem;
+            background: var(--white);
+        }
+
+        .features-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .features h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 3rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 2rem;
+            border-radius: 10px;
+            transition: transform 0.3s;
+            background: var(--bg-color);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        /* How it Works */
+        .how-it-works {
+            padding: 80px 2rem;
+            background: var(--bg-color);
+        }
+
+        .how-it-works h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 3rem;
+        }
+
+        .steps {
+            max-width: 800px;
+            margin: 0 auto;
+            display: grid;
+            gap: 2rem;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .step-number {
+            background: var(--secondary-color);
+            color: var(--primary-color);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        /* Pricing Preview */
+        .pricing-preview {
+            padding: 80px 2rem;
+            background: var(--white);
+            text-align: center;
+        }
+
+        .pricing-preview h2 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 3rem;
+        }
+
+        .pricing-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .pricing-card {
+            background: var(--bg-color);
+            padding: 2rem;
+            border-radius: 10px;
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .pricing-card.premium {
+            border: 3px solid var(--secondary-color);
+        }
+
+        .pricing-card:hover {
+            transform: scale(1.05);
+        }
+
+        .price {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 1rem 0;
+        }
+
+        .price-period {
+            font-size: 1rem;
+            color: #666;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 80px 2rem;
+            background: var(--primary-color);
+            color: white;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Footer */
+        footer {
+            padding: 60px 2rem 40px;
+            background: #1a1a1a;
+            color: white;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-section h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--secondary-color);
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-section a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .footer-section a:hover {
+            opacity: 1;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #333;
+            padding-top: 2rem;
+            text-align: center;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        /* Mobile Menu */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero .subtitle {
+                font-size: 1rem;
+            }
+
+            .features h2, .how-it-works h2, .pricing-preview h2 {
+                font-size: 2rem;
+            }
+
+            .step {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .pricing-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <span>🌐</span>
+                <span>LexiFlow</span>
+            </a>
+            <div class="nav-links">
+                <a href="index.html" style="color: var(--primary-color); font-weight: bold;">Accueil</a>
+                <a href="features.html">Fonctionnalités</a>
+                <a href="pricing.html">Tarifs</a>
+                <a href="contact.html">Contact</a>
+                <a href="coming-soon.html" class="cta-button">Early Bird -40%</a>
+            </div>
+            <button class="mobile-menu-toggle">☰</button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <h1>Traduisez, Apprenez, Maîtrisez</h1>
+            <p class="subtitle">
+                L'extension Chrome qui révolutionne la traduction instantanée<br>
+                avec des flashcards intelligentes et l'IA DeepSeek
+            </p>
+            <div class="hero-cta">
+                <a href="#" class="cta-button">Ajouter à Chrome - C'est Gratuit</a>
+                <a href="#features" class="cta-button" style="background: transparent; border: 2px solid var(--primary-color); color: var(--primary-color);">
+                    Découvrir LexiFlow
+                </a>
+            </div>
+            <div class="early-bird-badge">
+                🐦 Offre Early Bird : Premium à 2.99€/mois (au lieu de 4.99€)
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="features-container">
+            <h2>Pourquoi Choisir LexiFlow ?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Traduction Instantanée</h3>
+                    <p>Un clic sur n'importe quel mot et obtenez sa traduction dans 11 langues différentes</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📚</div>
+                    <h3>Flashcards Intelligentes</h3>
+                    <p>Créez automatiquement des cartes de révision pour mémoriser votre vocabulaire</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🧠</div>
+                    <h3>IA DeepSeek</h3>
+                    <p>Traductions contextuelles ultra-précises grâce à l'intelligence artificielle avancée</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌍</div>
+                    <h3>11 Langues</h3>
+                    <p>Français, Anglais, Espagnol, Allemand, Italien, Arabe, Russe, Japonais et plus</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it Works -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="features-container">
+            <h2>Comment ça Marche ?</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div>
+                        <h3>Installez l'Extension</h3>
+                        <p>Ajoutez LexiFlow à Chrome en un clic. C'est gratuit et prend moins de 30 secondes.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div>
+                        <h3>Sélectionnez un Mot</h3>
+                        <p>Sur n'importe quelle page web, cliquez sur un mot pour voir sa traduction instantanément.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div>
+                        <h3>Apprenez et Mémorisez</h3>
+                        <p>Sauvegardez les mots en flashcards et révisez-les pour améliorer votre vocabulaire.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Preview -->
+    <section class="pricing-preview" id="pricing">
+        <div class="features-container">
+            <h2>Choisissez Votre Plan</h2>
+            <div class="pricing-cards">
+                <div class="pricing-card">
+                    <h3>LexiFlow Gratuit</h3>
+                    <div class="price">
+                        0€
+                        <span class="price-period">pour toujours</span>
+                    </div>
+                    <ul style="list-style: none; padding: 0; margin: 2rem 0;">
+                        <li>✅ Traductions illimitées</li>
+                        <li>✅ 50 flashcards</li>
+                        <li>✅ 100 caractères max</li>
+                        <li>✅ Google Translate</li>
+                        <li>❌ DeepSeek AI</li>
+                        <li>❌ Mode Pratique</li>
+                    </ul>
+                    <a href="#" class="cta-button" style="background: #ccc; color: #333;">Commencer</a>
+                </div>
+                <div class="pricing-card premium">
+                    <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: var(--secondary-color); padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.8rem;">
+                        🐦 EARLY BIRD -40%
+                    </div>
+                    <h3>LexiFlow Premium</h3>
+                    <div class="price">
+                        2.99€
+                        <span class="price-period">/mois</span>
+                    </div>
+                    <p style="text-decoration: line-through; color: #999;">4.99€/mois</p>
+                    <ul style="list-style: none; padding: 0; margin: 2rem 0;">
+                        <li>✅ Tout du plan gratuit</li>
+                        <li>✅ 200 flashcards</li>
+                        <li>✅ 350 caractères max</li>
+                        <li>✅ DeepSeek AI</li>
+                        <li>✅ Mode Pratique</li>
+                        <li>✅ Prononciation audio</li>
+                        <li>✅ Synchronisation cloud</li>
+                        <li>✅ Support prioritaire</li>
+                    </ul>
+                    <a href="coming-soon.html" class="cta-button">Profiter de l'Offre</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="features-container">
+            <h2>Prêt à Briser les Barrières Linguistiques ?</h2>
+            <p>Rejoignez des milliers d'utilisateurs qui apprennent plus vite avec LexiFlow</p>
+            <a href="coming-soon.html" class="cta-button">
+                Réserver Ma Place Early Bird
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-grid">
+                <!-- À propos -->
+                <div class="footer-section">
+                    <h3>À propos de LexiFlow</h3>
+                    <p style="opacity: 0.8; line-height: 1.6;">Extension Chrome révolutionnaire pour la traduction instantanée et l'apprentissage des langues avec flashcards intelligentes.</p>
+                </div>
+                
+                <!-- Liens rapides -->
+                <div class="footer-section">
+                    <h3>Liens Rapides</h3>
+                    <ul>
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="pricing.html">Tarifs</a></li>
+                        <li><a href="coming-soon.html" style="color: var(--secondary-color);">🐦 Offre Early Bird</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Légal -->
+                <div class="footer-section">
+                    <h3>Informations Légales</h3>
+                    <ul>
+                        <li><a href="terms.html">Conditions d'utilisation</a></li>
+                        <li><a href="privacy.html">Politique de confidentialité</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Contact -->
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <p style="opacity: 0.8; margin-bottom: 0.5rem;">Email: support@lexiflow.com</p>
+                    <p style="opacity: 0.8;">Réponse sous 24-48h</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p style="opacity: 0.6; margin-bottom: 0.5rem;">&copy; 2025 LexiFlow. Tous droits réservés.</p>
+                <p style="opacity: 0.4; font-size: 0.875rem;">Fait avec ❤️ pour briser les barrières linguistiques</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Mobile menu toggle
+        const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+        const navLinks = document.querySelector('.nav-links');
+        
+        mobileMenuToggle.addEventListener('click', () => {
+            navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+            navLinks.style.position = 'absolute';
+            navLinks.style.top = '100%';
+            navLinks.style.left = '0';
+            navLinks.style.right = '0';
+            navLinks.style.background = 'white';
+            navLinks.style.flexDirection = 'column';
+            navLinks.style.padding = '2rem';
+            navLinks.style.boxShadow = '0 5px 20px rgba(0,0,0,0.1)';
+        });
+
+        // Add animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animation = 'fadeInUp 0.8s both';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.feature-card, .step, .pricing-card').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
