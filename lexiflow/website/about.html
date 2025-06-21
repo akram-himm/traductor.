@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>À Propos - LexiFlow | Notre Mission</title>
+    <meta name="description" content="Découvrez l'histoire de LexiFlow, notre mission pour briser les barrières linguistiques et notre vision pour l'apprentissage des langues.">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
+    
+    <!-- CSS Unifié -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Styles spécifiques à la page about -->
+    <style>
+        /* Mission Section */
+        .mission-section {
+            padding: 80px 0;
+            background: var(--white);
+        }
+
+        .mission-container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .mission-container h2 {
+            font-size: 2.5rem;
+            color: var(--primary-blue);
+            margin-bottom: 2rem;
+        }
+
+        .mission-text {
+            font-size: 1.25rem;
+            line-height: 1.8;
+            color: var(--text-gray);
+            margin-bottom: 3rem;
+        }
+
+        /* Values Grid */
+        .values-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 3rem;
+            margin-top: 4rem;
+        }
+
+        .value-card {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .value-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .value-card h3 {
+            color: var(--primary-blue);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .value-card p {
+            color: var(--text-gray);
+            line-height: 1.6;
+        }
+
+        /* Story Section */
+        .story-section {
+            padding: 80px 0;
+            background: var(--bg-light);
+        }
+
+        .story-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .story-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .story-text h2 {
+            font-size: 2.5rem;
+            color: var(--primary-blue);
+            margin-bottom: 2rem;
+        }
+
+        .story-text p {
+            color: var(--text-gray);
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+        }
+
+        .story-image {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: center;
+            color: white;
+        }
+
+        .story-image-icon {
+            font-size: 8rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Team Section */
+        .team-section {
+            padding: 80px 0;
+            background: var(--white);
+        }
+
+        .team-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .team-container h2 {
+            font-size: 2.5rem;
+            color: var(--primary-blue);
+            margin-bottom: 3rem;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .team-member {
+            text-align: center;
+        }
+
+        .member-avatar {
+            width: 150px;
+            height: 150px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: white;
+        }
+
+        .member-name {
+            font-size: 1.25rem;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .member-role {
+            color: var(--text-gray);
+            font-style: italic;
+        }
+
+        /* Stats Section */
+        .stats-section {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 60px 0;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 3rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .stat-item h3 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-item p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Timeline */
+        .timeline {
+            max-width: 800px;
+            margin: 3rem auto;
+            position: relative;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 100%;
+            background: #e2e8f0;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding: 2rem 0;
+        }
+
+        .timeline-item:nth-child(odd) {
+            text-align: right;
+            padding-right: calc(50% + 30px);
+        }
+
+        .timeline-item:nth-child(even) {
+            text-align: left;
+            padding-left: calc(50% + 30px);
+        }
+
+        .timeline-marker {
+            position: absolute;
+            top: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 20px;
+            background: var(--accent-yellow);
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .timeline-date {
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-content {
+            color: var(--text-gray);
+        }
+
+        /* Contact CTA */
+        .contact-cta-section {
+            padding: 80px 0;
+            background: var(--bg-light);
+            text-align: center;
+        }
+
+        .contact-cta-box {
+            background: white;
+            padding: 4rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .contact-cta-box h2 {
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+        }
+
+        .contact-cta-box p {
+            color: var(--text-gray);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .story-content {
+                grid-template-columns: 1fr;
+            }
+
+            .timeline-item:nth-child(odd),
+            .timeline-item:nth-child(even) {
+                text-align: left;
+                padding-left: 50px;
+                padding-right: 0;
+            }
+
+            .timeline::before {
+                left: 20px;
+            }
+
+            .timeline-marker {
+                left: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Unifiée -->
+    <nav class="nav" role="navigation" aria-label="Navigation principale">
+        <div class="nav-container">
+            <a href="index.html" class="logo" aria-label="LexiFlow - Accueil">
+                <span aria-hidden="true">🌐</span>
+                <span>LexiFlow</span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html">Accueil</a></li>
+                <li><a href="features.html">Fonctionnalités</a></li>
+                <li><a href="pricing.html">Tarifs</a></li>
+                <li><a href="faq.html">FAQ</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <a href="coming-soon.html" class="cta-nav">Early Bird -40%</a>
+            <button class="mobile-menu" id="mobileMenu" aria-label="Menu mobile" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Header Unifié Bleu Marine -->
+    <header class="page-header">
+        <div class="header-content">
+            <h1>À Propos de LexiFlow</h1>
+            <p>Notre mission pour briser les barrières linguistiques</p>
+        </div>
+    </header>
+
+    <main>
+        <!-- Mission Section -->
+        <section class="mission-section animate-on-scroll">
+            <div class="mission-container">
+                <h2>Notre Mission</h2>
+                <p class="mission-text">
+                    Chez LexiFlow, nous croyons que l'apprentissage des langues doit être <strong>fluide et naturel</strong>. 
+                    Notre mission est d'éliminer les interruptions inutiles lors de la lecture en langue étrangère 
+                    et de transformer chaque traduction en connaissance durable grâce à la mémorisation active.
+                </p>
+                
+                <div class="values-grid">
+                    <div class="value-card">
+                        <span class="value-icon">⚡</span>
+                        <h3>Fluidité</h3>
+                        <p>Ne jamais interrompre votre lecture. La traduction vient à vous, pas l'inverse.</p>
+                    </div>
+                    <div class="value-card">
+                        <span class="value-icon">🧠</span>
+                        <h3>Mémorisation</h3>
+                        <p>Chaque traduction devient une flashcard. Plus jamais de mots oubliés.</p>
+                    </div>
+                    <div class="value-card">
+                        <span class="value-icon">🎯</span>
+                        <h3>Efficacité</h3>
+                        <p>Apprendre en contexte, au moment exact où vous rencontrez le mot.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Story Section -->
+        <section class="story-section animate-on-scroll">
+            <div class="story-container">
+                <div class="story-content">
+                    <div class="story-text">
+                        <h2>Notre Histoire</h2>
+                        <p>
+                            LexiFlow est né d'une double frustration que nous avons tous vécue : <strong>pourquoi 
+                            devons-nous interrompre notre lecture</strong> pour aller traduire un mot ailleurs ? 
+                            Copier, ouvrir un nouvel onglet, coller, traduire... Cette interruption brise 
+                            complètement le flux de lecture.
+                        </p>
+                        <p>
+                            Mais surtout, <strong>pourquoi traduire si on va l'oublier</strong> dans quelques minutes ? 
+                            Combien de mots avez-vous traduits dans votre vie pour les oublier aussitôt ? 
+                            C'est du temps perdu et des opportunités d'apprentissage gâchées.
+                        </p>
+                        <p>
+                            C'est pourquoi LexiFlow combine <strong>traduction instantanée</strong> (sans quitter 
+                            votre page) et <strong>flashcards intelligentes</strong> pour transformer chaque 
+                            traduction en apprentissage durable. Traduisez, mémorisez, maîtrisez - le tout 
+                            naturellement pendant votre navigation.
+                        </p>
+                    </div>
+                    <div class="story-image">
+                        <div class="story-image-icon">💡</div>
+                        <h3>La solution 2-en-1</h3>
+                        <p style="font-size: 0.9rem; opacity: 0.9; margin-top: 1rem;">
+                            Traduire sans interrompre<br>
+                            Mémoriser sans oublier
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="stats-section">
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <h3>11</h3>
+                        <p>Langues supportées</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>50K+</h3>
+                        <p>Traductions par jour</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>98%</h3>
+                        <p>Satisfaction utilisateur</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>24h</h3>
+                        <p>Support réactif</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Timeline Section -->
+        <section class="section section-white animate-on-scroll">
+            <div class="container">
+                <h2 style="text-align: center; margin-bottom: 3rem; color: var(--primary-blue);">Le Parcours de LexiFlow</h2>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-date">Le Problème</div>
+                        <div class="timeline-content">Frustration : interrompre la lecture + oublier les traductions</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-date">L'Idée</div>
+                        <div class="timeline-content">Combiner traduction instantanée et mémorisation active</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-date">Le Prototype</div>
+                        <div class="timeline-content">Extension Chrome avec bouton flottant + flashcards</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-date">L'Innovation</div>
+                        <div class="timeline-content">Intégration DeepSeek AI pour contexte parfait</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-date">Aujourd'hui</div>
+                        <div class="timeline-content">Des milliers d'utilisateurs apprennent sans interruption</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Team Section -->
+        <section class="team-section animate-on-scroll">
+            <div class="team-container">
+                <h2>L'Équipe LexiFlow</h2>
+                <p style="color: var(--text-gray); margin-bottom: 3rem; font-size: 1.1rem;">
+                    Une équipe passionnée dédiée à votre réussite linguistique
+                </p>
+                <div class="team-grid">
+                    <div class="team-member">
+                        <div class="member-avatar">👨‍💻</div>
+                        <h3 class="member-name">Fondateur</h3>
+                        <p class="member-role">Vision & Développement</p>
+                    </div>
+                    <div class="team-member">
+                        <div class="member-avatar">👩‍🎨</div>
+                        <h3 class="member-name">Designer UX/UI</h3>
+                        <p class="member-role">Expérience Utilisateur</p>
+                    </div>
+                    <div class="team-member">
+                        <div class="member-avatar">👨‍🔬</div>
+                        <h3 class="member-name">Expert IA</h3>
+                        <p class="member-role">DeepSeek Integration</p>
+                    </div>
+                    <div class="team-member">
+                        <div class="member-avatar">👩‍💼</div>
+                        <h3 class="member-name">Support Client</h3>
+                        <p class="member-role">Votre Satisfaction</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact CTA -->
+        <section class="contact-cta-section">
+            <div class="container">
+                <div class="contact-cta-box animate-on-scroll">
+                    <h2>Rejoignez l'Aventure LexiFlow</h2>
+                    <p>
+                        Que vous soyez utilisateur, investisseur ou simplement curieux, 
+                        nous serions ravis d'échanger avec vous.
+                    </p>
+                    <a href="contact.html" class="cta-button primary">Contactez-nous</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer Unifié -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <!-- À propos -->
+                <div class="footer-section">
+                    <h3>À propos de LexiFlow</h3>
+                    <p>Extension Chrome révolutionnaire pour la traduction instantanée et l'apprentissage des langues avec flashcards intelligentes.</p>
+                </div>
+                
+                <!-- Liens rapides -->
+                <div class="footer-section">
+                    <h3>Liens Rapides</h3>
+                    <ul>
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="features.html">Fonctionnalités</a></li>
+                        <li><a href="pricing.html">Tarifs</a></li>
+                        <li><a href="faq.html">FAQ</a></li>
+                        <li><a href="coming-soon.html" class="highlight">🐦 Offre Early Bird</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Légal -->
+                <div class="footer-section">
+                    <h3>Informations Légales</h3>
+                    <ul>
+                        <li><a href="terms.html">Conditions d'utilisation</a></li>
+                        <li><a href="privacy.html">Politique de confidentialité</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Contact -->
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <p>Email: support@lexiflow.com</p>
+                    <p>Réponse sous 24-48h</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 LexiFlow. Tous droits réservés.</p>
+                <p>Fait avec ❤️ pour briser les barrières linguistiques</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts Communs -->
+    <script>
+        // Mobile menu toggle
+        const mobileMenu = document.getElementById('mobileMenu');
+        const navLinks = document.getElementById('navLinks');
+        
+        mobileMenu.addEventListener('click', () => {
+            const isExpanded = mobileMenu.getAttribute('aria-expanded') === 'true';
+            mobileMenu.setAttribute('aria-expanded', !isExpanded);
+            navLinks.classList.toggle('active');
+        });
+
+        // Fermer le menu mobile en cliquant sur un lien
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+                mobileMenu.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        // Smooth scroll pour les ancres
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Intersection Observer pour les animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animated');
+                }
+            });
+        }, observerOptions);
+
+        // Observer tous les éléments avec la classe animate-on-scroll
+        document.querySelectorAll('.animate-on-scroll').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
