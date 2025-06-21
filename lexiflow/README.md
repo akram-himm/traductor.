@@ -19,18 +19,18 @@
 - **Flashcards intelligentes** pour mémoriser le vocabulaire
 - **Modèle Freemium** avec IA avancée en Premium
 
-## 🚀 État du projet (Mise à jour : 18 juin 2025)
+## 🚀 État du projet (Décembre 2024)
 
 ### Version actuelle : 0.8.5
 | Phase | Statut | Progression |
 |-------|---------|-------------|
 | Phase 1 - Extension Base | ✅ Complété | 100% |
-| Phase 2 - Backend & Auth | ✅ Complété | **100%** |
-| Phase 3 - Site Web | 🚧 En cours | **15%** |
+| Phase 2 - Backend & Auth | ✅ Complété | 85% |
+| Phase 3 - Site Web | 🚧 En cours | **70%** |
 | Phase 4 - Extension Premium | 📅 Planifié | 0% |
 | Phase 5 - Lancement | 📅 Août 2025 | 0% |
 
-### 🏆 Ce qui est fait (18 juin 2025)
+### 🏆 Ce qui est fait
 - ✅ Extension Chrome 100% fonctionnelle (version gratuite)
 - ✅ Système de traduction instantanée (11 langues)
 - ✅ Flashcards avec limites (50/200)
@@ -41,21 +41,35 @@
 - ✅ **Tous les tests passent au vert** 🎉
 - ✅ Serveur de développement opérationnel
 - ✅ **Mode développement sans base de données**
-- ✅ **Page Coming Soon fonctionnelle** 🆕
-- ✅ **Système de liste d'attente opérationnel** 🆕
-- ✅ **API waitlist avec stockage JSON** 🆕
+- ✅ **7 pages web sur 10 complétées**
+
+### 🚧 État actuel du site web
+
+#### Pages complétées (7/10) :
+- ✅ `index.html` - Landing page
+- ✅ `features.html` - Fonctionnalités détaillées
+- ✅ `pricing.html` - Page des tarifs
+- ✅ `faq.html` - Questions fréquentes (26 questions)
+- ✅ `coming-soon.html` - Page Early Bird
+- ✅ `privacy.html` - Politique de confidentialité
+- ✅ `terms.html` - Conditions d'utilisation
+
+#### Pages manquantes (3/10) :
+- ❌ `contact.html` - Formulaire de contact
+- ❌ `about.html` - À propos
+- ❌ `support.html` - Base de connaissances (optionnel)
+
+#### Problèmes identifiés :
+- 🐛 Navigation non uniforme entre les pages
+- 🐛 Fichier CSS vide (`css/styles.css`)
+- 🐛 Certains boutons CTA inconsistants
 
 ### 🎯 Prochaines priorités
-1. **🌐 Terminer le site web** (85% restant)
-   - ✅ Page Coming Soon LIVE
-   - ⏳ Landing page attractive
-   - ⏳ Pages Features, Pricing, FAQ
-   - ⏳ Dashboard utilisateur
-2. **🚀 Déployer en production**
-   - Backend sur Railway/Render
-   - Site sur Vercel/Netlify
-3. **💰 Lancer la campagne Early Bird** (2.99€/mois)
-4. **✨ Connecter l'extension au backend**
+1. **Uniformiser la navigation** sur toutes les pages
+2. **Créer `contact.html`** avec formulaire
+3. **Finaliser les 3 dernières pages**
+4. **Déployer le backend** en production
+5. **Lancer la campagne Early Bird** (2.99€/mois)
 
 ## 💰 Modèle économique
 
@@ -74,6 +88,23 @@
 ### 🐦 Offre Early Bird
 **2.99€/mois** à vie pour les 1000 premiers utilisateurs (au lieu de 4.99€)
 
+## 🎯 Stratégies de monétisation explorées
+
+### Option A : B2B Entreprises (Recommandé)
+- **199€/mois** par entreprise
+- Cibles : Agences de traduction, cabinets d'avocats internationaux
+- Potentiel : 5 clients = 1000€/mois
+
+### Option B : Lifetime Deals
+- **500€** accès à vie
+- Plateformes : AppSumo, Gumroad
+- Potentiel : 25-50k€ en 30 jours
+
+### Option C : Vente du projet
+- Valeur estimée : **15-25k€** (état actuel)
+- Plateformes : Flippa, MicroAcquire
+- Délai : 2-4 semaines
+
 ## 🛠️ Installation pour développeurs
 
 ### Extension Chrome
@@ -86,7 +117,7 @@ git clone https://github.com/yourusername/lexiflow.git
 - Charger l'extension non empaquetée → Dossier 'extension'
 ```
 
-### Backend (100% complet) 🆕
+### Backend (85% complet)
 ```bash
 # 1. Aller dans le dossier backend
 cd lexiflow/backend
@@ -99,103 +130,49 @@ cp .env.example .env
 
 # 4. Démarrer le serveur
 npm start
-# ou avec un port spécifique
-PORT=3001 npm start
 
 # Le serveur fonctionne sans PostgreSQL en mode dev !
 ```
 
-### Site Web (15% complet) 🆕
+### Site Web
 ```bash
 # 1. Aller dans le dossier website
 cd lexiflow/website
 
-# 2. Lancer le serveur local
-python -m http.server 8000
-
-# 3. Ouvrir dans le navigateur
-http://localhost:8000/coming-soon.html
-```
-
-### Tests Backend
-```bash
-# Lancer tous les tests (100% passent !)
-npm test
-
-# Test API uniquement
-npm run test:api
-
-# Test Stripe webhooks
-npm run test:stripe
+# 2. Ouvrir dans un navigateur
+- Ouvrir index.html directement
+- Ou utiliser un serveur local (Live Server)
 ```
 
 ## 📂 Structure du projet
 
 ```
 lexiflow/
-├── README.md           # Ce fichier
+├── README.md           # Ce fichier (mis à jour)
 ├── extension/          # Extension Chrome (100% fonctionnelle)
 │   └── EXTENSION_GUIDE.md
-├── backend/            # API Node.js (100% complété) 🆕
-│   ├── src/
-│   │   ├── routes/
-│   │   │   └── waitlist.js  # Route liste d'attente 🆕
-│   │   └── app.js           # CORS configuré pour ports 5000 & 8000 🆕
+├── backend/            # API Node.js (85% complété)
 │   └── backend-instructions.md
-├── website/            # Site web (15% complété) 🆕
-│   ├── coming-soon.html     # Page fonctionnelle 🆕
-│   └── WEBSITE-DESC.md
-└── data/               # Données locales 🆕
-    └── waitlist.json   # Liste d'attente (créé automatiquement) 🆕
+└── website/            # Site web (70% complété)
+    ├── WEBSITE-DESC.md # Plan détaillé du site
+    ├── index.html      # ✅ Landing page
+    ├── features.html   # ✅ Fonctionnalités
+    ├── pricing.html    # ✅ Tarifs
+    ├── faq.html        # ✅ FAQ
+    ├── coming-soon.html# ✅ Early Bird
+    ├── privacy.html    # ✅ Confidentialité
+    ├── terms.html      # ✅ CGU
+    ├── contact.html    # ❌ À créer
+    ├── about.html      # ❌ À créer
+    └── support.html    # ❌ À créer (optionnel)
 ```
 
 ## 🏗️ Architecture technique
 
-### Extension (Complète)
-- Manifest V3
-- Content script avec injection
-- 11 langues supportées
-- Système de flashcards local
-
-### Backend (100% complet) 🆕
-- Node.js + Express
-- PostgreSQL + Sequelize (optionnel en dev)
-- JWT Authentication
-- Stripe Payments
-- Mode mock pour développement
-- **API Waitlist fonctionnelle** 🆕
-
-### Site Web (15% complet) 🆕
-- **Coming Soon page** ✅
-- Landing page (À faire)
-- Dashboard utilisateur (À faire)
-- Système de paiement (À faire)
-
-## 🤝 Contribution
-
-Ce projet est actuellement privé. Pour contribuer :
-1. Contactez l'équipe principale
-2. Suivez les conventions de code établies
-3. Testez minutieusement avant chaque PR
-4. Documentez vos modifications
-
-## 🎉 Accomplissements récents (18 juin 2025)
-
-- ✅ Backend 100% fonctionnel
-- ✅ Tous les tests passent avec succès
-- ✅ Mode développement sans base de données
-- ✅ **Page Coming Soon déployée localement** 🆕
-- ✅ **Système de liste d'attente opérationnel** 🆕
-- ✅ **2 premiers inscrits Early Bird !** 🆕
-- ✅ Documentation complète mise à jour
-
-## 📊 Métriques actuelles (18 juin 2025) 🆕
-
-- **Inscrits liste d'attente :** 2
-- **Early Birds réservés :** 2/1000
-- **Backend :** 100% complet
-- **Site web :** 15% complet
-- **Extension :** 100% (version gratuite)
+- **Extension** : Manifest V3, content scripts
+- **Backend** : Node.js, Express, JWT, Stripe
+- **Site web** : HTML/CSS/JS vanilla (simplicité)
+- **Pas de build process** complexe
 
 ## 📊 Métriques de succès visées
 
@@ -203,55 +180,15 @@ Ce projet est actuellement privé. Pour contribuer :
 - **10% de taux de conversion** Free → Premium
 - **4.5+ étoiles** sur Chrome Web Store
 - **Churn rate < 5%** par mois
-- **1000 Early Birds** à 2.99€/mois
+- **100 Early Birds** à 2.99€/mois
 
-## 🚀 Prochaines étapes immédiates 🆕
+## 🎉 Accomplissements récents (Décembre 2024)
 
-1. **Compléter le site web** (1-2 semaines)
-   - Landing page
-   - Pages Features, Pricing, FAQ
-   - Intégration Stripe
-
-2. **Déployer en production** (3-4 jours)
-   - Backend sur Railway/Render
-   - Site sur Vercel
-   - Domaine personnalisé
-
-3. **Connecter extension ↔ backend** (1 semaine)
-   - Authentification dans l'extension
-   - Synchronisation des flashcards
-   - Activation features Premium
-
-## 📝 TODO List - Tâches restantes
-
-### 🔥 Priorité HAUTE (Cette semaine)
-- [ ] **Landing page** - Page d'accueil attractive
-- [ ] **Page Pricing** - Avec intégration Stripe
-- [ ] **Pages légales** - Privacy Policy & Terms (obligatoire)
-- [ ] **Déploiement Coming Soon** - Mettre en ligne pour vrais inscrits
-
-### 📅 Priorité MOYENNE (2 semaines)
-- [ ] **Page Features** - Détailler les fonctionnalités
-- [ ] **Page FAQ** - Questions fréquentes
-- [ ] **Page About** - Histoire de LexiFlow
-- [ ] **Page Contact** - Formulaire de support
-- [ ] **Emails automatiques** - Confirmation d'inscription
-- [ ] **Export CSV** - Liste des inscrits waitlist
-
-### 🔄 Priorité BASSE (1 mois)
-- [ ] **Dashboard utilisateur** - Espace membre
-- [ ] **Connexion Extension ↔ Backend** - Synchronisation
-- [ ] **Mode Premium** dans l'extension
-- [ ] **Tests unitaires** backend
-- [ ] **Documentation API** (Swagger)
-- [ ] **Monitoring** (Sentry, analytics)
-
-### ✅ FAIT Récemment
-- [x] Page Coming Soon (100%)
-- [x] Système liste d'attente
-- [x] API Waitlist fonctionnelle
-- [x] Script démarrage (start-lexiflow.bat)
-- [x] Documentation à jour
+- ✅ Page FAQ complète créée (26 questions détaillées)
+- ✅ Navigation améliorée avec liens FAQ
+- ✅ Structure de site web à 70% complète
+- ✅ Design cohérent sur toutes les pages
+- ✅ Mobile-first responsive design
 
 ## 📞 Contact
 
@@ -269,5 +206,5 @@ Ce projet est actuellement privé. Pour contribuer :
 <div align="center">
   <sub>Fait avec ❤️ pour briser les barrières linguistiques</sub>
   <br>
-  <sub>Dernière mise à jour : 18 juin 2025 - 03h15</sub>
+  <sub>Dernière mise à jour : Décembre 2024</sub>
 </div>
