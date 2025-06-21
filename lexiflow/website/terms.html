@@ -9,86 +9,26 @@
     <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
     
+    <!-- CSS Unifié -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Styles spécifiques aux pages légales -->
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary-color: #0A2C4D;
-            --secondary-color: #FFD700;
-            --text-color: #333333;
-            --bg-color: #F8F9FA;
-            --white: #FFFFFF;
-            --warning: #ff4444;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.8;
-            color: var(--text-color);
-            background: var(--bg-color);
-        }
-
-        /* Navigation */
-        nav {
-            background: var(--white);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--primary-color);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
-
-        .nav-links a {
-            color: var(--text-color);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        /* Content */
         .legal-container {
             max-width: 800px;
-            margin: 100px auto 50px;
-            padding: 0 2rem;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin: 60px auto;
+            padding: 0 20px;
         }
 
         .legal-content {
+            background: var(--white);
             padding: 3rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
         }
 
-        h1 {
-            color: var(--primary-color);
+        .legal-content h1 {
+            color: var(--primary-blue);
             margin-bottom: 1rem;
             font-size: 2.5rem;
         }
@@ -99,48 +39,51 @@
             font-style: italic;
         }
 
-        h2 {
-            color: var(--primary-color);
+        .legal-content h2 {
+            color: var(--primary-blue);
             margin: 2rem 0 1rem;
             font-size: 1.5rem;
         }
 
-        h3 {
-            color: var(--primary-color);
+        .legal-content h3 {
+            color: var(--primary-blue);
             margin: 1.5rem 0 0.5rem;
             font-size: 1.2rem;
         }
 
-        p {
+        .legal-content p {
             margin-bottom: 1rem;
+            line-height: 1.8;
+            color: var(--text-gray);
         }
 
-        ul {
+        .legal-content ul {
             margin: 1rem 0 1rem 2rem;
         }
 
-        li {
+        .legal-content li {
             margin-bottom: 0.5rem;
+            color: var(--text-gray);
         }
 
         .highlight {
             background: #fff3cd;
             padding: 1rem;
-            border-radius: 5px;
+            border-radius: 8px;
             margin: 1rem 0;
-            border-left: 4px solid var(--secondary-color);
+            border-left: 4px solid var(--accent-yellow);
         }
 
         .warning-box {
             background: #fee;
             padding: 1rem;
-            border-radius: 5px;
+            border-radius: 8px;
             margin: 1rem 0;
-            border-left: 4px solid var(--warning);
+            border-left: 4px solid #ff4444;
         }
 
         .contact-box {
-            background: var(--bg-color);
+            background: var(--bg-light);
             padding: 1.5rem;
             border-radius: 10px;
             margin: 2rem 0;
@@ -159,284 +102,349 @@
         }
 
         th {
-            background: var(--bg-color);
+            background: var(--bg-light);
             font-weight: bold;
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
             .legal-content {
                 padding: 2rem 1rem;
             }
 
-            h1 {
+            .legal-content h1 {
                 font-size: 2rem;
-            }
-
-            .nav-links {
-                display: none;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav>
+    <!-- Navigation Unifiée -->
+    <nav class="nav" role="navigation" aria-label="Navigation principale">
         <div class="nav-container">
-            <a href="index.html" class="logo">
-                <span>🌐</span>
+            <a href="index.html" class="logo" aria-label="LexiFlow - Accueil">
+                <span aria-hidden="true">🌐</span>
                 <span>LexiFlow</span>
             </a>
-            <div class="nav-links">
-                <a href="index.html">Accueil</a>
-                <a href="features.html">Fonctionnalités</a>
-                <a href="pricing.html">Tarifs</a>
-                <a href="faq.html">FAQ</a>
-                <a href="contact.html">Contact</a>
-            </div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html">Accueil</a></li>
+                <li><a href="features.html">Fonctionnalités</a></li>
+                <li><a href="pricing.html">Tarifs</a></li>
+                <li><a href="faq.html">FAQ</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <a href="coming-soon.html" class="cta-nav">Early Bird -40%</a>
+            <button class="mobile-menu" id="mobileMenu" aria-label="Menu mobile" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </nav>
 
+    <!-- Header Unifié Bleu Marine -->
+    <header class="page-header">
+        <div class="header-content">
+            <h1>Conditions d'Utilisation</h1>
+            <p>Règles d'utilisation de LexiFlow</p>
+        </div>
+    </header>
+
     <!-- Content -->
-    <div class="legal-container">
-        <div class="legal-content">
-            <h1>Conditions Générales d'Utilisation</h1>
-            <p class="last-updated">Dernière mise à jour : 18 juin 2025</p>
+    <main>
+        <div class="legal-container">
+            <div class="legal-content">
+                <p class="last-updated">Dernière mise à jour : 18 juin 2025</p>
 
-            <p>Bienvenue sur LexiFlow ! En utilisant notre extension et nos services, vous acceptez les conditions suivantes. Merci de les lire attentivement.</p>
+                <p>Bienvenue sur LexiFlow ! En utilisant notre extension et nos services, vous acceptez les conditions suivantes. Merci de les lire attentivement.</p>
 
-            <h2>1. Acceptation des conditions</h2>
+                <h2>1. Acceptation des conditions</h2>
 
-            <p>En installant l'extension LexiFlow ou en créant un compte, vous acceptez :</p>
-            <ul>
-                <li>Ces conditions d'utilisation</li>
-                <li>Notre politique de confidentialité</li>
-                <li>Toute condition supplémentaire pour les services payants</li>
-            </ul>
+                <p>En installant l'extension LexiFlow ou en créant un compte, vous acceptez :</p>
+                <ul>
+                    <li>Ces conditions d'utilisation</li>
+                    <li>Notre politique de confidentialité</li>
+                    <li>Toute condition supplémentaire pour les services payants</li>
+                </ul>
 
-            <div class="warning-box">
-                <strong>⚠️ Important :</strong> Si vous n'acceptez pas ces conditions, vous ne devez pas utiliser LexiFlow.
-            </div>
+                <div class="warning-box">
+                    <strong>⚠️ Important :</strong> Si vous n'acceptez pas ces conditions, vous ne devez pas utiliser LexiFlow.
+                </div>
 
-            <h2>2. Description du service</h2>
+                <h2>2. Description du service</h2>
 
-            <p>LexiFlow est une extension Chrome qui offre :</p>
-            <ul>
-                <li>Traduction instantanée de mots et phrases</li>
-                <li>Création et gestion de flashcards</li>
-                <li>Outils d'apprentissage des langues</li>
-                <li>Services premium avec fonctionnalités avancées</li>
-            </ul>
+                <p>LexiFlow est une extension Chrome qui offre :</p>
+                <ul>
+                    <li>Traduction instantanée de mots et phrases</li>
+                    <li>Création et gestion de flashcards</li>
+                    <li>Outils d'apprentissage des langues</li>
+                    <li>Services premium avec fonctionnalités avancées</li>
+                </ul>
 
-            <h2>3. Compte utilisateur</h2>
+                <h2>3. Compte utilisateur</h2>
 
-            <h3>3.1 Création de compte</h3>
-            <ul>
-                <li>Vous devez avoir au moins 13 ans</li>
-                <li>Fournir des informations exactes et à jour</li>
-                <li>Maintenir la sécurité de votre mot de passe</li>
-                <li>Nous notifier immédiatement en cas d'accès non autorisé</li>
-            </ul>
+                <h3>3.1 Création de compte</h3>
+                <ul>
+                    <li>Vous devez avoir au moins 13 ans</li>
+                    <li>Fournir des informations exactes et à jour</li>
+                    <li>Maintenir la sécurité de votre mot de passe</li>
+                    <li>Nous notifier immédiatement en cas d'accès non autorisé</li>
+                </ul>
 
-            <h3>3.2 Responsabilité du compte</h3>
-            <p>Vous êtes responsable de toute activité sur votre compte, même si elle n'est pas autorisée par vous.</p>
+                <h3>3.2 Responsabilité du compte</h3>
+                <p>Vous êtes responsable de toute activité sur votre compte, même si elle n'est pas autorisée par vous.</p>
 
-            <h2>4. Utilisation acceptable</h2>
+                <h2>4. Utilisation acceptable</h2>
 
-            <h3>4.1 Vous POUVEZ :</h3>
-            <ul>
-                <li>Utiliser LexiFlow pour votre usage personnel</li>
-                <li>Créer des flashcards pour votre apprentissage</li>
-                <li>Partager vos flashcards avec d'autres utilisateurs</li>
-                <li>Utiliser les traductions pour comprendre du contenu</li>
-            </ul>
+                <h3>4.1 Vous POUVEZ :</h3>
+                <ul>
+                    <li>Utiliser LexiFlow pour votre usage personnel</li>
+                    <li>Créer des flashcards pour votre apprentissage</li>
+                    <li>Partager vos flashcards avec d'autres utilisateurs</li>
+                    <li>Utiliser les traductions pour comprendre du contenu</li>
+                </ul>
 
-            <h3>4.2 Vous NE POUVEZ PAS :</h3>
-            <ul>
-                <li>Utiliser LexiFlow à des fins illégales</li>
-                <li>Contourner les limites de la version gratuite</li>
-                <li>Automatiser ou scripter l'utilisation de l'extension</li>
-                <li>Revendre ou redistribuer nos services</li>
-                <li>Copier ou modifier le code de l'extension</li>
-                <li>Utiliser LexiFlow pour du spam ou harcèlement</li>
-                <li>Surcharger nos serveurs avec des requêtes excessives</li>
-            </ul>
+                <h3>4.2 Vous NE POUVEZ PAS :</h3>
+                <ul>
+                    <li>Utiliser LexiFlow à des fins illégales</li>
+                    <li>Contourner les limites de la version gratuite</li>
+                    <li>Automatiser ou scripter l'utilisation de l'extension</li>
+                    <li>Revendre ou redistribuer nos services</li>
+                    <li>Copier ou modifier le code de l'extension</li>
+                    <li>Utiliser LexiFlow pour du spam ou harcèlement</li>
+                    <li>Surcharger nos serveurs avec des requêtes excessives</li>
+                </ul>
 
-            <h2>5. Abonnement Premium</h2>
+                <h2>5. Abonnement Premium</h2>
 
-            <h3>5.1 Essai gratuit</h3>
-            <ul>
-                <li>7 jours d'essai gratuit (carte bancaire requise)</li>
-                <li>Facturation automatique après l'essai</li>
-                <li>Annulation possible à tout moment pendant l'essai</li>
-            </ul>
+                <h3>5.1 Essai gratuit</h3>
+                <ul>
+                    <li>7 jours d'essai gratuit (carte bancaire requise)</li>
+                    <li>Facturation automatique après l'essai</li>
+                    <li>Annulation possible à tout moment pendant l'essai</li>
+                </ul>
 
-            <h3>5.2 Paiement</h3>
-            <table>
-                <tr>
-                    <th>Plan</th>
-                    <th>Prix</th>
-                    <th>Facturation</th>
-                </tr>
-                <tr>
-                    <td>Early Bird Mensuel</td>
-                    <td>2.99€/mois</td>
-                    <td>Chaque mois</td>
-                </tr>
-                <tr>
-                    <td>Early Bird Annuel</td>
-                    <td>29.90€/an</td>
-                    <td>Chaque année</td>
-                </tr>
-                <tr>
-                    <td>Prix régulier</td>
-                    <td>4.99€/mois</td>
-                    <td>Après Early Bird</td>
-                </tr>
-            </table>
+                <h3>5.2 Paiement</h3>
+                <table>
+                    <tr>
+                        <th>Plan</th>
+                        <th>Prix</th>
+                        <th>Facturation</th>
+                    </tr>
+                    <tr>
+                        <td>Early Bird Mensuel</td>
+                        <td>2.99€/mois</td>
+                        <td>Chaque mois</td>
+                    </tr>
+                    <tr>
+                        <td>Early Bird Annuel</td>
+                        <td>29.90€/an</td>
+                        <td>Chaque année</td>
+                    </tr>
+                    <tr>
+                        <td>Prix régulier</td>
+                        <td>4.99€/mois</td>
+                        <td>Après Early Bird</td>
+                    </tr>
+                </table>
 
-            <div class="highlight">
-                <strong>💡 Note :</strong> Les prix Early Bird sont garantis à vie pour les 1000 premiers utilisateurs.
-            </div>
+                <div class="highlight">
+                    <strong>💡 Note :</strong> Les prix Early Bird sont garantis à vie pour les 1000 premiers utilisateurs.
+                </div>
 
-            <h3>5.3 Politique de remboursement</h3>
-            <ul>
-                <li><strong>Pendant l'essai :</strong> Annulation gratuite, aucun frais</li>
-                <li><strong>Après l'essai :</strong> Pas de remboursement</li>
-                <li><strong>Exception :</strong> Problème technique majeur de notre côté</li>
-            </ul>
+                <h3>5.3 Politique de remboursement</h3>
+                <ul>
+                    <li><strong>Pendant l'essai :</strong> Annulation gratuite, aucun frais</li>
+                    <li><strong>Après l'essai :</strong> Pas de remboursement</li>
+                    <li><strong>Exception :</strong> Problème technique majeur de notre côté</li>
+                </ul>
 
-            <h3>5.4 Annulation</h3>
-            <ul>
-                <li>Annulation possible à tout moment</li>
-                <li>Accès Premium jusqu'à la fin de la période payée</li>
-                <li>Pas de remboursement au prorata</li>
-            </ul>
+                <h3>5.4 Annulation</h3>
+                <ul>
+                    <li>Annulation possible à tout moment</li>
+                    <li>Accès Premium jusqu'à la fin de la période payée</li>
+                    <li>Pas de remboursement au prorata</li>
+                </ul>
 
-            <h2>6. Propriété intellectuelle</h2>
+                <h2>6. Propriété intellectuelle</h2>
 
-            <h3>6.1 Notre contenu</h3>
-            <p>LexiFlow et tout son contenu (logo, design, code) sont protégés par le droit d'auteur.</p>
+                <h3>6.1 Notre contenu</h3>
+                <p>LexiFlow et tout son contenu (logo, design, code) sont protégés par le droit d'auteur.</p>
 
-            <h3>6.2 Votre contenu</h3>
-            <ul>
-                <li>Vous gardez la propriété de vos flashcards</li>
-                <li>Vous nous donnez le droit de les stocker/synchroniser</li>
-                <li>Nous ne vendons jamais votre contenu</li>
-            </ul>
+                <h3>6.2 Votre contenu</h3>
+                <ul>
+                    <li>Vous gardez la propriété de vos flashcards</li>
+                    <li>Vous nous donnez le droit de les stocker/synchroniser</li>
+                    <li>Nous ne vendons jamais votre contenu</li>
+                </ul>
 
-            <h2>7. Limitation de responsabilité</h2>
+                <h2>7. Limitation de responsabilité</h2>
 
-            <div class="warning-box">
-                <p><strong>LexiFlow est fourni "tel quel" sans garantie d'aucune sorte.</strong></p>
-            </div>
+                <div class="warning-box">
+                    <p><strong>LexiFlow est fourni "tel quel" sans garantie d'aucune sorte.</strong></p>
+                </div>
 
-            <p>Nous ne sommes PAS responsables de :</p>
-            <ul>
-                <li>Erreurs de traduction</li>
-                <li>Perte de données (sauvegardez régulièrement !)</li>
-                <li>Dommages indirects ou consécutifs</li>
-                <li>Incompatibilité avec certains sites web</li>
-                <li>Interruptions de service</li>
-            </ul>
+                <p>Nous ne sommes PAS responsables de :</p>
+                <ul>
+                    <li>Erreurs de traduction</li>
+                    <li>Perte de données (sauvegardez régulièrement !)</li>
+                    <li>Dommages indirects ou consécutifs</li>
+                    <li>Incompatibilité avec certains sites web</li>
+                    <li>Interruptions de service</li>
+                </ul>
 
-            <p><strong>Notre responsabilité maximale :</strong> Le montant que vous avez payé dans les 12 derniers mois.</p>
+                <p><strong>Notre responsabilité maximale :</strong> Le montant que vous avez payé dans les 12 derniers mois.</p>
 
-            <h2>8. Modifications du service</h2>
+                <h2>8. Modifications du service</h2>
 
-            <p>Nous pouvons :</p>
-            <ul>
-                <li>Modifier ou arrêter des fonctionnalités</li>
-                <li>Changer les prix (avec préavis de 30 jours)</li>
-                <li>Mettre à jour ces conditions</li>
-            </ul>
+                <p>Nous pouvons :</p>
+                <ul>
+                    <li>Modifier ou arrêter des fonctionnalités</li>
+                    <li>Changer les prix (avec préavis de 30 jours)</li>
+                    <li>Mettre à jour ces conditions</li>
+                </ul>
 
-            <div class="highlight">
-                <strong>💡 Garantie Early Bird :</strong> Si vous avez le tarif Early Bird, votre prix ne changera JAMAIS tant que vous restez abonné.
-            </div>
+                <div class="highlight">
+                    <strong>💡 Garantie Early Bird :</strong> Si vous avez le tarif Early Bird, votre prix ne changera JAMAIS tant que vous restez abonné.
+                </div>
 
-            <h2>9. Résiliation</h2>
+                <h2>9. Résiliation</h2>
 
-            <h3>9.1 Par vous</h3>
-            <p>Vous pouvez supprimer votre compte à tout moment depuis les paramètres.</p>
+                <h3>9.1 Par vous</h3>
+                <p>Vous pouvez supprimer votre compte à tout moment depuis les paramètres.</p>
 
-            <h3>9.2 Par nous</h3>
-            <p>Nous pouvons suspendre ou fermer votre compte si vous :</p>
-            <ul>
-                <li>Violez ces conditions</li>
-                <li>Avez un comportement abusif</li>
-                <li>Tentez de frauder le système</li>
-            </ul>
+                <h3>9.2 Par nous</h3>
+                <p>Nous pouvons suspendre ou fermer votre compte si vous :</p>
+                <ul>
+                    <li>Violez ces conditions</li>
+                    <li>Avez un comportement abusif</li>
+                    <li>Tentez de frauder le système</li>
+                </ul>
 
-            <h2>10. Droit applicable</h2>
+                <h2>10. Droit applicable</h2>
 
-            <p>Ces conditions sont régies par le droit français. Tout litige sera soumis aux tribunaux français.</p>
+                <p>Ces conditions sont régies par le droit français. Tout litige sera soumis aux tribunaux français.</p>
 
-            <h2>11. Contact</h2>
+                <h2>11. Contact</h2>
 
-            <div class="contact-box">
-                <p><strong>Pour toute question sur ces conditions :</strong></p>
-                <p>Email : legal@lexiflow.com<br>
-                Support : support@lexiflow.com</p>
-            </div>
+                <div class="contact-box">
+                    <p><strong>Pour toute question sur ces conditions :</strong></p>
+                    <p>Email : legal@lexiflow.com<br>
+                    Support : support@lexiflow.com</p>
+                </div>
 
-            <h2>12. Clauses finales</h2>
+                <h2>12. Clauses finales</h2>
 
-            <ul>
-                <li>Si une clause est invalide, les autres restent valables</li>
-                <li>Notre non-application d'une clause n'est pas une renonciation</li>
-                <li>Ces conditions constituent l'accord complet entre nous</li>
-            </ul>
+                <ul>
+                    <li>Si une clause est invalide, les autres restent valables</li>
+                    <li>Notre non-application d'une clause n'est pas une renonciation</li>
+                    <li>Ces conditions constituent l'accord complet entre nous</li>
+                </ul>
 
-            <div class="highlight" style="margin-top: 3rem;">
-                <p><strong>En résumé :</strong> Utilisez LexiFlow de manière responsable, respectez les limites de votre plan, et profitez de l'apprentissage des langues ! 🌍</p>
-            </div>
+                <div class="highlight" style="margin-top: 3rem;">
+                    <p><strong>En résumé :</strong> Utilisez LexiFlow de manière responsable, respectez les limites de votre plan, et profitez de l'apprentissage des langues ! 🌍</p>
+                </div>
             </div>
         </div>
-    </div>
+    </main>
 
-    <!-- Footer -->
-    <footer style="padding: 60px 2rem 40px; background: #1a1a1a; color: white; margin-top: 80px;">
-        <div style="max-width: 1200px; margin: 0 auto;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 3rem; margin-bottom: 3rem;">
+    <!-- Footer Unifié -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-grid">
                 <!-- À propos -->
-                <div>
-                    <h3 style="font-size: 1.2rem; margin-bottom: 1rem; color: #FFD700;">À propos de LexiFlow</h3>
-                    <p style="opacity: 0.8; line-height: 1.6;">Extension Chrome révolutionnaire pour la traduction instantanée et l'apprentissage des langues avec flashcards intelligentes.</p>
+                <div class="footer-section">
+                    <h3>À propos de LexiFlow</h3>
+                    <p>Extension Chrome révolutionnaire pour la traduction instantanée et l'apprentissage des langues avec flashcards intelligentes.</p>
                 </div>
                 
                 <!-- Liens rapides -->
-                <div>
-                    <h3 style="font-size: 1.2rem; margin-bottom: 1rem; color: #FFD700;">Liens Rapides</h3>
-                    <ul style="list-style: none;">
-                        <li style="margin-bottom: 0.5rem;"><a href="index.html" style="color: white; text-decoration: none; opacity: 0.8; transition: opacity 0.3s;">Accueil</a></li>
-                        <li style="margin-bottom: 0.5rem;"><a href="pricing.html" style="color: white; text-decoration: none; opacity: 0.8; transition: opacity 0.3s;">Tarifs</a></li>
-                        <li style="margin-bottom: 0.5rem;"><a href="coming-soon.html" style="color: #FFD700; text-decoration: none;">🐦 Offre Early Bird</a></li>
+                <div class="footer-section">
+                    <h3>Liens Rapides</h3>
+                    <ul>
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="features.html">Fonctionnalités</a></li>
+                        <li><a href="pricing.html">Tarifs</a></li>
+                        <li><a href="faq.html">FAQ</a></li>
+                        <li><a href="coming-soon.html" class="highlight">🐦 Offre Early Bird</a></li>
                     </ul>
                 </div>
                 
                 <!-- Légal -->
-                <div>
-                    <h3 style="font-size: 1.2rem; margin-bottom: 1rem; color: #FFD700;">Informations Légales</h3>
-                    <ul style="list-style: none;">
-                        <li style="margin-bottom: 0.5rem;"><a href="terms.html" style="color: white; text-decoration: none; opacity: 1; font-weight: bold;">Conditions d'utilisation</a></li>
-                        <li style="margin-bottom: 0.5rem;"><a href="privacy.html" style="color: white; text-decoration: none; opacity: 0.8; transition: opacity 0.3s;">Politique de confidentialité</a></li>
+                <div class="footer-section">
+                    <h3>Informations Légales</h3>
+                    <ul>
+                        <li><a href="terms.html">Conditions d'utilisation</a></li>
+                        <li><a href="privacy.html">Politique de confidentialité</a></li>
                     </ul>
                 </div>
                 
                 <!-- Contact -->
-                <div>
-                    <h3 style="font-size: 1.2rem; margin-bottom: 1rem; color: #FFD700;">Contact</h3>
-                    <p style="opacity: 0.8; margin-bottom: 0.5rem;">Email: support@lexiflow.com</p>
-                    <p style="opacity: 0.8;">Réponse sous 24-48h</p>
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <p>Email: support@lexiflow.com</p>
+                    <p>Réponse sous 24-48h</p>
                 </div>
             </div>
             
-            <div style="border-top: 1px solid #333; padding-top: 2rem; text-align: center;">
-                <p style="opacity: 0.6; margin-bottom: 0.5rem;">&copy; 2025 LexiFlow. Tous droits réservés.</p>
-                <p style="opacity: 0.4; font-size: 0.875rem;">Fait avec ❤️ pour briser les barrières linguistiques</p>
+            <div class="footer-bottom">
+                <p>&copy; 2025 LexiFlow. Tous droits réservés.</p>
+                <p>Fait avec ❤️ pour briser les barrières linguistiques</p>
             </div>
         </div>
     </footer>
+
+    <!-- Scripts Communs -->
+    <script>
+        // Mobile menu toggle
+        const mobileMenu = document.getElementById('mobileMenu');
+        const navLinks = document.getElementById('navLinks');
+        
+        mobileMenu.addEventListener('click', () => {
+            const isExpanded = mobileMenu.getAttribute('aria-expanded') === 'true';
+            mobileMenu.setAttribute('aria-expanded', !isExpanded);
+            navLinks.classList.toggle('active');
+        });
+
+        // Fermer le menu mobile en cliquant sur un lien
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+                mobileMenu.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        // Smooth scroll pour les ancres
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Intersection Observer pour les animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animated');
+                }
+            });
+        }, observerOptions);
+
+        // Observer tous les éléments avec la classe animate-on-scroll
+        document.querySelectorAll('.animate-on-scroll').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
 </body>
 </html>

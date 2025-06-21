@@ -3,50 +3,451 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact - LexiFlow</title>
-    <meta name="description" content="Contactez LexiFlow pour toute question ou assistance. Nous sommes là pour vous aider.">
+    <title>Contact - LexiFlow | Nous sommes là pour vous aider</title>
+    <meta name="description" content="Contactez l'équipe LexiFlow. Support technique, questions commerciales ou suggestions, nous répondons sous 24-48h.">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
+    
+    <!-- CSS Unifié -->
     <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Styles spécifiques à la page contact -->
+    <style>
+        .contact-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            margin-top: 3rem;
+        }
+
+        .contact-form-section {
+            background: var(--white);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .contact-form-section h2 {
+            color: var(--primary-blue);
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(10, 44, 77, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .contact-info-section {
+            padding: 3rem 0;
+        }
+
+        .contact-info-section h2 {
+            color: var(--primary-blue);
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+
+        .contact-method {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+        }
+
+        .contact-method:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .contact-method h3 {
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .contact-icon {
+            font-size: 1.5rem;
+        }
+
+        .response-time {
+            background: var(--accent-yellow);
+            color: var(--primary-blue);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            display: inline-block;
+            margin-top: 1rem;
+            font-weight: 600;
+        }
+
+        .faq-cta {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .faq-cta h3 {
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .contact-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .contact-form-section {
+                padding: 2rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- Navigation -->
+    <!-- Navigation Unifiée -->
     <nav class="nav" role="navigation" aria-label="Navigation principale">
         <div class="nav-container">
             <a href="index.html" class="logo" aria-label="LexiFlow - Accueil">
                 <span aria-hidden="true">🌐</span>
                 <span>LexiFlow</span>
             </a>
-            <ul class="nav-links">
+            <ul class="nav-links" id="navLinks">
                 <li><a href="index.html">Accueil</a></li>
                 <li><a href="features.html">Fonctionnalités</a></li>
                 <li><a href="pricing.html">Tarifs</a></li>
                 <li><a href="faq.html">FAQ</a></li>
-                <li><a href="contact.html" class="active" aria-current="page">Contact</a></li>
+                <li><a href="contact.html" class="active">Contact</a></li>
             </ul>
-            <a href="coming-soon.html" class="cta-nav">Essai Gratuit</a>
+            <a href="coming-soon.html" class="cta-nav">Early Bird -40%</a>
+            <button class="mobile-menu" id="mobileMenu" aria-label="Menu mobile" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </nav>
 
-    <!-- Contact Form -->
-    <section class="contact-section">
-        <div class="container">
+    <!-- Header Unifié Bleu Marine -->
+    <header class="page-header">
+        <div class="header-content">
             <h1>Contactez-nous</h1>
-            <p>Nous sommes là pour répondre à toutes vos questions. Remplissez le formulaire ci-dessous et nous vous répondrons dans les plus brefs délais.</p>
-            <form action="#" method="post" class="contact-form">
-                <div class="form-group">
-                    <label for="name">Nom</label>
-                    <input type="text" id="name" name="name" required>
-                </div>
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required>
-                </div>
-                <div class="form-group">
-                    <label for="message">Message</label>
-                    <textarea id="message" name="message" rows="5" required></textarea>
-                </div>
-                <button type="submit" class="cta-button">Envoyer</button>
-            </form>
+            <p>Nous sommes là pour répondre à toutes vos questions</p>
         </div>
-    </section>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <section class="section section-gray">
+            <div class="contact-container">
+                <div class="contact-grid">
+                    <!-- Formulaire de Contact -->
+                    <div class="contact-form-section animate-on-scroll">
+                        <h2>Envoyez-nous un message</h2>
+                        
+                        <div class="success-message" id="successMessage">
+                            ✅ Merci ! Votre message a été envoyé. Nous vous répondrons sous 24-48h.
+                        </div>
+                        
+                        <div class="error-message" id="errorMessage">
+                            ❌ Une erreur s'est produite. Veuillez réessayer ou nous contacter directement par email.
+                        </div>
+
+                        <form id="contactForm">
+                            <div class="form-group">
+                                <label for="name">Nom complet *</label>
+                                <input type="text" id="name" name="name" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">Adresse email *</label>
+                                <input type="email" id="email" name="email" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="subject">Sujet *</label>
+                                <select id="subject" name="subject" required>
+                                    <option value="">Sélectionnez un sujet</option>
+                                    <option value="support">Support technique</option>
+                                    <option value="premium">Questions sur Premium</option>
+                                    <option value="bug">Signaler un bug</option>
+                                    <option value="feature">Suggestion de fonctionnalité</option>
+                                    <option value="business">Partenariat / B2B</option>
+                                    <option value="other">Autre</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="message">Votre message *</label>
+                                <textarea id="message" name="message" required placeholder="Décrivez votre demande en détail..."></textarea>
+                            </div>
+
+                            <button type="submit" class="cta-button primary" style="width: 100%;">
+                                Envoyer le message
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Informations de Contact -->
+                    <div class="contact-info-section animate-on-scroll">
+                        <h2>Autres moyens de nous contacter</h2>
+
+                        <div class="contact-method">
+                            <h3><span class="contact-icon">📧</span> Email Direct</h3>
+                            <p><strong>Support général :</strong><br>support@lexiflow.com</p>
+                            <p><strong>Questions commerciales :</strong><br>business@lexiflow.com</p>
+                            <span class="response-time">Réponse sous 24-48h</span>
+                        </div>
+
+                        <div class="contact-method">
+                            <h3><span class="contact-icon">🚀</span> Support Premium</h3>
+                            <p>Les utilisateurs Premium bénéficient d'un support prioritaire avec réponse garantie sous 24h.</p>
+                            <p><strong>Email dédié :</strong><br>premium@lexiflow.com</p>
+                            <span class="response-time">Réponse prioritaire sous 24h</span>
+                        </div>
+
+                        <div class="contact-method">
+                            <h3><span class="contact-icon">🐛</span> Signaler un Bug</h3>
+                            <p>Trouvé un problème ? Aidez-nous à améliorer LexiFlow en signalant les bugs.</p>
+                            <p>Incluez si possible :</p>
+                            <ul style="margin-left: 20px; margin-top: 10px;">
+                                <li>Version de Chrome</li>
+                                <li>URL de la page</li>
+                                <li>Capture d'écran</li>
+                                <li>Étapes pour reproduire</li>
+                            </ul>
+                        </div>
+
+                        <div class="faq-cta">
+                            <h3>💡 Avez-vous consulté notre FAQ ?</h3>
+                            <p>La plupart des questions trouvent une réponse dans notre FAQ complète.</p>
+                            <a href="faq.html" class="cta-button secondary" style="margin-top: 1rem;">
+                                Consulter la FAQ
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Additional Info Section -->
+        <section class="section section-white">
+            <div class="container text-center">
+                <h2 class="mb-3">Nous sommes à votre écoute</h2>
+                <p style="max-width: 600px; margin: 0 auto; color: var(--text-gray); font-size: 1.1rem;">
+                    Votre satisfaction est notre priorité. N'hésitez pas à nous contacter pour toute question, 
+                    suggestion ou problème. Nous sommes une équipe passionnée dédiée à rendre l'apprentissage 
+                    des langues plus accessible et agréable.
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer Unifié -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <!-- À propos -->
+                <div class="footer-section">
+                    <h3>À propos de LexiFlow</h3>
+                    <p>Extension Chrome révolutionnaire pour la traduction instantanée et l'apprentissage des langues avec flashcards intelligentes.</p>
+                </div>
+                
+                <!-- Liens rapides -->
+                <div class="footer-section">
+                    <h3>Liens Rapides</h3>
+                    <ul>
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="features.html">Fonctionnalités</a></li>
+                        <li><a href="pricing.html">Tarifs</a></li>
+                        <li><a href="faq.html">FAQ</a></li>
+                        <li><a href="coming-soon.html" class="highlight">🐦 Offre Early Bird</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Légal -->
+                <div class="footer-section">
+                    <h3>Informations Légales</h3>
+                    <ul>
+                        <li><a href="terms.html">Conditions d'utilisation</a></li>
+                        <li><a href="privacy.html">Politique de confidentialité</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Contact -->
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <p>Email: support@lexiflow.com</p>
+                    <p>Réponse sous 24-48h</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 LexiFlow. Tous droits réservés.</p>
+                <p>Fait avec ❤️ pour briser les barrières linguistiques</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts Communs -->
+    <script>
+        // Mobile menu toggle
+        const mobileMenu = document.getElementById('mobileMenu');
+        const navLinks = document.getElementById('navLinks');
+        
+        mobileMenu.addEventListener('click', () => {
+            const isExpanded = mobileMenu.getAttribute('aria-expanded') === 'true';
+            mobileMenu.setAttribute('aria-expanded', !isExpanded);
+            navLinks.classList.toggle('active');
+        });
+
+        // Fermer le menu mobile en cliquant sur un lien
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+                mobileMenu.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        // Smooth scroll pour les ancres
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Intersection Observer pour les animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animated');
+                }
+            });
+        }, observerOptions);
+
+        // Observer tous les éléments avec la classe animate-on-scroll
+        document.querySelectorAll('.animate-on-scroll').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Gestion du formulaire de contact
+        const contactForm = document.getElementById('contactForm');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+
+        contactForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Cacher les messages précédents
+            successMessage.style.display = 'none';
+            errorMessage.style.display = 'none';
+            
+            // Récupérer les données du formulaire
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                subject: document.getElementById('subject').value,
+                message: document.getElementById('message').value
+            };
+            
+            try {
+                // TODO: Remplacer par l'appel API réel
+                // const response = await fetch('http://localhost:3001/api/contact', {
+                //     method: 'POST',
+                //     headers: { 'Content-Type': 'application/json' },
+                //     body: JSON.stringify(formData)
+                // });
+                
+                // Simulation pour le moment
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Afficher le message de succès
+                successMessage.style.display = 'block';
+                contactForm.reset();
+                
+                // Scroll vers le message
+                successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+            } catch (error) {
+                console.error('Erreur:', error);
+                errorMessage.style.display = 'block';
+                errorMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    </script>
 </body>
 </html>

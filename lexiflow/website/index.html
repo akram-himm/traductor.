@@ -10,114 +10,59 @@
     <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
     
+    <!-- CSS Unifié -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Styles spécifiques à la page d'accueil -->
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary-color: #0A2C4D;
-            --secondary-color: #FFD700;
-            --accent-color: #00C896;
-            --text-color: #333333;
-            --bg-color: #F8F9FA;
-            --white: #FFFFFF;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            line-height: 1.6;
-            color: var(--text-color);
-            overflow-x: hidden;
-        }
-
-        /* Navigation */
-        nav {
-            background: var(--white);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--primary-color);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
-
-        .nav-links a {
-            color: var(--text-color);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        .nav-links a:hover {
-            color: var(--primary-color);
-        }
-
-        .cta-button {
-            background: var(--secondary-color);
-            color: var(--primary-color);
-            padding: 0.75rem 1.5rem;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: all 0.3s;
-            display: inline-block;
-        }
-
-        .cta-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
-        }
-
-        /* Hero Section */
+        /* Hero Section spécifique */
         .hero {
-            padding: 120px 2rem 80px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: var(--gradient-blue);
+            color: var(--white);
+            padding: 120px 0 80px;
             text-align: center;
+            position: relative;
+            overflow: hidden;
         }
 
-        .hero-container {
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            top: -400px;
+            left: -400px;
+            animation: rotate 40s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .hero-content {
             max-width: 1200px;
             margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+            z-index: 1;
         }
 
         .hero h1 {
-            font-size: 3rem;
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-            animation: fadeInUp 0.8s;
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            margin-bottom: 20px;
+            font-weight: 700;
+            animation: fadeInUp 0.8s ease-out;
         }
 
         .hero .subtitle {
-            font-size: 1.25rem;
-            color: #666;
-            margin-bottom: 2rem;
-            animation: fadeInUp 0.8s 0.2s both;
+            font-size: clamp(1.1rem, 2vw, 1.4rem);
+            opacity: 0.9;
+            max-width: 700px;
+            margin: 0 auto 2rem;
+            line-height: 1.6;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
         }
 
         .hero-cta {
@@ -125,85 +70,71 @@
             gap: 1rem;
             justify-content: center;
             flex-wrap: wrap;
-            animation: fadeInUp 0.8s 0.4s both;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+            margin-bottom: 2rem;
         }
 
         .early-bird-badge {
-            background: var(--accent-color);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            margin-top: 1rem;
+            background: var(--accent-yellow);
+            color: var(--primary-blue);
+            padding: 0.75rem 1.5rem;
+            border-radius: 30px;
+            font-size: 1rem;
             display: inline-block;
             animation: pulse 2s infinite;
+            font-weight: 600;
         }
 
-        /* Features Section */
-        .features {
-            padding: 80px 2rem;
-            background: var(--white);
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
 
-        .features-container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .features h2 {
-            text-align: center;
-            font-size: 2.5rem;
-            color: var(--primary-color);
-            margin-bottom: 3rem;
-        }
-
+        /* Features Grid */
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 2rem;
+            margin-top: 3rem;
         }
 
         .feature-card {
+            background: var(--white);
+            padding: 2.5rem;
+            border-radius: 16px;
             text-align: center;
-            padding: 2rem;
-            border-radius: 10px;
-            transition: transform 0.3s;
-            background: var(--bg-color);
+            transition: var(--transition);
+            box-shadow: var(--shadow-md);
         }
 
         .feature-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-lg);
         }
 
         .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            display: block;
         }
 
         .feature-card h3 {
-            color: var(--primary-color);
+            color: var(--primary-blue);
             margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .feature-card p {
+            color: var(--text-gray);
+            line-height: 1.6;
         }
 
         /* How it Works */
-        .how-it-works {
-            padding: 80px 2rem;
-            background: var(--bg-color);
-        }
-
-        .how-it-works h2 {
-            text-align: center;
-            font-size: 2.5rem;
-            color: var(--primary-color);
-            margin-bottom: 3rem;
-        }
-
         .steps {
-            max-width: 800px;
-            margin: 0 auto;
             display: grid;
             gap: 2rem;
+            max-width: 800px;
+            margin: 3rem auto 0;
         }
 
         .step {
@@ -212,13 +143,19 @@
             gap: 2rem;
             background: white;
             padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+        }
+
+        .step:hover {
+            transform: translateX(10px);
+            box-shadow: var(--shadow-lg);
         }
 
         .step-number {
-            background: var(--secondary-color);
-            color: var(--primary-color);
+            background: var(--accent-yellow);
+            color: var(--primary-blue);
             width: 60px;
             height: 60px;
             border-radius: 50%;
@@ -230,217 +167,112 @@
             flex-shrink: 0;
         }
 
-        /* Pricing Preview */
-        .pricing-preview {
-            padding: 80px 2rem;
-            background: var(--white);
-            text-align: center;
-        }
-
-        .pricing-preview h2 {
-            font-size: 2.5rem;
-            color: var(--primary-color);
-            margin-bottom: 3rem;
-        }
-
+        /* Pricing Cards */
         .pricing-cards {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 2rem;
             max-width: 800px;
-            margin: 0 auto;
+            margin: 3rem auto 0;
         }
 
         .pricing-card {
-            background: var(--bg-color);
-            padding: 2rem;
-            border-radius: 10px;
+            background: var(--white);
+            padding: 2.5rem;
+            border-radius: 20px;
             position: relative;
-            transition: transform 0.3s;
+            transition: var(--transition);
+            box-shadow: var(--shadow-md);
+            text-align: center;
         }
 
         .pricing-card.premium {
-            border: 3px solid var(--secondary-color);
+            border: 3px solid var(--accent-yellow);
+            transform: scale(1.05);
         }
 
         .pricing-card:hover {
-            transform: scale(1.05);
+            transform: scale(1.08);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .pricing-card.premium:hover {
+            transform: scale(1.1);
         }
 
         .price {
             font-size: 2.5rem;
             font-weight: bold;
-            color: var(--primary-color);
+            color: var(--primary-blue);
             margin: 1rem 0;
         }
 
         .price-period {
             font-size: 1rem;
-            color: #666;
+            color: var(--text-gray);
         }
 
         /* CTA Section */
         .cta-section {
-            padding: 80px 2rem;
-            background: var(--primary-color);
+            background: var(--gradient-primary);
             color: white;
             text-align: center;
+            border-radius: 30px;
+            margin: 4rem 0;
+            overflow: hidden;
+        }
+
+        .cta-content {
+            padding: 60px 20px;
         }
 
         .cta-section h2 {
-            font-size: 2.5rem;
+            font-size: clamp(1.75rem, 4vw, 2.5rem);
             margin-bottom: 1rem;
         }
 
         .cta-section p {
             font-size: 1.25rem;
             margin-bottom: 2rem;
-        }
-
-        /* Footer */
-        footer {
-            padding: 60px 2rem 40px;
-            background: #1a1a1a;
-            color: white;
-        }
-
-        .footer-container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .footer-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 3rem;
-            margin-bottom: 3rem;
-        }
-
-        .footer-section h3 {
-            font-size: 1.2rem;
-            margin-bottom: 1rem;
-            color: var(--secondary-color);
-        }
-
-        .footer-section ul {
-            list-style: none;
-        }
-
-        .footer-section li {
-            margin-bottom: 0.5rem;
-        }
-
-        .footer-section a {
-            color: white;
-            text-decoration: none;
-            opacity: 0.8;
-            transition: opacity 0.3s;
-        }
-
-        .footer-section a:hover {
-            opacity: 1;
-        }
-
-        .footer-bottom {
-            border-top: 1px solid #333;
-            padding-top: 2rem;
-            text-align: center;
-        }
-
-        /* Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.05);
-            }
-        }
-
-        /* Mobile Menu */
-        .mobile-menu-toggle {
-            display: none;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-
-            .mobile-menu-toggle {
-                display: block;
-            }
-
-            .hero h1 {
-                font-size: 2rem;
-            }
-
-            .hero .subtitle {
-                font-size: 1rem;
-            }
-
-            .features h2, .how-it-works h2, .pricing-preview h2 {
-                font-size: 2rem;
-            }
-
-            .step {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .pricing-cards {
-                grid-template-columns: 1fr;
-            }
+            opacity: 0.95;
         }
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav>
+    <!-- Navigation Unifiée -->
+    <nav class="nav" role="navigation" aria-label="Navigation principale">
         <div class="nav-container">
-            <a href="index.html" class="logo">
-                <span>🌐</span>
+            <a href="index.html" class="logo" aria-label="LexiFlow - Accueil">
+                <span aria-hidden="true">🌐</span>
                 <span>LexiFlow</span>
             </a>
-            <div class="nav-links">
-                <a href="index.html" style="color: var(--primary-color); font-weight: bold;">Accueil</a>
-                <a href="features.html">Fonctionnalités</a>
-                <a href="pricing.html">Tarifs</a>
-                <a href="faq.html">FAQ</a>
-                <a href="contact.html">Contact</a>
-                <a href="coming-soon.html" class="cta-button">Early Bird -40%</a>
-            </div>
-            <button class="mobile-menu-toggle">☰</button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html" class="active">Accueil</a></li>
+                <li><a href="features.html">Fonctionnalités</a></li>
+                <li><a href="pricing.html">Tarifs</a></li>
+                <li><a href="faq.html">FAQ</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <a href="coming-soon.html" class="cta-nav">Early Bird -40%</a>
+            <button class="mobile-menu" id="mobileMenu" aria-label="Menu mobile" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </nav>
 
-    <!-- Hero Section -->
+    <!-- Hero Section avec Header Bleu Marine -->
     <section class="hero">
-        <div class="hero-container">
+        <div class="hero-content">
             <h1>Traduisez, Apprenez, Maîtrisez</h1>
             <p class="subtitle">
                 L'extension Chrome qui révolutionne la traduction instantanée<br>
                 avec des flashcards intelligentes et l'IA DeepSeek
             </p>
             <div class="hero-cta">
-                <a href="#" class="cta-button">Ajouter à Chrome - C'est Gratuit</a>
-                <a href="#features" class="cta-button" style="background: transparent; border: 2px solid var(--primary-color); color: var(--primary-color);">
+                <a href="#" class="cta-button primary">Ajouter à Chrome - C'est Gratuit</a>
+                <a href="#features" class="cta-button secondary" style="background: transparent; border: 2px solid white; color: white;">
                     Découvrir LexiFlow
                 </a>
             </div>
@@ -451,27 +283,27 @@
     </section>
 
     <!-- Features Section -->
-    <section class="features" id="features">
-        <div class="features-container">
-            <h2>Pourquoi Choisir LexiFlow ?</h2>
+    <section class="section section-gray animate-on-scroll" id="features">
+        <div class="container">
+            <h2 class="text-center mb-3">Pourquoi Choisir LexiFlow ?</h2>
             <div class="features-grid">
                 <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
+                    <span class="feature-icon">⚡</span>
                     <h3>Traduction Instantanée</h3>
                     <p>Un clic sur n'importe quel mot et obtenez sa traduction dans 11 langues différentes</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">📚</div>
+                    <span class="feature-icon">📚</span>
                     <h3>Flashcards Intelligentes</h3>
                     <p>Créez automatiquement des cartes de révision pour mémoriser votre vocabulaire</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">🧠</div>
+                    <span class="feature-icon">🧠</span>
                     <h3>IA DeepSeek</h3>
                     <p>Traductions contextuelles ultra-précises grâce à l'intelligence artificielle avancée</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">🌍</div>
+                    <span class="feature-icon">🌍</span>
                     <h3>11 Langues</h3>
                     <p>Français, Anglais, Espagnol, Allemand, Italien, Arabe, Russe, Japonais et plus</p>
                 </div>
@@ -480,9 +312,9 @@
     </section>
 
     <!-- How it Works -->
-    <section class="how-it-works" id="how-it-works">
-        <div class="features-container">
-            <h2>Comment ça Marche ?</h2>
+    <section class="section section-white animate-on-scroll" id="how-it-works">
+        <div class="container">
+            <h2 class="text-center mb-3">Comment ça Marche ?</h2>
             <div class="steps">
                 <div class="step">
                     <div class="step-number">1</div>
@@ -510,9 +342,10 @@
     </section>
 
     <!-- Pricing Preview -->
-    <section class="pricing-preview" id="pricing">
-        <div class="features-container">
-            <h2>Choisissez Votre Plan</h2>
+    <section class="section section-gray animate-on-scroll" id="pricing">
+        <div class="container">
+            <h2 class="text-center mb-2">Choisissez Votre Plan</h2>
+            <p class="text-center mb-4" style="color: var(--text-gray);">Commencez gratuitement, passez au Premium quand vous êtes prêt</p>
             <div class="pricing-cards">
                 <div class="pricing-card">
                     <h3>LexiFlow Gratuit</h3>
@@ -520,7 +353,7 @@
                         0€
                         <span class="price-period">pour toujours</span>
                     </div>
-                    <ul style="list-style: none; padding: 0; margin: 2rem 0;">
+                    <ul style="list-style: none; padding: 0; margin: 2rem 0; text-align: left;">
                         <li>✅ Traductions illimitées</li>
                         <li>✅ 50 flashcards</li>
                         <li>✅ 100 caractères max</li>
@@ -528,10 +361,10 @@
                         <li>❌ DeepSeek AI</li>
                         <li>❌ Mode Pratique</li>
                     </ul>
-                    <a href="#" class="cta-button" style="background: #ccc; color: #333;">Commencer</a>
+                    <a href="#" class="cta-button secondary">Commencer</a>
                 </div>
                 <div class="pricing-card premium">
-                    <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: var(--secondary-color); padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.8rem;">
+                    <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: var(--accent-yellow); color: var(--primary-blue); padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: bold;">
                         🐦 EARLY BIRD -40%
                     </div>
                     <h3>LexiFlow Premium</h3>
@@ -539,8 +372,8 @@
                         2.99€
                         <span class="price-period">/mois</span>
                     </div>
-                    <p style="text-decoration: line-through; color: #999;">4.99€/mois</p>
-                    <ul style="list-style: none; padding: 0; margin: 2rem 0;">
+                    <p style="text-decoration: line-through; color: #999; margin-top: -10px;">4.99€/mois</p>
+                    <ul style="list-style: none; padding: 0; margin: 2rem 0; text-align: left;">
                         <li>✅ Tout du plan gratuit</li>
                         <li>✅ 200 flashcards</li>
                         <li>✅ 350 caractères max</li>
@@ -550,31 +383,35 @@
                         <li>✅ Synchronisation cloud</li>
                         <li>✅ Support prioritaire</li>
                     </ul>
-                    <a href="coming-soon.html" class="cta-button">Profiter de l'Offre</a>
+                    <a href="coming-soon.html" class="cta-button primary">Profiter de l'Offre</a>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- CTA Section -->
-    <section class="cta-section">
-        <div class="features-container">
-            <h2>Prêt à Briser les Barrières Linguistiques ?</h2>
-            <p>Rejoignez des milliers d'utilisateurs qui apprennent plus vite avec LexiFlow</p>
-            <a href="coming-soon.html" class="cta-button">
-                Réserver Ma Place Early Bird
-            </a>
+    <section class="section">
+        <div class="container">
+            <div class="cta-section animate-on-scroll">
+                <div class="cta-content">
+                    <h2>Prêt à Briser les Barrières Linguistiques ?</h2>
+                    <p>Rejoignez des milliers d'utilisateurs qui apprennent plus vite avec LexiFlow</p>
+                    <a href="coming-soon.html" class="cta-button primary">
+                        Réserver Ma Place Early Bird
+                    </a>
+                </div>
+            </div>
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer>
+    <!-- Footer Unifié -->
+    <footer class="footer">
         <div class="footer-container">
             <div class="footer-grid">
                 <!-- À propos -->
                 <div class="footer-section">
                     <h3>À propos de LexiFlow</h3>
-                    <p style="opacity: 0.8; line-height: 1.6;">Extension Chrome révolutionnaire pour la traduction instantanée et l'apprentissage des langues avec flashcards intelligentes.</p>
+                    <p>Extension Chrome révolutionnaire pour la traduction instantanée et l'apprentissage des langues avec flashcards intelligentes.</p>
                 </div>
                 
                 <!-- Liens rapides -->
@@ -582,8 +419,10 @@
                     <h3>Liens Rapides</h3>
                     <ul>
                         <li><a href="index.html">Accueil</a></li>
+                        <li><a href="features.html">Fonctionnalités</a></li>
                         <li><a href="pricing.html">Tarifs</a></li>
-                        <li><a href="coming-soon.html" style="color: var(--secondary-color);">🐦 Offre Early Bird</a></li>
+                        <li><a href="faq.html">FAQ</a></li>
+                        <li><a href="coming-soon.html" class="highlight">🐦 Offre Early Bird</a></li>
                     </ul>
                 </div>
                 
@@ -599,20 +438,39 @@
                 <!-- Contact -->
                 <div class="footer-section">
                     <h3>Contact</h3>
-                    <p style="opacity: 0.8; margin-bottom: 0.5rem;">Email: support@lexiflow.com</p>
-                    <p style="opacity: 0.8;">Réponse sous 24-48h</p>
+                    <p>Email: support@lexiflow.com</p>
+                    <p>Réponse sous 24-48h</p>
                 </div>
             </div>
             
             <div class="footer-bottom">
-                <p style="opacity: 0.6; margin-bottom: 0.5rem;">&copy; 2025 LexiFlow. Tous droits réservés.</p>
-                <p style="opacity: 0.4; font-size: 0.875rem;">Fait avec ❤️ pour briser les barrières linguistiques</p>
+                <p>&copy; 2025 LexiFlow. Tous droits réservés.</p>
+                <p>Fait avec ❤️ pour briser les barrières linguistiques</p>
             </div>
         </div>
     </footer>
 
+    <!-- Scripts Communs -->
     <script>
-        // Smooth scrolling
+        // Mobile menu toggle
+        const mobileMenu = document.getElementById('mobileMenu');
+        const navLinks = document.getElementById('navLinks');
+        
+        mobileMenu.addEventListener('click', () => {
+            const isExpanded = mobileMenu.getAttribute('aria-expanded') === 'true';
+            mobileMenu.setAttribute('aria-expanded', !isExpanded);
+            navLinks.classList.toggle('active');
+        });
+
+        // Fermer le menu mobile en cliquant sur un lien
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+                mobileMenu.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        // Smooth scroll pour les ancres
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -626,23 +484,7 @@
             });
         });
 
-        // Mobile menu toggle
-        const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
-        const navLinks = document.querySelector('.nav-links');
-        
-        mobileMenuToggle.addEventListener('click', () => {
-            navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
-            navLinks.style.position = 'absolute';
-            navLinks.style.top = '100%';
-            navLinks.style.left = '0';
-            navLinks.style.right = '0';
-            navLinks.style.background = 'white';
-            navLinks.style.flexDirection = 'column';
-            navLinks.style.padding = '2rem';
-            navLinks.style.boxShadow = '0 5px 20px rgba(0,0,0,0.1)';
-        });
-
-        // Add animation on scroll
+        // Intersection Observer pour les animations
         const observerOptions = {
             threshold: 0.1,
             rootMargin: '0px 0px -100px 0px'
@@ -651,12 +493,13 @@
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    entry.target.style.animation = 'fadeInUp 0.8s both';
+                    entry.target.classList.add('animated');
                 }
             });
         }, observerOptions);
 
-        document.querySelectorAll('.feature-card, .step, .pricing-card').forEach(el => {
+        // Observer tous les éléments avec la classe animate-on-scroll
+        document.querySelectorAll('.animate-on-scroll').forEach(el => {
             observer.observe(el);
         });
     </script>
