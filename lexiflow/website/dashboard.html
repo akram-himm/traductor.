@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de bord - LexiFlow</title>
+    <meta name="description" content="Gérez vos flashcards, suivez vos progrès et accédez à vos paramètres LexiFlow.">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
+    
+    <!-- CSS Unifié -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Styles spécifiques au dashboard -->
+    <style>
+        .dashboard-header {
+            background: var(--gradient-blue);
+            color: white;
+            padding: 80px 0 40px;
+        }
+
+        .dashboard-welcome {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .dashboard-welcome h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-welcome p {
+            opacity: 0.9;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: -40px auto 0;
+            padding: 0 20px 60px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-gray);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+        }
+
+        .main-content {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            padding: 2rem;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .sidebar-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            padding: 1.5rem;
+        }
+
+        .upgrade-card {
+            background: var(--gradient-primary);
+            color: white;
+            text-align: center;
+        }
+
+        .upgrade-card h3 {
+            margin-bottom: 1rem;
+        }
+
+        .upgrade-card p {
+            margin-bottom: 1.5rem;
+            opacity: 0.9;
+        }
+
+        .upgrade-card .cta-button {
+            background: white;
+            color: var(--primary-blue);
+        }
+
+        .recent-flashcards {
+            margin-top: 2rem;
+        }
+
+        .flashcard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--bg-light);
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 0.75rem;
+            transition: var(--transition);
+        }
+
+        .flashcard-item:hover {
+            background: #e2e8f0;
+            transform: translateX(5px);
+        }
+
+        .flashcard-content {
+            flex: 1;
+        }
+
+        .flashcard-front {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .flashcard-back {
+            font-size: 0.9rem;
+            color: var(--text-gray);
+        }
+
+        .flashcard-langs {
+            display: flex;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-gray);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .action-button {
+            flex: 1;
+            padding: 1rem;
+            background: var(--bg-light);
+            border: 2px solid transparent;
+            border-radius: var(--border-radius-sm);
+            text-align: center;
+            text-decoration: none;
+            color: var(--text-dark);
+            transition: var(--transition);
+        }
+
+        .action-button:hover {
+            background: white;
+            border-color: var(--primary-blue);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .action-button-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .progress-bar {
+            background: #e2e8f0;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-fill {
+            background: var(--gradient-primary);
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 968px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Simplifiée -->
+<!-- Navigation Simplifiée -->
+    <nav class="nav" role="navigation" aria-label="Navigation principale">
+        <div class="nav-container">
+            <a href="index.html" class="logo" aria-label="LexiFlow - Accueil">
+                <span aria-hidden="true">🌐</span>
+                <span>LexiFlow</span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html">Accueil</a></li>
+                <li><a href="features.html" class="active">Fonctionnalités</a></li>
+                <li><a href="pricing.html">Tarifs</a></li>
+                <li><a href="faq.html">FAQ</a></li>
+            </ul>
+            <a href="coming-soon.html" class="cta-nav">🐦 Early Bird -40%</a>
+            <button class="mobile-menu" id="mobileMenu" aria-label="Menu mobile" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div class="dashboard-welcome">
+            <h1>Bonjour, <span id="userName">Utilisateur</span> !</h1>
+            <p>Gérez vos flashcards et suivez vos progrès d'apprentissage</p>
+        </div>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-container">
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-icon">📚</span>
+                <div class="stat-number" id="flashcardCount">23</div>
+                <div class="stat-label">Flashcards créées</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">⚡</span>
+                <div class="stat-number" id="translationCount">156</div>
+                <div class="stat-label">Traductions effectuées</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">🌍</span>
+                <div class="stat-number" id="languageCount">4</div>
+                <div class="stat-label">Langues apprises</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">🔥</span>
+                <div class="stat-number" id="streakCount">7</div>
+                <div class="stat-label">Jours consécutifs</div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="dashboard-grid">
+            <!-- Main Content -->
+            <div class="main-content">
+                <h2>Vos Flashcards Récentes</h2>
+                
+                <div class="recent-flashcards" id="recentFlashcards">
+                    <div class="flashcard-item">
+                        <div class="flashcard-content">
+                            <div class="flashcard-front">Bonjour</div>
+                            <div class="flashcard-back">Hello</div>
+                            <div class="flashcard-langs">
+                                <span>🇫🇷 FR</span>
+                                <span>→</span>
+                                <span>🇺🇸 EN</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flashcard-item">
+                        <div class="flashcard-content">
+                            <div class="flashcard-front">Merci</div>
+                            <div class="flashcard-back">Thank you</div>
+                            <div class="flashcard-langs">
+                                <span>🇫🇷 FR</span>
+                                <span>→</span>
+                                <span>🇺🇸 EN</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flashcard-item">
+                        <div class="flashcard-content">
+                            <div class="flashcard-front">Ordinateur</div>
+                            <div class="flashcard-back">Computer</div>
+                            <div class="flashcard-langs">
+                                <span>🇫🇷 FR</span>
+                                <span>→</span>
+                                <span>🇺🇸 EN</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="#" class="action-button">
+                        <span class="action-button-icon">📚</span>
+                        <span>Voir toutes les flashcards</span>
+                    </a>
+                    <a href="#" class="action-button">
+                        <span class="action-button-icon">🎮</span>
+                        <span>Mode Pratique</span>
+                    </a>
+                    <a href="#" class="action-button">
+                        <span class="action-button-icon">📊</span>
+                        <span>Statistiques détaillées</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Status Card -->
+                <div class="sidebar-card">
+                    <h3>Votre Statut</h3>
+                    <p style="font-size: 1.5rem; font-weight: bold; color: var(--primary-blue); margin: 1rem 0;">
+                        <span id="userStatus">Gratuit</span>
+                    </p>
+                    <div style="margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Flashcards</span>
+                            <span id="flashcardLimit">23/50</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 46%"></div>
+                        </div>
+                    </div>
+                    <p style="font-size: 0.9rem; color: var(--text-gray);">
+                        Limite de caractères : 100
+                    </p>
+                </div>
+
+                <!-- Upgrade Card -->
+                <div class="sidebar-card upgrade-card">
+                    <h3>🚀 Passez à Premium</h3>
+                    <p>
+                        Débloquez 200 flashcards, DeepSeek AI, 
+                        et la synchronisation cloud !
+                    </p>
+                    <a href="pricing.html" class="cta-button">
+                        Découvrir Premium
+                    </a>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="sidebar-card">
+                    <h3>Actions Rapides</h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">
+                        <a href="#" style="color: var(--primary-blue); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+                            <span>💾</span> Exporter mes données
+                        </a>
+                        <a href="#" style="color: var(--primary-blue); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+                            <span>⚙️</span> Paramètres du compte
+                        </a>
+                        <a href="#" style="color: var(--primary-blue); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+                            <span>🔑</span> Changer le mot de passe
+                        </a>
+                        <a href="support.html" style="color: var(--primary-blue); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+                            <span>❓</span> Centre d'aide
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Enrichi -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <!-- À propos -->
+                <div class="footer-section">
+                    <h3>À propos de LexiFlow</h3>
+                    <p>Extension Chrome révolutionnaire pour la traduction instantanée et l'apprentissage des langues avec flashcards intelligentes.</p>
+                    <div class="footer-links-secondary">
+                        <a href="about.html">En savoir plus →</a>
+                    </div>
+                </div>
+                
+                <!-- Liens rapides -->
+                <div class="footer-section">
+                    <h3>Liens Rapides</h3>
+                    <ul>
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="features.html">Fonctionnalités</a></li>
+                        <li><a href="pricing.html">Tarifs</a></li>
+                        <li><a href="faq.html">FAQ</a></li>
+                        <li><a href="coming-soon.html" class="highlight">🐦 Offre Early Bird</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Support & Aide -->
+                <div class="footer-section">
+                    <h3>Aide & Support</h3>
+                    <ul>
+                        <li><a href="support.html">Centre de support</a></li>
+                        <li><a href="contact.html">Nous contacter</a></li>
+                        <li><a href="about.html">À propos de nous</a></li>
+                        <li><a href="faq.html">Questions fréquentes</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Légal & Contact -->
+                <div class="footer-section">
+                    <h3>Informations</h3>
+                    <ul>
+                        <li><a href="terms.html">Conditions d'utilisation</a></li>
+                        <li><a href="privacy.html">Politique de confidentialité</a></li>
+                        <li><strong>Email:</strong> support@lexiflow.com</li>
+                        <li><strong>Réponse:</strong> sous 24-48h</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 LexiFlow. Tous droits réservés.</p>
+                <p>Fait avec ❤️ pour briser les barrières linguistiques</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Check authentication
+        window.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                // Redirect to login if not authenticated
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Load user data
+            loadUserData();
+        });
+
+        // Load user data
+        async function loadUserData() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('http://localhost:3001/api/user/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const userData = await response.json();
+                    updateDashboard(userData);
+                } else {
+                    // Use mock data for development
+                    const mockData = {
+                        email: 'test@lexiflow.com',
+                        isPremium: false,
+                        stats: {
+                            flashcards: 23,
+                            translations: 156,
+                            languages: 4,
+                            streak: 7
+                        }
+                    };
+                    updateDashboard(mockData);
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                // Use mock data
+                const mockData = {
+                    email: 'test@lexiflow.com',
+                    isPremium: false,
+                    stats: {
+                        flashcards: 23,
+                        translations: 156,
+                        languages: 4,
+                        streak: 7
+                    }
+                };
+                updateDashboard(mockData);
+            }
+        }
+
+        // Update dashboard with user data
+        function updateDashboard(userData) {
+            // Update username
+            const email = userData.email || localStorage.getItem('userEmail');
+            const username = email ? email.split('@')[0] : 'Utilisateur';
+            document.getElementById('userName').textContent = username;
+            
+            // Update stats
+            document.getElementById('flashcardCount').textContent = userData.stats?.flashcards || 23;
+            document.getElementById('translationCount').textContent = userData.stats?.translations || 156;
+            document.getElementById('languageCount').textContent = userData.stats?.languages || 4;
+            document.getElementById('streakCount').textContent = userData.stats?.streak || 7;
+            
+            // Update status
+            const isPremium = userData.isPremium || false;
+            document.getElementById('userStatus').textContent = isPremium ? '⭐ Premium' : 'Gratuit';
+            
+            // Update flashcard limit
+            const limit = isPremium ? 200 : 50;
+            const current = userData.stats?.flashcards || 23;
+            document.getElementById('flashcardLimit').textContent = `${current}/${limit}`;
+            
+            // Update progress bar
+            const percentage = (current / limit) * 100;
+            document.querySelector('.progress-fill').style.width = `${percentage}%`;
+            
+            // Hide upgrade card if premium
+            if (isPremium) {
+                document.querySelector('.upgrade-card').style.display = 'none';
+            }
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userEmail');
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Mobile menu toggle
+        const mobileMenu = document.getElementById('mobileMenu');
+        const navLinks = document.getElementById('navLinks');
+        
+        mobileMenu.addEventListener('click', () => {
+            const isExpanded = mobileMenu.getAttribute('aria-expanded') === 'true';
+            mobileMenu.setAttribute('aria-expanded', !isExpanded);
+            navLinks.classList.toggle('active');
+        });
+    </script>
+</body>
+</html> 

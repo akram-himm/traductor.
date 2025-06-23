@@ -596,8 +596,10 @@
     </div>
 
     <script>
-        // Configuration
-        const API_URL = 'http://localhost:3001/api'; // Backend local
+        // Configuration dynamique de l'API
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3001/api' 
+            : '/api'; // En production, utilisera le même domaine
         
         // Countdown timer
         const launchDate = new Date('2025-08-01T00:00:00').getTime();

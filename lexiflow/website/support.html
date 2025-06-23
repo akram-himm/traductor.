@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support - LexiFlow | Guides et Ressources</title>
+    <meta name="description" content="Centre de support LexiFlow : guides de démarrage, tutoriels, ressources et aide pour utiliser l'extension de traduction.">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
+    
+    <!-- CSS Unifié -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Styles spécifiques à la page support -->
+    <style>
+        /* Quick Start Section */
+        .quickstart-section {
+            padding: 60px 0;
+            background: var(--white);
+        }
+
+        .quickstart-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .quickstart-hero {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .quickstart-hero h2 {
+            font-size: 2.5rem;
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+        }
+
+        .quickstart-hero p {
+            font-size: 1.2rem;
+            color: var(--text-gray);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Steps Grid */
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .step-card {
+            background: var(--bg-light);
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .step-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-blue);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .step-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            background: var(--accent-yellow);
+            color: var(--primary-blue);
+            border-radius: 50%;
+            line-height: 50px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+        }
+
+        .step-card h3 {
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+        }
+
+        .step-card p {
+            color: var(--text-gray);
+            line-height: 1.6;
+        }
+
+        /* Tutorials Section */
+        .tutorials-section {
+            padding: 60px 0;
+            background: var(--bg-light);
+        }
+
+        .tutorials-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .tutorials-header h2 {
+            font-size: 2.5rem;
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+        }
+
+        .tutorials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tutorial-card {
+            background: var(--white);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .tutorial-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .tutorial-header {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .tutorial-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
+        .tutorial-header h3 {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .tutorial-time {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .tutorial-content {
+            padding: 2rem;
+        }
+
+        .tutorial-content h4 {
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+        }
+
+        .tutorial-steps {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .tutorial-steps li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+            color: var(--text-gray);
+        }
+
+        .tutorial-steps li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--accent-yellow);
+            font-weight: bold;
+        }
+
+        /* Video Section */
+        .video-section {
+            padding: 60px 0;
+            background: var(--white);
+            text-align: center;
+        }
+
+        .video-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .video-placeholder {
+            background: var(--gradient-primary);
+            border-radius: 20px;
+            padding: 80px 40px;
+            color: white;
+            margin: 2rem 0;
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        .video-placeholder h3 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .play-button {
+            display: inline-block;
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            position: relative;
+            margin: 2rem auto;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .play-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+
+        .play-button::after {
+            content: '▶';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-40%, -50%);
+            font-size: 2rem;
+            color: white;
+        }
+
+        /* Resources Section */
+        .resources-section {
+            padding: 60px 0;
+            background: var(--bg-light);
+        }
+
+        .resources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .resource-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .resource-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .resource-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .resource-card h3 {
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .resource-card p {
+            color: var(--text-gray);
+            font-size: 0.9rem;
+        }
+
+        /* Updates Section */
+        .updates-section {
+            padding: 60px 0;
+            background: var(--white);
+        }
+
+        .updates-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .update-item {
+            background: var(--bg-light);
+            padding: 2rem;
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--accent-yellow);
+            transition: all 0.3s ease;
+        }
+
+        .update-item:hover {
+            transform: translateX(10px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .update-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .update-version {
+            background: var(--primary-blue);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .update-date {
+            color: var(--text-gray);
+            font-size: 0.9rem;
+        }
+
+        .update-content h4 {
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .update-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .update-list li {
+            padding: 0.25rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+            color: var(--text-gray);
+        }
+
+        .update-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #00C896;
+            font-weight: bold;
+        }
+
+        /* Help CTA */
+        .help-cta {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+            color: white;
+            padding: 60px 0;
+            text-align: center;
+            border-radius: 30px;
+            margin: 60px auto;
+            max-width: 1000px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .help-cta::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 30s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .help-cta-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .help-cta h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .help-cta p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .help-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .steps-grid,
+            .tutorials-grid,
+            .resources-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .update-header {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: flex-start;
+            }
+
+            .help-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .help-buttons .cta-button {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Unifiée -->
+<!-- Navigation Simplifiée -->
+    <nav class="nav" role="navigation" aria-label="Navigation principale">
+        <div class="nav-container">
+            <a href="index.html" class="logo" aria-label="LexiFlow - Accueil">
+                <span aria-hidden="true">🌐</span>
+                <span>LexiFlow</span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html">Accueil</a></li>
+                <li><a href="features.html" class="active">Fonctionnalités</a></li>
+                <li><a href="pricing.html">Tarifs</a></li>
+                <li><a href="faq.html">FAQ</a></li>
+            </ul>
+            <a href="coming-soon.html" class="cta-nav">🐦 Early Bird -40%</a>
+            <button class="mobile-menu" id="mobileMenu" aria-label="Menu mobile" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Header Unifié Bleu Marine -->
+    <header class="page-header">
+        <div class="header-content">
+            <h1>Centre de Support</h1>
+            <p>Tout ce dont vous avez besoin pour maîtriser LexiFlow</p>
+        </div>
+    </header>
+
+    <main>
+        <!-- Quick Start Section -->
+        <section class="quickstart-section">
+            <div class="quickstart-container">
+                <div class="quickstart-hero animate-on-scroll">
+                    <h2>🚀 Démarrage Rapide</h2>
+                    <p>Commencez à traduire et apprendre en moins de 2 minutes</p>
+                </div>
+
+                <div class="steps-grid animate-on-scroll">
+                    <div class="step-card">
+                        <div class="step-number">1</div>
+                        <h3>Installer l'Extension</h3>
+                        <p>Cliquez sur "Ajouter à Chrome" depuis le Chrome Web Store. L'icône LexiFlow 🌐 apparaîtra dans votre barre d'outils.</p>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">2</div>
+                        <h3>Sélectionner un Texte</h3>
+                        <p>Sur n'importe quelle page web, sélectionnez un mot ou une phrase. Le bouton de traduction apparaît automatiquement.</p>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">3</div>
+                        <h3>Créer des Flashcards</h3>
+                        <p>Après la traduction, cliquez sur "💾" pour sauvegarder en flashcard. Révisez-les plus tard pour mémoriser.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tutorials Section -->
+        <section class="tutorials-section">
+            <div class="container">
+                <div class="tutorials-header animate-on-scroll">
+                    <h2>📚 Tutoriels Essentiels</h2>
+                    <p>Apprenez à utiliser toutes les fonctionnalités de LexiFlow</p>
+                </div>
+
+                <div class="tutorials-grid">
+                    <!-- Tutorial 1 -->
+                    <div class="tutorial-card animate-on-scroll">
+                        <div class="tutorial-header">
+                            <span class="tutorial-icon">⚡</span>
+                            <h3>Première Traduction</h3>
+                            <p class="tutorial-time">⏱️ 1 minute</p>
+                        </div>
+                        <div class="tutorial-content">
+                            <h4>Comment faire :</h4>
+                            <ul class="tutorial-steps">
+                                <li>Allez sur n'importe quel site web</li>
+                                <li>Sélectionnez un mot avec votre souris</li>
+                                <li>Cliquez sur le bouton 🌐 qui apparaît</li>
+                                <li>Choisissez votre langue cible</li>
+                                <li>La traduction s'affiche instantanément !</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Tutorial 2 -->
+                    <div class="tutorial-card animate-on-scroll">
+                        <div class="tutorial-header">
+                            <span class="tutorial-icon">⌨️</span>
+                            <h3>Raccourcis Clavier</h3>
+                            <p class="tutorial-time">⏱️ 30 secondes</p>
+                        </div>
+                        <div class="tutorial-content">
+                            <h4>Gagnez du temps :</h4>
+                            <ul class="tutorial-steps">
+                                <li><strong>Windows/Linux :</strong> Ctrl + Q</li>
+                                <li><strong>Mac :</strong> Cmd + Q</li>
+                                <li>Sélectionnez le texte d'abord</li>
+                                <li>Appuyez sur le raccourci</li>
+                                <li>Plus rapide que le clic !</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Tutorial 3 -->
+                    <div class="tutorial-card animate-on-scroll">
+                        <div class="tutorial-header">
+                            <span class="tutorial-icon">📚</span>
+                            <h3>Gérer vos Flashcards</h3>
+                            <p class="tutorial-time">⏱️ 2 minutes</p>
+                        </div>
+                        <div class="tutorial-content">
+                            <h4>Organisation optimale :</h4>
+                            <ul class="tutorial-steps">
+                                <li>Cliquez sur l'icône LexiFlow</li>
+                                <li>Allez dans "Mes Flashcards"</li>
+                                <li>Organisez par langue ou thème</li>
+                                <li>Utilisez les tags pour catégoriser</li>
+                                <li>Révisez régulièrement</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Tutorial 4 -->
+                    <div class="tutorial-card animate-on-scroll">
+                        <div class="tutorial-header">
+                            <span class="tutorial-icon">🎯</span>
+                            <h3>Mode Pratique Premium</h3>
+                            <p class="tutorial-time">⏱️ 3 minutes</p>
+                        </div>
+                        <div class="tutorial-content">
+                            <h4>Apprentissage optimal :</h4>
+                            <ul class="tutorial-steps">
+                                <li>Activez le Mode Pratique</li>
+                                <li>Choisissez votre deck de cartes</li>
+                                <li>Répondez aux quiz</li>
+                                <li>L'algorithme adapte la difficulté</li>
+                                <li>Suivez vos progrès</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Tutorial 5 -->
+                    <div class="tutorial-card animate-on-scroll">
+                        <div class="tutorial-header">
+                            <span class="tutorial-icon">🤖</span>
+                            <h3>DeepSeek AI Premium</h3>
+                            <p class="tutorial-time">⏱️ 2 minutes</p>
+                        </div>
+                        <div class="tutorial-content">
+                            <h4>Traductions avancées :</h4>
+                            <ul class="tutorial-steps">
+                                <li>Activez DeepSeek dans les paramètres</li>
+                                <li>Sélectionnez un texte complexe</li>
+                                <li>L'IA analyse le contexte</li>
+                                <li>Obtenez des nuances précises</li>
+                                <li>Parfait pour le contenu technique</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Tutorial 6 -->
+                    <div class="tutorial-card animate-on-scroll">
+                        <div class="tutorial-header">
+                            <span class="tutorial-icon">⚙️</span>
+                            <h3>Personnalisation</h3>
+                            <p class="tutorial-time">⏱️ 1 minute</p>
+                        </div>
+                        <div class="tutorial-content">
+                            <h4>Adaptez LexiFlow :</h4>
+                            <ul class="tutorial-steps">
+                                <li>Ouvrez les paramètres</li>
+                                <li>Choisissez la couleur du bouton</li>
+                                <li>Définissez votre langue par défaut</li>
+                                <li>Activez/désactivez le son</li>
+                                <li>Personnalisez les raccourcis</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Video Section -->
+        <section class="video-section animate-on-scroll">
+            <div class="video-container">
+                <h2>🎥 Démonstration Vidéo</h2>
+                <p>Découvrez LexiFlow en action en 2 minutes</p>
+                
+                <div class="video-placeholder">
+                    <h3>Vidéo de Démonstration</h3>
+                    <div class="play-button"></div>
+                    <p>Bientôt disponible ! En attendant, suivez nos tutoriels écrits ci-dessus.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Resources Section -->
+        <section class="resources-section">
+            <div class="container">
+                <h2 style="text-align: center; margin-bottom: 3rem; color: var(--primary-blue);">📁 Ressources Utiles</h2>
+                
+                <div class="resources-grid animate-on-scroll">
+                    <a href="#" class="resource-card">
+                        <span class="resource-icon">📄</span>
+                        <h3>Guide PDF</h3>
+                        <p>Guide complet LexiFlow à télécharger</p>
+                    </a>
+                    
+                    <a href="#" class="resource-card">
+                        <span class="resource-icon">⌨️</span>
+                        <h3>Raccourcis</h3>
+                        <p>Carte de référence des raccourcis clavier</p>
+                    </a>
+                    
+                    <a href="#" class="resource-card">
+                        <span class="resource-icon">💡</span>
+                        <h3>Tips & Tricks</h3>
+                        <p>Astuces pour apprendre plus vite</p>
+                    </a>
+                    
+                    <a href="#" class="resource-card">
+                        <span class="resource-icon">🎯</span>
+                        <h3>Best Practices</h3>
+                        <p>Méthodes d'apprentissage efficaces</p>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Updates Section -->
+        <section class="updates-section">
+            <div class="updates-container">
+                <h2 style="text-align: center; margin-bottom: 3rem; color: var(--primary-blue);">🔄 Mises à Jour Récentes</h2>
+                
+                <div class="update-item animate-on-scroll">
+                    <div class="update-header">
+                        <span class="update-version">v1.2.0</span>
+                        <span class="update-date">15 juin 2025</span>
+                    </div>
+                    <div class="update-content">
+                        <h4>Nouvelles Fonctionnalités</h4>
+                        <ul class="update-list">
+                            <li>Mode Pratique amélioré avec quiz adaptatifs</li>
+                            <li>Support du japonais et coréen</li>
+                            <li>Synchronisation cloud instantanée</li>
+                            <li>Corrections de bugs mineurs</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="update-item animate-on-scroll">
+                    <div class="update-header">
+                        <span class="update-version">v1.1.0</span>
+                        <span class="update-date">1 juin 2025</span>
+                    </div>
+                    <div class="update-content">
+                        <h4>Améliorations</h4>
+                        <ul class="update-list">
+                            <li>DeepSeek AI plus rapide et précis</li>
+                            <li>Nouvelle interface pour les flashcards</li>
+                            <li>Export des cartes en CSV</li>
+                            <li>Performance optimisée de 30%</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="update-item animate-on-scroll">
+                    <div class="update-header">
+                        <span class="update-version">v1.0.0</span>
+                        <span class="update-date">15 mai 2025</span>
+                    </div>
+                    <div class="update-content">
+                        <h4>Lancement Officiel 🎉</h4>
+                        <ul class="update-list">
+                            <li>Version stable de LexiFlow</li>
+                            <li>11 langues supportées</li>
+                            <li>Système de flashcards intelligent</li>
+                            <li>Offre Early Bird activée</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Help CTA -->
+        <section class="container">
+            <div class="help-cta animate-on-scroll">
+                <div class="help-cta-content">
+                    <h2>Besoin d'Aide Supplémentaire ?</h2>
+                    <p>Notre équipe est là pour vous accompagner dans votre apprentissage</p>
+                    <div class="help-buttons">
+                        <a href="faq.html" class="cta-button secondary" style="background: white; color: var(--primary-blue);">
+                            Consulter la FAQ
+                        </a>
+                        <a href="contact.html" class="cta-button primary">
+                            Contacter le Support
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer Unifié -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <!-- À propos -->
+                <div class="footer-section">
+                    <h3>À propos de LexiFlow</h3>
+                    <p>Extension Chrome révolutionnaire pour la traduction instantanée et l'apprentissage des langues avec flashcards intelligentes.</p>
+                </div>
+                <!-- Liens rapides -->
+                <div class="footer-section">
+                    <h3>Liens Rapides</h3>
+                    <ul>
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="features.html">Fonctionnalités</a></li>
+                        <li><a href="pricing.html">Tarifs</a></li>
+                        <li><a href="faq.html">FAQ</a></li>
+                        <li><a href="about.html">À propos</a></li>
+                        <li><a href="support.html">Support</a></li>
+                        <li><a href="coming-soon.html" class="highlight">🐦 Offre Early Bird</a></li>
+                    </ul>
+                </div>
+                <!-- Légal -->
+                <div class="footer-section">
+                    <h3>Informations Légales</h3>
+                    <ul>
+                        <li><a href="terms.html">Conditions d'utilisation</a></li>
+                        <li><a href="privacy.html">Politique de confidentialité</a></li>
+                    </ul>
+                </div>
+                <!-- Contact -->
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <p>Email: support@lexiflow.com</p>
+                    <p>Réponse sous 24-48h</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 LexiFlow. Tous droits réservés.</p>
+                <p>Fait avec ❤️ pour briser les barrières linguistiques</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts Communs -->
+    <script>
+        // Mobile menu toggle
+        const mobileMenu = document.getElementById('mobileMenu');
+        const navLinks = document.getElementById('navLinks');
+        
+        mobileMenu.addEventListener('click', () => {
+            const isExpanded = mobileMenu.getAttribute('aria-expanded') === 'true';
+            mobileMenu.setAttribute('aria-expanded', !isExpanded);
+            navLinks.classList.toggle('active');
+        });
+
+        // Fermer le menu mobile en cliquant sur un lien
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+                mobileMenu.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        // Smooth scroll pour les ancres
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Intersection Observer pour les animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animated');
+                }
+            });
+        }, observerOptions);
+
+        // Observer tous les éléments avec la classe animate-on-scroll
+        document.querySelectorAll('.animate-on-scroll').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Animation hover sur les cartes
+        document.querySelectorAll('.step-card, .tutorial-card, .resource-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-10px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // Effet parallaxe subtil sur le header
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const header = document.querySelector('.page-header');
+            if (header && scrolled < 500) {
+                header.style.transform = `translateY(${scrolled * 0.5}px)`;
+            }
+        });
+
+        // Simulation de clic sur les tutoriels (pour une future expansion)
+        document.querySelectorAll('.tutorial-card').forEach(card => {
+            card.addEventListener('click', function() {
+                // Future : ouvrir un modal avec plus de détails
+                console.log('Tutorial clicked:', this.querySelector('h3').textContent);
+            });
+        });
+
+        // Animation du bouton play
+        const playButton = document.querySelector('.play-button');
+        if (playButton) {
+            playButton.addEventListener('click', function() {
+                // Future : lancer la vidéo
+                alert('Vidéo bientôt disponible ! En attendant, consultez nos tutoriels écrits.');
+            });
+        }
+    </script>
+</body>
+</html>

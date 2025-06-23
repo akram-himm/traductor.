@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créer un compte - LexiFlow</title>
+    <meta name="description" content="Créez votre compte LexiFlow gratuit pour sauvegarder vos flashcards et synchroniser vos données.">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
+    
+    <!-- CSS Unifié -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Styles spécifiques à la page d'inscription -->
+    <style>
+        body {
+            background: var(--gradient-blue);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .register-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .register-wrapper {
+            display: flex;
+            gap: 3rem;
+            max-width: 1200px;
+            width: 100%;
+            align-items: center;
+        }
+
+        .register-box {
+            background: white;
+            border-radius: var(--border-radius-xl);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            padding: 3rem;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .benefits-box {
+            flex: 1;
+            color: white;
+            animation: fadeInLeft 0.6s ease-out;
+        }
+
+        .benefits-box h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .benefit-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: var(--border-radius-sm);
+            backdrop-filter: blur(10px);
+            transition: var(--transition);
+        }
+
+        .benefit-item:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateX(10px);
+        }
+
+        .benefit-icon {
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+
+        .benefit-text h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .benefit-text p {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        .auth-logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-logo a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+
+        .auth-title {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-title h1 {
+            font-size: 2rem;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-title p {
+            color: var(--text-gray);
+        }
+
+        .auth-form {
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: var(--border-radius-sm);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(10, 44, 77, 0.1);
+        }
+
+        .password-requirements {
+            font-size: 0.85rem;
+            color: var(--text-gray);
+            margin-top: 0.5rem;
+        }
+
+        .password-requirement {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.25rem;
+        }
+
+        .password-requirement.valid {
+            color: var(--accent-green);
+        }
+
+        .terms-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .terms-checkbox input[type="checkbox"] {
+            margin-top: 0.25rem;
+            flex-shrink: 0;
+        }
+
+        .terms-checkbox label {
+            font-size: 0.9rem;
+            color: var(--text-gray);
+        }
+
+        .terms-checkbox a {
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+
+        .terms-checkbox a:hover {
+            text-decoration: underline;
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 14px;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-register:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-register:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .auth-footer {
+            text-align: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .auth-footer p {
+            color: var(--text-gray);
+        }
+
+        .auth-footer a {
+            color: var(--primary-blue);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .success-message,
+        .error-message {
+            padding: 1rem;
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 1.5rem;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .progress-indicator {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .progress-step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            color: var(--text-gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            position: relative;
+        }
+
+        .progress-step.active {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .progress-step.completed {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .progress-step::after {
+            content: '✓';
+            position: absolute;
+            font-size: 1.2rem;
+            display: none;
+        }
+
+        .progress-step.completed::after {
+            display: block;
+        }
+
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @media (max-width: 968px) {
+            .register-wrapper {
+                flex-direction: column;
+            }
+
+            .benefits-box {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .register-box {
+                padding: 2rem 1.5rem;
+            }
+
+            .auth-title h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-wrapper">
+            <!-- Benefits Column -->
+            <div class="benefits-box">
+                <h2>Pourquoi créer un compte ?</h2>
+                
+                <div class="benefit-item">
+                    <span class="benefit-icon">☁️</span>
+                    <div class="benefit-text">
+                        <h3>Sauvegarde automatique</h3>
+                        <p>Vos flashcards sont sauvegardées dans le cloud</p>
+                    </div>
+                </div>
+
+                <div class="benefit-item">
+                    <span class="benefit-icon">🔄</span>
+                    <div class="benefit-text">
+                        <h3>Synchronisation multi-appareils</h3>
+                        <p>Retrouvez vos données sur tous vos appareils</p>
+                    </div>
+                </div>
+
+                <div class="benefit-item">
+                    <span class="benefit-icon">📊</span>
+                    <div class="benefit-text">
+                        <h3>Statistiques d'apprentissage</h3>
+                        <p>Suivez vos progrès et optimisez votre apprentissage</p>
+                    </div>
+                </div>
+
+                <div class="benefit-item">
+                    <span class="benefit-icon">⭐</span>
+                    <div class="benefit-text">
+                        <h3>Accès à Premium</h3>
+                        <p>Débloquez toutes les fonctionnalités avancées</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Register Form -->
+            <div class="register-box">
+                <!-- Logo -->
+                <div class="auth-logo">
+                    <a href="index.html">
+                        <span>🌐</span>
+                        <span>LexiFlow</span>
+                    </a>
+                </div>
+
+                <!-- Progress Indicator -->
+                <div class="progress-indicator">
+                    <div class="progress-steps">
+                        <div class="progress-step active">1</div>
+                        <div class="progress-step">2</div>
+                        <div class="progress-step">3</div>
+                    </div>
+                    <p style="font-size: 0.9rem; color: var(--text-gray);">Créez votre compte en 30 secondes</p>
+                </div>
+
+                <!-- Title -->
+                <div class="auth-title">
+                    <h1>Créer un compte gratuit</h1>
+                    <p>Commencez à sauvegarder vos flashcards</p>
+                </div>
+
+                <!-- Messages -->
+                <div class="success-message" id="successMessage">
+                    ✅ Compte créé avec succès ! Redirection...
+                </div>
+                <div class="error-message" id="errorMessage">
+                    ❌ Cette adresse email est déjà utilisée
+                </div>
+
+                <!-- Register Form -->
+                <form class="auth-form" id="registerForm">
+                    <div class="form-group">
+                        <label for="email">Adresse email</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            class="form-control" 
+                            placeholder="votre@email.com"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Mot de passe</label>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            class="form-control" 
+                            placeholder="Créez un mot de passe sécurisé"
+                            required
+                            minlength="8"
+                        >
+                        <div class="password-requirements">
+                            <div class="password-requirement" id="req-length">
+                                <span>○</span> Au moins 8 caractères
+                            </div>
+                            <div class="password-requirement" id="req-number">
+                                <span>○</span> Un chiffre
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirmer le mot de passe</label>
+                        <input 
+                            type="password" 
+                            id="confirmPassword" 
+                            class="form-control" 
+                            placeholder="Confirmez votre mot de passe"
+                            required
+                        >
+                    </div>
+
+                    <div class="terms-checkbox">
+                        <input type="checkbox" id="terms" required>
+                        <label for="terms">
+                            J'accepte les <a href="terms.html" target="_blank">conditions d'utilisation</a> 
+                            et la <a href="privacy.html" target="_blank">politique de confidentialité</a>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-register" id="submitBtn" disabled>
+                        Créer mon compte
+                    </button>
+                </form>
+
+                <!-- Footer -->
+                <div class="auth-footer">
+                    <p>
+                        Déjà un compte ? 
+                        <a href="login.html">Se connecter</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Password validation
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const termsCheckbox = document.getElementById('terms');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        function validatePassword() {
+            const password = passwordInput.value;
+            
+            // Length check
+            const lengthReq = document.getElementById('req-length');
+            if (password.length >= 8) {
+                lengthReq.classList.add('valid');
+                lengthReq.querySelector('span').textContent = '✓';
+            } else {
+                lengthReq.classList.remove('valid');
+                lengthReq.querySelector('span').textContent = '○';
+            }
+            
+            // Number check
+            const numberReq = document.getElementById('req-number');
+            if (/\d/.test(password)) {
+                numberReq.classList.add('valid');
+                numberReq.querySelector('span').textContent = '✓';
+            } else {
+                numberReq.classList.remove('valid');
+                numberReq.querySelector('span').textContent = '○';
+            }
+            
+            checkFormValidity();
+        }
+
+        function checkFormValidity() {
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            const email = document.getElementById('email').value;
+            
+            const isValid = 
+                email && 
+                password.length >= 8 && 
+                /\d/.test(password) && 
+                password === confirmPassword && 
+                termsCheckbox.checked;
+                
+            submitBtn.disabled = !isValid;
+        }
+
+        passwordInput.addEventListener('input', validatePassword);
+        confirmPasswordInput.addEventListener('input', checkFormValidity);
+        termsCheckbox.addEventListener('change', checkFormValidity);
+
+        // Form submission
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = passwordInput.value;
+            
+            // Hide messages
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            
+            // Change button state
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Création en cours...';
+            
+            try {
+                // Check if user has local data to migrate
+                const localData = await getLocalData();
+                
+                // TODO: Replace with actual API call
+                const response = await fetch('http://localhost:3001/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        email, 
+                        password,
+                        localData: localData // Send local flashcards if any
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Store token
+                    localStorage.setItem('authToken', data.token);
+                    localStorage.setItem('userEmail', email);
+                    
+                    // Show success message
+                    document.getElementById('successMessage').style.display = 'block';
+                    
+                    // Update progress steps
+                    document.querySelectorAll('.progress-step').forEach(step => {
+                        step.classList.add('completed');
+                    });
+                    
+                    // Redirect after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 2000);
+                } else {
+                    const error = await response.json();
+                    document.getElementById('errorMessage').textContent = error.message || 'Une erreur est survenue';
+                    document.getElementById('errorMessage').style.display = 'block';
+                    
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Créer mon compte';
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                document.getElementById('errorMessage').style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Créer mon compte';
+            }
+        });
+
+        // Get local data to migrate
+        async function getLocalData() {
+            // This would be called from the extension context
+            // For now, return null
+            return null;
+        }
+    </script>
+</body>
+</html>

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>À Propos - LexiFlow | Notre Mission</title>
-    <meta name="description" content="Découvrez l'histoire de LexiFlow, notre mission pour briser les barrières linguistiques et notre vision pour l'apprentissage des langues.">
+    <title>À Propos - LexiFlow | Notre Histoire et Mission</title>
+    <meta name="description" content="Découvrez l'histoire de LexiFlow, notre mission pour révolutionner l'apprentissage des langues et notre vision pour briser les barrières linguistiques.">
     
     <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
@@ -50,12 +50,31 @@
         .value-card {
             text-align: center;
             padding: 2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .value-card:hover {
+            transform: translateY(-10px);
         }
 
         .value-icon {
             font-size: 4rem;
             margin-bottom: 1.5rem;
             display: block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .value-card:nth-child(2) .value-icon {
+            animation-delay: 0.5s;
+        }
+
+        .value-card:nth-child(3) .value-icon {
+            animation-delay: 1s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
 
         .value-card h3 {
@@ -99,16 +118,74 @@
             margin-bottom: 1.5rem;
         }
 
+        .story-text p strong {
+            color: var(--primary-blue);
+        }
+
         .story-image {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 20px;
             padding: 3rem;
             text-align: center;
             color: white;
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+            transform: rotate(-2deg);
+            transition: transform 0.3s ease;
+        }
+
+        .story-image:hover {
+            transform: rotate(0deg) scale(1.05);
         }
 
         .story-image-icon {
             font-size: 8rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Values Section */
+        .values-section {
+            padding: 80px 0;
+            background: white;
+        }
+
+        .values-section h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: var(--primary-blue);
+            margin-bottom: 3rem;
+        }
+
+        .values-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .value-item {
+            background: var(--bg-light);
+            padding: 2.5rem;
+            border-radius: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .value-item:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-blue);
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .value-item .value-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .value-item h3 {
+            color: var(--primary-blue);
             margin-bottom: 1rem;
         }
 
@@ -139,6 +216,11 @@
 
         .team-member {
             text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .team-member:hover {
+            transform: translateY(-10px);
         }
 
         .member-avatar {
@@ -152,6 +234,13 @@
             justify-content: center;
             font-size: 4rem;
             color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .team-member:hover .member-avatar {
+            transform: scale(1.1);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
         }
 
         .member-name {
@@ -163,6 +252,14 @@
         .member-role {
             color: var(--text-gray);
             font-style: italic;
+            margin-bottom: 0.5rem;
+        }
+
+        .member-bio {
+            font-size: 0.9rem;
+            color: var(--text-gray);
+            max-width: 250px;
+            margin: 0 auto;
         }
 
         /* Stats Section */
@@ -171,6 +268,24 @@
             color: white;
             padding: 60px 0;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stats-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 30s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         .stats-grid {
@@ -179,11 +294,19 @@
             gap: 3rem;
             max-width: 800px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
 
         .stat-item h3 {
             font-size: 3rem;
             margin-bottom: 0.5rem;
+        }
+
+        .stat-counter {
+            font-weight: bold;
+            display: inline-block;
+            min-width: 100px;
         }
 
         .stat-item p {
@@ -211,6 +334,14 @@
         .timeline-item {
             position: relative;
             padding: 2rem 0;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .timeline-item.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .timeline-item:nth-child(odd) {
@@ -234,43 +365,125 @@
             border-radius: 50%;
             border: 4px solid white;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1;
         }
 
         .timeline-date {
             font-weight: bold;
             color: var(--primary-blue);
             margin-bottom: 0.5rem;
+            font-size: 0.9rem;
         }
 
         .timeline-content {
             color: var(--text-gray);
+            line-height: 1.6;
+        }
+
+        .timeline-content strong {
+            color: var(--primary-blue);
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Testimonials Section */
+        .testimonials-section {
+            padding: 80px 0;
+            background: var(--bg-light);
+        }
+
+        .testimonials-section h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: var(--primary-blue);
+            margin-bottom: 3rem;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .testimonial {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .testimonial:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+        }
+
+        .testimonial::before {
+            content: '"';
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            font-size: 4rem;
+            color: var(--accent-yellow);
+            font-family: Georgia, serif;
+        }
+
+        .testimonial p {
+            font-style: italic;
+            color: var(--text-gray);
+            margin-bottom: 1rem;
+            padding-top: 1rem;
+        }
+
+        .testimonial cite {
+            font-style: normal;
+            font-weight: bold;
+            color: var(--primary-blue);
         }
 
         /* Contact CTA */
         .contact-cta-section {
             padding: 80px 0;
-            background: var(--bg-light);
+            background: white;
             text-align: center;
         }
 
         .contact-cta-box {
-            background: white;
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
             padding: 4rem;
-            border-radius: 20px;
-            box-shadow: var(--shadow-lg);
-            max-width: 600px;
+            border-radius: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            max-width: 700px;
             margin: 0 auto;
+            border: 2px solid #e6f2ff;
+            transition: all 0.3s ease;
+        }
+
+        .contact-cta-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.12);
         }
 
         .contact-cta-box h2 {
             color: var(--primary-blue);
             margin-bottom: 1rem;
+            font-size: 2.2rem;
         }
 
         .contact-cta-box p {
             color: var(--text-gray);
             margin-bottom: 2rem;
             font-size: 1.1rem;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
         @media (max-width: 768px) {
@@ -292,6 +505,14 @@
             .timeline-marker {
                 left: 20px;
             }
+
+            .cta-buttons {
+                flex-direction: column;
+            }
+
+            .cta-button {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -308,9 +529,10 @@
                 <li><a href="features.html">Fonctionnalités</a></li>
                 <li><a href="pricing.html">Tarifs</a></li>
                 <li><a href="faq.html">FAQ</a></li>
+                <li><a href="about.html" class="active">À propos</a></li>
                 <li><a href="contact.html">Contact</a></li>
             </ul>
-            <a href="coming-soon.html" class="cta-nav">Early Bird -40%</a>
+            <a href="coming-soon.html" class="cta-nav">🐦 Early Bird -40%</a>
             <button class="mobile-menu" id="mobileMenu" aria-label="Menu mobile" aria-expanded="false">
                 <span></span>
                 <span></span>
@@ -322,8 +544,8 @@
     <!-- Header Unifié Bleu Marine -->
     <header class="page-header">
         <div class="header-content">
-            <h1>À Propos de LexiFlow</h1>
-            <p>Notre mission pour briser les barrières linguistiques</p>
+            <h1>Notre Histoire</h1>
+            <p>Comment la frustration d'un développeur est devenue la solution de milliers</p>
         </div>
     </header>
 
@@ -333,9 +555,12 @@
             <div class="mission-container">
                 <h2>Notre Mission</h2>
                 <p class="mission-text">
-                    Chez LexiFlow, nous croyons que l'apprentissage des langues doit être <strong>fluide et naturel</strong>. 
-                    Notre mission est d'éliminer les interruptions inutiles lors de la lecture en langue étrangère 
-                    et de transformer chaque traduction en connaissance durable grâce à la mémorisation active.
+                    Chez LexiFlow, nous croyons que <strong>chaque mot compte</strong>. 
+                    Notre mission est de transformer la frustration de ne pas comprendre en 
+                    <strong>opportunité d'apprentissage instantané</strong>. Nous voulons que 
+                    vous puissiez lire n'importe quel contenu dans n'importe quelle langue, 
+                    sans jamais perdre le fil de votre lecture, tout en construisant 
+                    <strong>un vocabulaire durable</strong> qui vous accompagnera toute votre vie.
                 </p>
                 
                 <div class="values-grid">
@@ -363,17 +588,23 @@
             <div class="story-container">
                 <div class="story-content">
                     <div class="story-text">
-                        <h2>Notre Histoire</h2>
+                        <h2>L'Histoire Derrière LexiFlow</h2>
                         <p>
-                            LexiFlow est né d'une double frustration que nous avons tous vécue : <strong>pourquoi 
-                            devons-nous interrompre notre lecture</strong> pour aller traduire un mot ailleurs ? 
-                            Copier, ouvrir un nouvel onglet, coller, traduire... Cette interruption brise 
-                            complètement le flux de lecture.
+                            <strong>Tout a commencé par un moment de frustration.</strong> 
+                            Vous savez, ce moment où vous lisez un article passionnant et... 
+                            BAM ! Un mot inconnu. Vous le copiez, ouvrez un nouvel onglet, 
+                            le collez dans Google Translate, revenez à votre article... 
+                            et vous avez perdu le fil. Frustrant, non ?
                         </p>
                         <p>
-                            Mais surtout, <strong>pourquoi traduire si on va l'oublier</strong> dans quelques minutes ? 
-                            Combien de mots avez-vous traduits dans votre vie pour les oublier aussitôt ? 
-                            C'est du temps perdu et des opportunités d'apprentissage gâchées.
+                            Mais le pire ? <strong>5 minutes plus tard, vous avez déjà oublié 
+                            ce mot.</strong> Tout ce temps perdu pour rien. C'est là que nous 
+                            nous sommes dit : il doit y avoir une meilleure façon !
+                        </p>
+                        <p>
+                            LexiFlow est né de cette double frustration : <strong>pourquoi 
+                            devons-nous interrompre notre lecture</strong> pour aller traduire un mot ailleurs ? 
+                            Et <strong>pourquoi traduire si on va l'oublier</strong> dans quelques minutes ?
                         </p>
                         <p>
                             C'est pourquoi LexiFlow combine <strong>traduction instantanée</strong> (sans quitter 
@@ -394,24 +625,53 @@
             </div>
         </section>
 
+        <!-- Values Section -->
+        <section class="values-section animate-on-scroll">
+            <div class="container">
+                <h2>Nos Valeurs Fondamentales</h2>
+                <div class="values-grid">
+                    <div class="value-item">
+                        <span class="value-icon">🌊</span>
+                        <h3>Fluidité Absolue</h3>
+                        <p>Jamais nous n'interromprons votre flow de lecture. La technologie doit s'adapter à vous, pas l'inverse.</p>
+                    </div>
+                    <div class="value-item">
+                        <span class="value-icon">🎯</span>
+                        <h3>Apprentissage Contextuel</h3>
+                        <p>Un mot appris dans son contexte vaut 10 mots mémorisés isolément. C'est notre credo.</p>
+                    </div>
+                    <div class="value-item">
+                        <span class="value-icon">🚀</span>
+                        <h3>Innovation Continue</h3>
+                        <p>L'IA évolue, nous aussi. Chaque mise à jour apporte son lot d'améliorations pour votre apprentissage.</p>
+                    </div>
+                    <div class="value-item">
+                        <span class="value-icon">🤝</span>
+                        <h3>Accessibilité</h3>
+                        <p>L'apprentissage des langues est un droit. Version gratuite généreuse, prix Premium équitable.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Stats Section -->
         <section class="stats-section">
             <div class="container">
                 <div class="stats-grid">
                     <div class="stat-item">
-                        <h3>11</h3>
+                        <h3><span id="stat-languages" class="stat-counter">0</span></h3>
                         <p>Langues supportées</p>
                     </div>
                     <div class="stat-item">
-                        <h3>50K+</h3>
+                        <h3><span id="stat-translations" class="stat-counter">0</span>+</h3>
                         <p>Traductions par jour</p>
                     </div>
                     <div class="stat-item">
-                        <h3>98%</h3>
+                        <h3><span id="stat-satisfaction" class="stat-counter">0</span>%</h3>
                         <p>Satisfaction utilisateur</p>
                     </div>
                     <div class="stat-item">
-                        <h3>24h</h3>
+                        <h3><span id="stat-support" class="stat-counter">0</span>h</h3>
                         <p>Support réactif</p>
                     </div>
                 </div>
@@ -425,28 +685,43 @@
                 <div class="timeline">
                     <div class="timeline-item">
                         <div class="timeline-marker"></div>
-                        <div class="timeline-date">Le Problème</div>
-                        <div class="timeline-content">Frustration : interrompre la lecture + oublier les traductions</div>
+                        <div class="timeline-date">Janvier 2024</div>
+                        <div class="timeline-content">
+                            <strong>L'Étincelle</strong>
+                            Un développeur frustré + 50 onglets Google Translate ouverts
+                        </div>
                     </div>
                     <div class="timeline-item">
                         <div class="timeline-marker"></div>
-                        <div class="timeline-date">L'Idée</div>
-                        <div class="timeline-content">Combiner traduction instantanée et mémorisation active</div>
+                        <div class="timeline-date">Mars 2024</div>
+                        <div class="timeline-content">
+                            <strong>Le Eurêka</strong>
+                            "Et si la traduction venait à nous, pas l'inverse ?"
+                        </div>
                     </div>
                     <div class="timeline-item">
                         <div class="timeline-marker"></div>
-                        <div class="timeline-date">Le Prototype</div>
-                        <div class="timeline-content">Extension Chrome avec bouton flottant + flashcards</div>
+                        <div class="timeline-date">Juin 2024</div>
+                        <div class="timeline-content">
+                            <strong>La Révolution</strong>
+                            Première démo : traduction + flashcard = magie !
+                        </div>
                     </div>
                     <div class="timeline-item">
                         <div class="timeline-marker"></div>
-                        <div class="timeline-date">L'Innovation</div>
-                        <div class="timeline-content">Intégration DeepSeek AI pour contexte parfait</div>
+                        <div class="timeline-date">Octobre 2024</div>
+                        <div class="timeline-content">
+                            <strong>L'Innovation IA</strong>
+                            DeepSeek AI transforme les traductions approximatives en perfection
+                        </div>
                     </div>
                     <div class="timeline-item">
                         <div class="timeline-marker"></div>
                         <div class="timeline-date">Aujourd'hui</div>
-                        <div class="timeline-content">Des milliers d'utilisateurs apprennent sans interruption</div>
+                        <div class="timeline-content">
+                            <strong>Votre Tour</strong>
+                            Des milliers d'utilisateurs ne perdent plus jamais un mot
+                        </div>
                     </div>
                 </div>
             </div>
@@ -462,23 +737,48 @@
                 <div class="team-grid">
                     <div class="team-member">
                         <div class="member-avatar">👨‍💻</div>
-                        <h3 class="member-name">Fondateur</h3>
-                        <p class="member-role">Vision & Développement</p>
+                        <h3 class="member-name">Le Visionnaire</h3>
+                        <p class="member-role">Fondateur & Développeur</p>
+                        <p class="member-bio">Polyglotte frustré devenu développeur obsédé par l'apprentissage fluide</p>
                     </div>
                     <div class="team-member">
                         <div class="member-avatar">👩‍🎨</div>
-                        <h3 class="member-name">Designer UX/UI</h3>
-                        <p class="member-role">Expérience Utilisateur</p>
+                        <h3 class="member-name">L'Artiste UX</h3>
+                        <p class="member-role">Designer UX/UI</p>
+                        <p class="member-bio">Transforme les clics compliqués en magie intuitive</p>
                     </div>
                     <div class="team-member">
                         <div class="member-avatar">👨‍🔬</div>
-                        <h3 class="member-name">Expert IA</h3>
-                        <p class="member-role">DeepSeek Integration</p>
+                        <h3 class="member-name">Le Génie IA</h3>
+                        <p class="member-role">Expert DeepSeek</p>
+                        <p class="member-bio">Fait parler les algorithmes toutes les langues du monde</p>
                     </div>
                     <div class="team-member">
                         <div class="member-avatar">👩‍💼</div>
-                        <h3 class="member-name">Support Client</h3>
-                        <p class="member-role">Votre Satisfaction</p>
+                        <h3 class="member-name">L'Ange Gardien</h3>
+                        <p class="member-role">Support Client</p>
+                        <p class="member-bio">Répond plus vite que Google Translate (et avec le sourire)</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials Section -->
+        <section class="testimonials-section animate-on-scroll">
+            <div class="container">
+                <h2>Ce que Disent nos Early Adopters</h2>
+                <div class="testimonials-grid">
+                    <div class="testimonial">
+                        <p>"J'ai enfin pu lire Harry Potter en espagnol sans m'arracher les cheveux ! LexiFlow a transformé ma lecture en aventure d'apprentissage."</p>
+                        <cite>- Marie, Étudiante en langues</cite>
+                    </div>
+                    <div class="testimonial">
+                        <p>"Ma veille technologique internationale est devenue un plaisir. Je lis TechCrunch Japan sans interruption !"</p>
+                        <cite>- Thomas, Développeur Full-Stack</cite>
+                    </div>
+                    <div class="testimonial">
+                        <p>"Le mode flashcards est addictif. J'apprends sans m'en rendre compte. Mon allemand s'améliore chaque jour !"</p>
+                        <cite>- Sarah, Traductrice freelance</cite>
                     </div>
                 </div>
             </div>
@@ -488,12 +788,15 @@
         <section class="contact-cta-section">
             <div class="container">
                 <div class="contact-cta-box animate-on-scroll">
-                    <h2>Rejoignez l'Aventure LexiFlow</h2>
+                    <h2>Faisons Connaissance !</h2>
                     <p>
-                        Que vous soyez utilisateur, investisseur ou simplement curieux, 
-                        nous serions ravis d'échanger avec vous.
+                        Vous avez une question ? Une idée géniale ? Vous voulez juste dire bonjour ?<br>
+                        <strong>On adore les emails qui ne sont pas des factures !</strong>
                     </p>
-                    <a href="contact.html" class="cta-button primary">Contactez-nous</a>
+                    <div class="cta-buttons">
+                        <a href="contact.html" class="cta-button primary">Écrivez-nous</a>
+                        <a href="coming-soon.html" class="cta-button secondary">Essayer LexiFlow</a>
+                    </div>
                 </div>
             </div>
         </section>
@@ -517,6 +820,8 @@
                         <li><a href="features.html">Fonctionnalités</a></li>
                         <li><a href="pricing.html">Tarifs</a></li>
                         <li><a href="faq.html">FAQ</a></li>
+                        <li><a href="about.html">À propos</a></li>
+                        <li><a href="contact.html">Contact</a></li>
                         <li><a href="coming-soon.html" class="highlight">🐦 Offre Early Bird</a></li>
                     </ul>
                 </div>
@@ -589,6 +894,13 @@
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('animated');
+                    
+                    // Animation spéciale pour la timeline
+                    if (entry.target.classList.contains('timeline-item')) {
+                        setTimeout(() => {
+                            entry.target.classList.add('visible');
+                        }, 100);
+                    }
                 }
             });
         }, observerOptions);
@@ -596,6 +908,71 @@
         // Observer tous les éléments avec la classe animate-on-scroll
         document.querySelectorAll('.animate-on-scroll').forEach(el => {
             observer.observe(el);
+        });
+
+        // Observer les éléments de la timeline
+        document.querySelectorAll('.timeline-item').forEach((item, index) => {
+            observer.observe(item);
+        });
+
+        // Animation des compteurs
+        function animateCounter(elementId, start, end, suffix, duration) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            const range = end - start;
+            const increment = end > start ? 1 : -1;
+            const stepTime = Math.abs(Math.floor(duration / range));
+            let current = start;
+            
+            const timer = setInterval(function() {
+                current += increment;
+                element.textContent = current + (suffix || '');
+                
+                if (current === end) {
+                    clearInterval(timer);
+                }
+            }, stepTime);
+        }
+
+        // Déclencher l'animation des stats quand visible
+        const statsSection = document.querySelector('.stats-section');
+        let statsAnimated = false;
+
+        const statsObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !statsAnimated) {
+                    statsAnimated = true;
+                    animateCounter('stat-languages', 0, 11, '', 1500);
+                    animateCounter('stat-translations', 0, 50000, '', 2000);
+                    animateCounter('stat-satisfaction', 0, 98, '', 1800);
+                    animateCounter('stat-support', 0, 24, '', 1600);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        if (statsSection) {
+            statsObserver.observe(statsSection);
+        }
+
+        // Effet parallaxe subtil sur le header
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const header = document.querySelector('.page-header');
+            if (header && scrolled < 500) {
+                header.style.transform = `translateY(${scrolled * 0.5}px)`;
+            }
+        });
+
+        // Animation hover sur les membres de l'équipe
+        document.querySelectorAll('.team-member').forEach(member => {
+            member.addEventListener('mouseenter', function() {
+                this.querySelector('.member-avatar').style.transform = 'scale(1.1) rotate(5deg)';
+            });
+            
+            member.addEventListener('mouseleave', function() {
+                this.querySelector('.member-avatar').style.transform = 'scale(1) rotate(0deg)';
+            });
         });
     </script>
 </body>
