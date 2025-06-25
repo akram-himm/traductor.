@@ -1,18 +1,18 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Créer un compte - LexiFlow</title>
-    <meta name="description" content="Créez votre compte LexiFlow gratuit pour sauvegarder vos flashcards et synchroniser vos données.">
+    <title>Create Account - LexiFlow</title>
+    <meta name="description" content="Create your free LexiFlow account to save your flashcards and sync your data.">
     
     <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
     
-    <!-- CSS Unifié -->
+    <!-- Unified CSS -->
     <link rel="stylesheet" href="css/styles.css">
     
-    <!-- Styles spécifiques à la page d'inscription -->
+    <!-- Page-specific styles -->
     <style>
         body {
             background: var(--gradient-blue);
@@ -304,6 +304,23 @@
             display: block;
         }
 
+        .back-to-home {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .back-to-home:hover {
+            opacity: 1;
+        }
+
         @keyframes fadeInLeft {
             from {
                 opacity: 0;
@@ -333,45 +350,54 @@
             .auth-title h1 {
                 font-size: 1.5rem;
             }
+
+            .back-to-home {
+                top: 1rem;
+                left: 1rem;
+            }
         }
     </style>
 </head>
 <body>
+    <a href="index.html" class="back-to-home">
+        ← Back to Home
+    </a>
+
     <div class="register-container">
         <div class="register-wrapper">
             <!-- Benefits Column -->
             <div class="benefits-box">
-                <h2>Pourquoi créer un compte ?</h2>
+                <h2>Why create an account?</h2>
                 
                 <div class="benefit-item">
                     <span class="benefit-icon">☁️</span>
                     <div class="benefit-text">
-                        <h3>Sauvegarde automatique</h3>
-                        <p>Vos flashcards sont sauvegardées dans le cloud</p>
+                        <h3>Automatic backup</h3>
+                        <p>Your flashcards are saved in the cloud</p>
                     </div>
                 </div>
 
                 <div class="benefit-item">
                     <span class="benefit-icon">🔄</span>
                     <div class="benefit-text">
-                        <h3>Synchronisation multi-appareils</h3>
-                        <p>Retrouvez vos données sur tous vos appareils</p>
+                        <h3>Multi-device sync</h3>
+                        <p>Access your data on all your devices</p>
                     </div>
                 </div>
 
                 <div class="benefit-item">
                     <span class="benefit-icon">📊</span>
                     <div class="benefit-text">
-                        <h3>Statistiques d'apprentissage</h3>
-                        <p>Suivez vos progrès et optimisez votre apprentissage</p>
+                        <h3>Learning statistics</h3>
+                        <p>Track your progress and optimize your learning</p>
                     </div>
                 </div>
 
                 <div class="benefit-item">
                     <span class="benefit-icon">⭐</span>
                     <div class="benefit-text">
-                        <h3>Accès à Premium</h3>
-                        <p>Débloquez toutes les fonctionnalités avancées</p>
+                        <h3>Access to Premium</h3>
+                        <p>Unlock all advanced features</p>
                     </div>
                 </div>
             </div>
@@ -393,63 +419,63 @@
                         <div class="progress-step">2</div>
                         <div class="progress-step">3</div>
                     </div>
-                    <p style="font-size: 0.9rem; color: var(--text-gray);">Créez votre compte en 30 secondes</p>
+                    <p style="font-size: 0.9rem; color: var(--text-gray);">Create your account in 30 seconds</p>
                 </div>
 
                 <!-- Title -->
                 <div class="auth-title">
-                    <h1>Créer un compte gratuit</h1>
-                    <p>Commencez à sauvegarder vos flashcards</p>
+                    <h1>Create free account</h1>
+                    <p>Start saving your flashcards</p>
                 </div>
 
                 <!-- Messages -->
                 <div class="success-message" id="successMessage">
-                    ✅ Compte créé avec succès ! Redirection...
+                    ✅ Account created successfully! Redirecting...
                 </div>
                 <div class="error-message" id="errorMessage">
-                    ❌ Cette adresse email est déjà utilisée
+                    ❌ This email address is already in use
                 </div>
 
                 <!-- Register Form -->
                 <form class="auth-form" id="registerForm">
                     <div class="form-group">
-                        <label for="email">Adresse email</label>
+                        <label for="email">Email address</label>
                         <input 
                             type="email" 
                             id="email" 
                             class="form-control" 
-                            placeholder="votre@email.com"
+                            placeholder="your@email.com"
                             required
                         >
                     </div>
 
                     <div class="form-group">
-                        <label for="password">Mot de passe</label>
+                        <label for="password">Password</label>
                         <input 
                             type="password" 
                             id="password" 
                             class="form-control" 
-                            placeholder="Créez un mot de passe sécurisé"
+                            placeholder="Create a secure password"
                             required
                             minlength="8"
                         >
                         <div class="password-requirements">
                             <div class="password-requirement" id="req-length">
-                                <span>○</span> Au moins 8 caractères
+                                <span>○</span> At least 8 characters
                             </div>
                             <div class="password-requirement" id="req-number">
-                                <span>○</span> Un chiffre
+                                <span>○</span> One number
                             </div>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="confirmPassword">Confirmer le mot de passe</label>
+                        <label for="confirmPassword">Confirm password</label>
                         <input 
                             type="password" 
                             id="confirmPassword" 
                             class="form-control" 
-                            placeholder="Confirmez votre mot de passe"
+                            placeholder="Confirm your password"
                             required
                         >
                     </div>
@@ -457,21 +483,21 @@
                     <div class="terms-checkbox">
                         <input type="checkbox" id="terms" required>
                         <label for="terms">
-                            J'accepte les <a href="terms.html" target="_blank">conditions d'utilisation</a> 
-                            et la <a href="privacy.html" target="_blank">politique de confidentialité</a>
+                            I agree to the <a href="terms.html" target="_blank">terms of service</a> 
+                            and <a href="privacy.html" target="_blank">privacy policy</a>
                         </label>
                     </div>
 
                     <button type="submit" class="btn-register" id="submitBtn" disabled>
-                        Créer mon compte
+                        Create my account
                     </button>
                 </form>
 
                 <!-- Footer -->
                 <div class="auth-footer">
                     <p>
-                        Déjà un compte ? 
-                        <a href="login.html">Se connecter</a>
+                        Already have an account? 
+                        <a href="login.html">Log in</a>
                     </p>
                 </div>
             </div>
@@ -543,7 +569,7 @@
             
             // Change button state
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Création en cours...';
+            submitBtn.textContent = 'Creating account...';
             
             try {
                 // Check if user has local data to migrate
@@ -583,17 +609,17 @@
                     }, 2000);
                 } else {
                     const error = await response.json();
-                    document.getElementById('errorMessage').textContent = error.message || 'Une erreur est survenue';
+                    document.getElementById('errorMessage').textContent = error.message || 'An error occurred';
                     document.getElementById('errorMessage').style.display = 'block';
                     
                     submitBtn.disabled = false;
-                    submitBtn.textContent = 'Créer mon compte';
+                    submitBtn.textContent = 'Create my account';
                 }
             } catch (error) {
                 console.error('Registration error:', error);
                 document.getElementById('errorMessage').style.display = 'block';
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Créer mon compte';
+                submitBtn.textContent = 'Create my account';
             }
         });
 

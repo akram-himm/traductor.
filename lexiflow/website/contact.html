@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact - LexiFlow | Nous sommes là pour vous aider</title>
-    <meta name="description" content="Contactez l'équipe LexiFlow. Support technique, questions commerciales ou suggestions, nous répondons sous 24-48h.">
+    <title>Contact - LexiFlow | We're Here to Help</title>
+    <meta name="description" content="Contact the LexiFlow team. Technical support, business inquiries or suggestions, we respond within 24-48h.">
     
     <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
@@ -12,7 +12,7 @@
     <!-- CSS -->
     <link rel="stylesheet" href="css/styles.css">
     
-    <!-- Styles spécifiques à la page contact -->
+    <!-- Page-specific styles -->
     <style>
         .contact-container {
             max-width: 1200px;
@@ -190,26 +190,22 @@
     </style>
 </head>
 <body>
-    <!-- Navigation Simplifiée -->
-    <nav class="nav" role="navigation" aria-label="Navigation principale">
+    <!-- Unified Navigation -->
+    <nav class="nav" role="navigation" aria-label="Main navigation">
         <div class="nav-container">
-            <a href="index.html" class="logo" aria-label="LexiFlow - Accueil">
+            <a href="index.html" class="logo" aria-label="LexiFlow - Home">
                 <span aria-hidden="true">🌐</span>
                 <span>LexiFlow</span>
             </a>
-            
-            <!-- Navigation principale - Seulement l'essentiel -->
             <ul class="nav-links" id="navLinks">
-                <li><a href="index.html">Accueil</a></li>
-                <li><a href="features.html">Fonctionnalités</a></li>
-                <li><a href="pricing.html">Tarifs</a></li>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="features.html">Features</a></li>
+                <li><a href="pricing.html">Pricing</a></li>
+                <li><a href="faq.html">FAQ</a></li>
+                <li><a href="contact.html" class="active">Contact</a></li>
             </ul>
-            
-            <!-- CTA Uniforme -->
             <a href="coming-soon.html" class="cta-nav">🐦 Early Bird -40%</a>
-            
-            <!-- Menu Mobile -->
-            <button class="mobile-menu" id="mobileMenu" aria-label="Menu mobile" aria-expanded="false">
+            <button class="mobile-menu" id="mobileMenu" aria-label="Mobile menu" aria-expanded="false">
                 <span></span>
                 <span></span>
                 <span></span>
@@ -220,8 +216,8 @@
     <!-- Header -->
     <header class="page-header">
         <div class="header-content">
-            <h1>Contactez-nous</h1>
-            <p>Nous sommes là pour répondre à toutes vos questions</p>
+            <h1>Contact Us</h1>
+            <p>We're here to answer all your questions</p>
         </div>
     </header>
 
@@ -230,90 +226,90 @@
         <section class="section section-gray">
             <div class="contact-container">
                 <div class="contact-grid">
-                    <!-- Formulaire de Contact -->
+                    <!-- Contact Form -->
                     <div class="contact-form-section animate-on-scroll">
-                        <h2>Envoyez-nous un message</h2>
+                        <h2>Send us a message</h2>
                         
                         <div class="success-message" id="successMessage">
                             <span>✅</span>
-                            <span>Merci ! Votre message a été envoyé. Nous vous répondrons sous 24-48h.</span>
+                            <span>Thank you! Your message has been sent. We'll respond within 24-48h.</span>
                         </div>
                         
                         <div class="error-message" id="errorMessage">
                             <span>❌</span>
-                            <span>Une erreur s'est produite. Veuillez réessayer ou nous contacter directement par email.</span>
+                            <span>An error occurred. Please try again or contact us directly by email.</span>
                         </div>
 
                         <form id="contactForm">
                             <div class="form-group">
-                                <label for="name">Nom complet *</label>
+                                <label for="name">Full name *</label>
                                 <input type="text" id="name" name="name" required>
                             </div>
 
                             <div class="form-group">
-                                <label for="email">Adresse email *</label>
+                                <label for="email">Email address *</label>
                                 <input type="email" id="email" name="email" required>
                             </div>
 
                             <div class="form-group">
-                                <label for="subject">Sujet *</label>
+                                <label for="subject">Subject *</label>
                                 <select id="subject" name="subject" required>
-                                    <option value="">Sélectionnez un sujet</option>
-                                    <option value="support">Support technique</option>
-                                    <option value="premium">Questions sur Premium</option>
-                                    <option value="bug">Signaler un bug</option>
-                                    <option value="feature">Suggestion de fonctionnalité</option>
-                                    <option value="business">Partenariat / B2B</option>
-                                    <option value="other">Autre</option>
+                                    <option value="">Select a subject</option>
+                                    <option value="support">Technical support</option>
+                                    <option value="premium">Premium questions</option>
+                                    <option value="bug">Report a bug</option>
+                                    <option value="feature">Feature suggestion</option>
+                                    <option value="business">Partnership / B2B</option>
+                                    <option value="other">Other</option>
                                 </select>
                             </div>
 
                             <div class="form-group">
-                                <label for="message">Votre message *</label>
-                                <textarea id="message" name="message" required placeholder="Décrivez votre demande en détail..."></textarea>
+                                <label for="message">Your message *</label>
+                                <textarea id="message" name="message" required placeholder="Describe your request in detail..."></textarea>
                             </div>
 
                             <button type="submit" class="cta-button primary" style="width: 100%;" id="submitBtn">
-                                Envoyer le message
+                                Send message
                             </button>
                         </form>
                     </div>
 
-                    <!-- Informations de Contact -->
+                    <!-- Contact Information -->
                     <div class="contact-info-section animate-on-scroll">
-                        <h2>Autres moyens de nous contacter</h2>
+                        <h2>Other ways to contact us</h2>
 
                         <div class="contact-method">
-                            <h3><span class="contact-icon">📧</span> Email Direct</h3>
-                            <p><strong>Support général :</strong><br>support@lexiflow.com</p>
-                            <p><strong>Questions commerciales :</strong><br>business@lexiflow.com</p>
-                            <span class="response-time">Réponse sous 24-48h</span>
+                            <h3><span class="contact-icon">📧</span> Direct Email</h3>
+                            <p><strong>General support:</strong><br>support@lexiflow.com</p>
+                            <p><strong>Business inquiries:</strong><br>business@lexiflow.com</p>
+                            <span class="response-time">Response within 24-48h</span>
                         </div>
 
                         <div class="contact-method">
-                            <h3><span class="contact-icon">🚀</span> Support Premium</h3>
-                            <p>Les utilisateurs Premium bénéficient d'un support prioritaire avec réponse garantie sous 24h.</p>
-                            <p><strong>Email dédié :</strong><br>premium@lexiflow.com</p>
-                            <span class="response-time">Réponse prioritaire sous 24h</span>
+                            <h3><span class="contact-icon">🚀</span> Premium Support</h3>
+                            <p>Premium users enjoy priority support with guaranteed response within 24h.</p>
+                            <p><strong>Dedicated email:</strong><br>premium@lexiflow.com</p>
+                            <span class="response-time">Priority response within 24h</span>
                         </div>
 
                         <div class="contact-method">
-                            <h3><span class="contact-icon">🐛</span> Signaler un Bug</h3>
-                            <p>Trouvé un problème ? Aidez-nous à améliorer LexiFlow en signalant les bugs.</p>
-                            <p>Incluez si possible :</p>
+                            <h3><span class="contact-icon">🐛</span> Report a Bug</h3>
+                            <p>Found an issue? Help us improve LexiFlow by reporting bugs.</p>
+                            <p>Please include if possible:</p>
                             <ul style="margin-left: 20px; margin-top: 10px; color: var(--text-gray);">
-                                <li>Version de Chrome</li>
-                                <li>URL de la page</li>
-                                <li>Capture d'écran</li>
-                                <li>Étapes pour reproduire</li>
+                                <li>Chrome version</li>
+                                <li>Page URL</li>
+                                <li>Screenshot</li>
+                                <li>Steps to reproduce</li>
                             </ul>
                         </div>
 
                         <div class="faq-cta">
-                            <h3>💡 Avez-vous consulté notre FAQ ?</h3>
-                            <p>La plupart des questions trouvent une réponse dans notre FAQ complète.</p>
+                            <h3>💡 Have you checked our FAQ?</h3>
+                            <p>Most questions find an answer in our comprehensive FAQ.</p>
                             <a href="faq.html" class="cta-button secondary" style="margin-top: 1rem;">
-                                Consulter la FAQ
+                                Check FAQ
                             </a>
                         </div>
                     </div>
@@ -324,76 +320,64 @@
         <!-- Additional Info Section -->
         <section class="section section-white">
             <div class="container text-center">
-                <h2 class="mb-3">Nous sommes à votre écoute</h2>
+                <h2 class="mb-3">We're listening</h2>
                 <p style="max-width: 600px; margin: 0 auto 2rem; color: var(--text-gray); font-size: 1.1rem; line-height: 1.8;">
-                    Votre satisfaction est notre priorité. N'hésitez pas à nous contacter pour toute question, 
-                    suggestion ou problème. Nous sommes une équipe passionnée dédiée à rendre l'apprentissage 
-                    des langues plus accessible et agréable.
+                    Your satisfaction is our priority. Don't hesitate to contact us for any questions,
+                    suggestions or issues. We're a passionate team dedicated to making language
+                    learning more accessible and enjoyable.
                 </p>
                 <div class="early-bird-badge">
-                    🐦 Rappel : Profitez de l'offre Early Bird à 2.99€/mois !
+                    🐦 Reminder: Take advantage of the Early Bird offer at $2.99/month!
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- Footer Optimisé -->
+    <!-- Unified Footer -->
     <footer class="footer">
         <div class="footer-container">
             <div class="footer-grid">
-                <!-- À propos -->
-                <div class="footer-section about-section">
-                    <h3>LexiFlow</h3>
-                    <p>
-                        Extension Chrome révolutionnaire pour la traduction instantanée et l'apprentissage 
-                        des langues. Ne laissez plus jamais un mot inconnu interrompre votre lecture.
-                    </p>
-                    <div class="early-bird-footer">
-                        <h4>🐦 Offre Early Bird</h4>
-                        <p>Premium à 2.99€/mois (au lieu de 4.99€)</p>
-                        <a href="coming-soon.html" class="cta-button primary" style="padding: 10px 24px; font-size: 0.95rem;">
-                            Profiter de l'offre
-                        </a>
-                    </div>
+                <!-- About -->
+                <div class="footer-section">
+                    <h3>About LexiFlow</h3>
+                    <p>Revolutionary Chrome extension for instant translation and language learning with smart flashcards.</p>
                 </div>
                 
-                <!-- Navigation principale -->
+                <!-- Quick Links -->
                 <div class="footer-section">
-                    <h3>Navigation</h3>
+                    <h3>Quick Links</h3>
                     <ul>
-                        <li><a href="index.html">Accueil</a></li>
-                        <li><a href="features.html">Fonctionnalités</a></li>
-                        <li><a href="pricing.html">Tarifs</a></li>
-                        <li><a href="coming-soon.html" class="highlight">🐦 Early Bird</a></li>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="features.html">Features</a></li>
+                        <li><a href="pricing.html">Pricing</a></li>
+                        <li><a href="faq.html">FAQ</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                        <li><a href="support.html">Support</a></li>
+                        <li><a href="coming-soon.html" class="highlight">🐦 Early Bird Offer</a></li>
                     </ul>
                 </div>
                 
-                <!-- Ressources -->
+                <!-- Legal -->
                 <div class="footer-section">
-                    <h3>Ressources</h3>
+                    <h3>Legal Information</h3>
                     <ul>
-                        <li><a href="faq.html">FAQ</a></li>
-                        <li><a href="contact.html">Contact</a></li>
-                        <li><a href="about.html">À propos</a></li>
-                        <li><a href="#" target="_blank">Chrome Web Store</a></li>
+                        <li><a href="terms.html">Terms of Service</a></li>
+                        <li><a href="privacy.html">Privacy Policy</a></li>
                     </ul>
                 </div>
                 
                 <!-- Contact -->
                 <div class="footer-section">
-                    <h3>Support</h3>
+                    <h3>Contact</h3>
                     <p>Email: support@lexiflow.com</p>
-                    <p>Réponse sous 24-48h</p>
-                    <p style="margin-top: 1rem;">Premium: Réponse prioritaire sous 24h</p>
+                    <p>Response within 24-48h</p>
                 </div>
             </div>
             
             <div class="footer-bottom">
-                <p>&copy; 2025 LexiFlow. Tous droits réservés.</p>
-                <div class="footer-legal-links">
-                    <a href="privacy.html">Confidentialité</a>
-                    <a href="terms.html">CGU</a>
-                </div>
+                <p>&copy; 2025 LexiFlow. All rights reserved.</p>
+                <p>Made with ❤️ to break language barriers</p>
             </div>
         </div>
     </footer>
@@ -408,28 +392,31 @@
             const isExpanded = mobileMenu.getAttribute('aria-expanded') === 'true';
             mobileMenu.setAttribute('aria-expanded', !isExpanded);
             navLinks.classList.toggle('active');
-            mobileMenu.classList.toggle('active');
         });
 
-        // Fermer le menu mobile en cliquant sur un lien
+        // Close mobile menu on link click
         navLinks.querySelectorAll('a').forEach(link => {
             link.addEventListener('click', () => {
                 navLinks.classList.remove('active');
-                mobileMenu.classList.remove('active');
                 mobileMenu.setAttribute('aria-expanded', 'false');
             });
         });
 
-        // Fermer le menu en cliquant en dehors
-        document.addEventListener('click', (e) => {
-            if (!mobileMenu.contains(e.target) && !navLinks.contains(e.target)) {
-                navLinks.classList.remove('active');
-                mobileMenu.classList.remove('active');
-                mobileMenu.setAttribute('aria-expanded', 'false');
-            }
+        // Smooth scroll for anchors
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
         });
 
-        // Intersection Observer pour les animations
+        // Intersection Observer for animations
         const observerOptions = {
             threshold: 0.1,
             rootMargin: '0px 0px -100px 0px'
@@ -443,12 +430,12 @@
             });
         }, observerOptions);
 
-        // Observer tous les éléments avec la classe animate-on-scroll
+        // Observe all elements with animate-on-scroll class
         document.querySelectorAll('.animate-on-scroll').forEach(el => {
             observer.observe(el);
         });
 
-        // Gestion du formulaire de contact
+        // Contact form handling
         const contactForm = document.getElementById('contactForm');
         const successMessage = document.getElementById('successMessage');
         const errorMessage = document.getElementById('errorMessage');
@@ -457,16 +444,16 @@
         contactForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Cacher les messages précédents
+            // Hide previous messages
             successMessage.style.display = 'none';
             errorMessage.style.display = 'none';
             
-            // Afficher le spinner
+            // Show spinner
             const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = 'Envoi en cours...<span class="loading-spinner"></span>';
+            submitBtn.innerHTML = 'Sending...<span class="loading-spinner"></span>';
             submitBtn.disabled = true;
             
-            // Récupérer les données du formulaire
+            // Get form data
             const formData = {
                 name: document.getElementById('name').value,
                 email: document.getElementById('email').value,
@@ -475,35 +462,35 @@
             };
             
             try {
-                // TODO: Remplacer par l'appel API réel
+                // TODO: Replace with actual API call
                 // const response = await fetch('http://localhost:3001/api/contact', {
                 //     method: 'POST',
                 //     headers: { 'Content-Type': 'application/json' },
                 //     body: JSON.stringify(formData)
                 // });
                 
-                // Simulation pour le moment
+                // Simulation for now
                 await new Promise(resolve => setTimeout(resolve, 1500));
                 
-                // Afficher le message de succès
+                // Show success message
                 successMessage.style.display = 'flex';
                 contactForm.reset();
                 
-                // Scroll vers le message
+                // Scroll to message
                 successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 
             } catch (error) {
-                console.error('Erreur:', error);
+                console.error('Error:', error);
                 errorMessage.style.display = 'flex';
                 errorMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
             } finally {
-                // Restaurer le bouton
+                // Restore button
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
             }
         });
 
-        // Animation des contact methods au hover
+        // Contact method hover animation
         document.querySelectorAll('.contact-method').forEach(method => {
             method.addEventListener('mouseenter', function() {
                 this.style.transform = 'translateY(-5px) scale(1.02)';
