@@ -1886,7 +1886,107 @@ function resetApp() {
   if (!confirm('Êtes-vous vraiment sûr ? Cette action est irréversible!')) {
     return;
   }
-  
+// Ajouter ce code à la fin de votre popup.js pour faire fonctionner les toggles
+
+// Fonction pour gérer les clics sur les toggles
+function handleToggleClick(toggleId, settingKey) {
+    const toggle = document.getElementById(toggleId);
+    if (!toggle) return;
+    
+    // Ignorer si c'est DeepSeek et l'utilisateur n'est pas Premium
+    if (toggleId === 'deepSeekToggle' && (!window.authFunctions || !window.authFunctions.isPremium())) {
+        return;
+    }
+    
+    toggle.addEventListener('click', function() {
+        // Basculer l'état actif
+        this.classList.toggle('active');
+        const isActive = this.classList.contains('active');
+        
+        // Sauvegarder dans les paramètres
+        chrome.storage.sync.get('userSettings', (data) => {
+            const settings = data.userSettings || {};
+            settings[settingKey] = isActive;
+            chrome.storage.sync.set({ userSettings: settings });
+            
+            // Mettre à jour la variable globale si elle existe
+            if (window.userSettings) {
+                window.userSettings[settingKey] = isActive;
+            }
+        });
+        
+        // Actions spécifiques selon le toggle
+        switch(toggleId) {
+            case 'enabledToggle':
+                // Activer/désactiver l'extension
+                chrome.runtime.sendMessage({ 
+                    action: 'toggleExtension', 
+                    enabled: isActive 
+                });
+                break;
+                
+            case 'darkModeToggle':
+                // Appliquer le mode sombre
+                document.body.classList.toggle('dark-mode', isActive);
+                break;
+                
+            case 'deepSeekToggle':
+                // Afficher/masquer la configuration DeepSeek
+                const deepSeekConfig = document.getElementById('deepSeekConfig');
+                if (deepSeekConfig) {
+                    deepSeekConfig.style.display = isActive ? 'block' : 'none';
+                }
+                break;
+        }
+    });
+}
+
+// Initialiser tous les toggles
+document.addEventListener('DOMContentLoaded', function() {
+    // Liste de tous les toggles avec leurs clés de paramètres
+    const toggles = [
+        { id: 'enabledToggle', key: 'isEnabled' },
+        { id: 'showOriginalToggle', key: 'showOriginal' },
+        { id: 'hoverTranslateToggle', key: 'hoverTranslate' },
+        { id: 'darkModeToggle', key: 'darkMode' },
+        { id: 'immersionModeToggle', key: 'immersionMode' },
+        { id: 'autoSaveToggle', key: 'autoSave' },
+        { id: 'smartDetectionToggle', key: 'autoDetectSameLanguage' },
+        { id: 'animationsToggle', key: 'animationsEnabled' },
+        { id: 'shortcutToggle', key: 'enableShortcut' },
+        { id: 'deepSeekToggle', key: 'deepSeekEnabled' }
+    ];
+    
+    // Attacher les event listeners
+    toggles.forEach(({ id, key }) => {
+        handleToggleClick(id, key);
+    });
+    
+    // Gérer les selects aussi
+    const selects = [
+        { id: 'targetLanguage', key: 'targetLanguage' },
+        { id: 'fontSize', key: 'fontSize' },
+        { id: 'popupPosition', key: 'popupPosition' },
+        { id: 'buttonColor', key: 'buttonColor' }
+    ];
+    
+    selects.forEach(({ id, key }) => {
+        const select = document.getElementById(id);
+        if (select) {
+            select.addEventListener('change', function() {
+                chrome.storage.sync.get('userSettings', (data) => {
+                    const settings = data.userSettings || {};
+                    settings[key] = this.value;
+                    chrome.storage.sync.set({ userSettings: settings });
+                    
+                    if (window.userSettings) {
+                        window.userSettings[key] = this.value;
+                    }
+                });
+            });
+        }
+    });
+});
   // Réinitialiser toutes les données
   translations = [];
   flashcards = [];
