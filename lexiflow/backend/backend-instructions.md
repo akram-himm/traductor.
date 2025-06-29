@@ -4,7 +4,7 @@ Backend API pour l'extension Chrome LexiFlow - Documentation technique et état 
 
 ## 📊 État Actuel du Backend
 
-### Progression Globale : 85% ✅
+### Progression Globale : 95% ✅
 
 | Composant | Statut | Description |
 |-----------|---------|-------------|
@@ -14,7 +14,7 @@ Backend API pour l'extension Chrome LexiFlow - Documentation technique et état 
 | Tests | ✅ 100% | Tous les tests passent avec succès |
 | Stripe | ✅ 90% | Paiements et webhooks configurés |
 | Base de données | ⚠️ 50% | Modèles créés, PostgreSQL optionnel en dev |
-| Emails | ❌ 0% | Service email à configurer |
+| Emails | ✅ 100% | Service email configuré |
 | Synchronisation | ❌ 0% | À implémenter pour Premium |
 
 ### 🎉 Ce qui Fonctionne
@@ -233,14 +233,14 @@ const checkUserLimits = async (req, res, next) => {
 |---------|----------|-------------|------|---------|
 | POST | `/api/auth/register` | Inscription | ❌ | ✅ Fonctionnel |
 | POST | `/api/auth/login` | Connexion | ❌ | ✅ Fonctionnel |
-| POST | `/api/auth/refresh` | Renouveler token | ✅ | ⚠️ À implémenter |
-| POST | `/api/auth/logout` | Déconnexion | ✅ | ⚠️ À implémenter |
+| POST | `/api/auth/refresh` | Renouveler token | ✅ | ✅ Fonctionnel |
+| POST | `/api/auth/logout` | Déconnexion | ✅ | ✅ Fonctionnel |
 
 ### 👤 Utilisateur
 | Méthode | Endpoint | Description | Auth | Status |
 |---------|----------|-------------|------|---------|
 | GET | `/api/user/profile` | Profil utilisateur | ✅ | ✅ Fonctionnel |
-| PUT | `/api/user/profile` | Mettre à jour profil | ✅ | ⚠️ À tester |
+| PUT | `/api/user/profile` | Mettre à jour profil | ✅ | ✅ Fonctionnel |
 | POST | `/api/user/deepseek-key` | Sauvegarder clé API | ✅ Premium | ⚠️ À implémenter |
 
 ### 📚 Flashcards
@@ -248,14 +248,14 @@ const checkUserLimits = async (req, res, next) => {
 |---------|----------|-------------|------|---------|
 | GET | `/api/flashcards` | Liste des flashcards | ✅ | ✅ Fonctionnel |
 | POST | `/api/flashcards` | Créer flashcard | ✅ | ✅ Fonctionnel |
-| DELETE | `/api/flashcards/:id` | Supprimer flashcard | ✅ | ⚠️ À tester |
+| DELETE | `/api/flashcards/:id` | Supprimer flashcard | ✅ | ✅ Fonctionnel |
 
 ### 💳 Abonnements
 | Méthode | Endpoint | Description | Auth | Status |
 |---------|----------|-------------|------|---------|
 | POST | `/api/subscription/create-checkout-session` | Créer session Stripe | ✅ | ✅ Fonctionnel |
 | POST | `/api/subscription/webhook` | Webhook Stripe | ❌ | ✅ Fonctionnel |
-| GET | `/api/subscription/status` | Statut abonnement | ✅ | ⚠️ À tester |
+| GET | `/api/subscription/status` | Statut abonnement | ✅ | ✅ Fonctionnel |
 | POST | `/api/subscription/cancel` | Annuler abonnement | ✅ | ⚠️ À implémenter |
 
 ## 🧪 Tests
@@ -396,11 +396,11 @@ git commit -m "fix: correct token validation"
 ## 📋 TODO pour Production
 
 ### Phase 1 - Urgent (Cette semaine)
-- [ ] Configurer les emails transactionnels
-- [ ] Implémenter refresh token
-- [ ] Ajouter logout côté serveur
-- [ ] Tester toutes les routes avec Postman
-- [ ] Documenter l'API avec Swagger
+- [x] Configurer les emails transactionnels
+- [x] Implémenter refresh token
+- [x] Ajouter logout côté serveur
+- [x] Tester toutes les routes avec Postman
+- [x] Documenter l'API avec Swagger
 
 ### Phase 2 - Important
 - [ ] Implémenter la synchronisation cloud
@@ -437,12 +437,6 @@ stripe listen --forward-to localhost:3001/api/subscription/webhook
 npm test
 ```
 
-## 🐛 Bugs Connus
-
-1. **Rate limiting trop strict** - À ajuster pour /api/flashcards
-2. **Validation email** - Rejette les emails avec '+'
-3. **CORS** - Ajouter l'ID de l'extension Chrome
-
 ## 🔒 Sécurité
 
 - JWT expiration : 7 jours
@@ -460,4 +454,4 @@ npm test
 
 ---
 
-**Version :** 0.8.0 | **Statut :** 85% complet | **Dernière mise à jour :** 17 juin 2025
+**Version :** 0.8.0 | **Statut :** 95% complet | **Dernière mise à jour :** Juin 2025
