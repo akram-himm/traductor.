@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test LexiFlow Extension</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            background: #f5f5f5;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .test-text {
+            background: #fff;
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px dashed #ddd;
+            border-radius: 5px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        .lang-test {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #764ba2;
+        }
+        #log {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Page de Test LexiFlow</h1>
+    
+    <div class="instructions">
+        <h3>📋 Instructions de test :</h3>
+        <ol>
+            <li>Sélectionnez n'importe quel texte ci-dessous</li>
+            <li>L'icône 🌐 devrait apparaître</li>
+            <li>Cliquez dessus pour traduire</li>
+            <li>Vérifiez que la traduction s'affiche</li>
+            <li>Testez les différentes langues et fonctionnalités</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 1 : Textes en différentes langues</h2>
+        <div class="lang-test">
+            <div>
+                <h3>🇬🇧 Anglais</h3>
+                <div class="test-text">
+                    Hello world! This is a test sentence for the translation extension.
+                </div>
+                <div class="test-text">
+                    The quick brown fox jumps over the lazy dog.
+                </div>
+            </div>
+            <div>
+                <h3>🇫🇷 Français</h3>
+                <div class="test-text">
+                    Bonjour le monde ! Ceci est une phrase de test pour l'extension de traduction.
+                </div>
+                <div class="test-text">
+                    Le vif renard brun saute par-dessus le chien paresseux.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2 : Autres langues</h2>
+        <div class="lang-test">
+            <div>
+                <h3>🇪🇸 Espagnol</h3>
+                <div class="test-text">
+                    ¡Hola mundo! Esta es una oración de prueba.
+                </div>
+            </div>
+            <div>
+                <h3>🇩🇪 Allemand</h3>
+                <div class="test-text">
+                    Hallo Welt! Dies ist ein Testsatz.
+                </div>
+            </div>
+        </div>
+        <div class="lang-test">
+            <div>
+                <h3>🇮🇹 Italien</h3>
+                <div class="test-text">
+                    Ciao mondo! Questa è una frase di prova.
+                </div>
+            </div>
+            <div>
+                <h3>🇸🇦 Arabe</h3>
+                <div class="test-text" dir="rtl">
+                    مرحبا بالعالم! هذه جملة اختبارية.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3 : Fonctionnalités</h2>
+        <button onclick="testShortcut()">Tester Ctrl+Q</button>
+        <button onclick="checkStorage()">Vérifier l'historique</button>
+        <button onclick="checkSettings()">Vérifier les paramètres</button>
+        <button onclick="clearLog()">Effacer les logs</button>
+        
+        <h3>📊 Logs de diagnostic :</h3>
+        <div id="log">En attente des tests...</div>
+    </div>
+
+    <script>
+        // Logger personnalisé
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : '📝';
+            logDiv.innerHTML += `[${time}] ${prefix} ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        // Test du raccourci
+        function testShortcut() {
+            log('Sélectionnez du texte puis appuyez sur Ctrl+Q (ou Cmd+Q sur Mac)');
+            
+            // Sélectionner automatiquement du texte
+            const testText = document.querySelector('.test-text');
+            const range = document.createRange();
+            range.selectNodeContents(testText);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            
+            log('Texte sélectionné automatiquement. Appuyez sur Ctrl+Q maintenant!');
+        }
+
+        // Vérifier le storage
+        function checkStorage() {
+            log('Vérification du storage...');
+            
+            // Envoyer un message au content script
+            window.postMessage({ type: 'CHECK_STORAGE' }, '*');
+        }
+
+        // Vérifier les paramètres
+        function checkSettings() {
+            log('Vérification des paramètres...');
+            window.postMessage({ type: 'CHECK_SETTINGS' }, '*');
+        }
+
+        // Effacer les logs
+        function clearLog() {
+            document.getElementById('log').innerHTML = 'Logs effacés.\n';
+        }
+
+        // Écouter les messages du content script
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'LEXIFLOW_LOG') {
+                log(event.data.message, event.data.level);
+            }
+        });
+
+        // Détecter la sélection de texte
+        document.addEventListener('mouseup', () => {
+            const selection = window.getSelection();
+            const text = selection.toString().trim();
+            if (text) {
+                log(`Texte sélectionné: "${text}" (${text.length} caractères)`);
+            }
+        });
+
+        // Détecter les raccourcis clavier
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'q') {
+                log('Raccourci Ctrl+Q détecté!', 'success');
+            }
+        });
+
+        // Log initial
+        log('Page de test chargée. L\'extension devrait être active sur cette page.', 'success');
+        log('Sélectionnez n\'importe quel texte pour commencer le test.');
+    </script>
+</body>
+</html>

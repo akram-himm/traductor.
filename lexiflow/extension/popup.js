@@ -817,7 +817,10 @@ async function loadData() {
       deepSeekApiKey: '',
       autoDetectSameLanguage: true,
       showConfidence: true,
-      animationsEnabled: true
+      animationsEnabled: true,
+      hoverTranslation: true,
+      immersionMode: false,
+      autoSaveToFlashcards: false
     }, (settings) => {
       userSettings = settings;
       console.log('⚙️ Paramètres chargés:', userSettings);
@@ -1785,6 +1788,18 @@ function getTimeAgo(date) {
 function showNotification(message, type = 'info') {
   const notification = document.createElement('div');
   notification.className = `notification notification-${type}`;
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 16px 24px;
+    background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#3b82f6'};
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000;
+    animation: slideIn 0.3s ease-out;
+  `;
   notification.textContent = message;
   
   document.body.appendChild(notification);
@@ -1886,107 +1901,7 @@ function resetApp() {
   if (!confirm('Êtes-vous vraiment sûr ? Cette action est irréversible!')) {
     return;
   }
-// Ajouter ce code à la fin de votre popup.js pour faire fonctionner les toggles
-
-// Fonction pour gérer les clics sur les toggles
-function handleToggleClick(toggleId, settingKey) {
-    const toggle = document.getElementById(toggleId);
-    if (!toggle) return;
-    
-    // Ignorer si c'est DeepSeek et l'utilisateur n'est pas Premium
-    if (toggleId === 'deepSeekToggle' && (!window.authFunctions || !window.authFunctions.isPremium())) {
-        return;
-    }
-    
-    toggle.addEventListener('click', function() {
-        // Basculer l'état actif
-        this.classList.toggle('active');
-        const isActive = this.classList.contains('active');
-        
-        // Sauvegarder dans les paramètres
-        chrome.storage.sync.get('userSettings', (data) => {
-            const settings = data.userSettings || {};
-            settings[settingKey] = isActive;
-            chrome.storage.sync.set({ userSettings: settings });
-            
-            // Mettre à jour la variable globale si elle existe
-            if (window.userSettings) {
-                window.userSettings[settingKey] = isActive;
-            }
-        });
-        
-        // Actions spécifiques selon le toggle
-        switch(toggleId) {
-            case 'enabledToggle':
-                // Activer/désactiver l'extension
-                chrome.runtime.sendMessage({ 
-                    action: 'toggleExtension', 
-                    enabled: isActive 
-                });
-                break;
-                
-            case 'darkModeToggle':
-                // Appliquer le mode sombre
-                document.body.classList.toggle('dark-mode', isActive);
-                break;
-                
-            case 'deepSeekToggle':
-                // Afficher/masquer la configuration DeepSeek
-                const deepSeekConfig = document.getElementById('deepSeekConfig');
-                if (deepSeekConfig) {
-                    deepSeekConfig.style.display = isActive ? 'block' : 'none';
-                }
-                break;
-        }
-    });
-}
-
-// Initialiser tous les toggles
-document.addEventListener('DOMContentLoaded', function() {
-    // Liste de tous les toggles avec leurs clés de paramètres
-    const toggles = [
-        { id: 'enabledToggle', key: 'isEnabled' },
-        { id: 'showOriginalToggle', key: 'showOriginal' },
-        { id: 'hoverTranslateToggle', key: 'hoverTranslate' },
-        { id: 'darkModeToggle', key: 'darkMode' },
-        { id: 'immersionModeToggle', key: 'immersionMode' },
-        { id: 'autoSaveToggle', key: 'autoSave' },
-        { id: 'smartDetectionToggle', key: 'autoDetectSameLanguage' },
-        { id: 'animationsToggle', key: 'animationsEnabled' },
-        { id: 'shortcutToggle', key: 'enableShortcut' },
-        { id: 'deepSeekToggle', key: 'deepSeekEnabled' }
-    ];
-    
-    // Attacher les event listeners
-    toggles.forEach(({ id, key }) => {
-        handleToggleClick(id, key);
-    });
-    
-    // Gérer les selects aussi
-    const selects = [
-        { id: 'targetLanguage', key: 'targetLanguage' },
-        { id: 'fontSize', key: 'fontSize' },
-        { id: 'popupPosition', key: 'popupPosition' },
-        { id: 'buttonColor', key: 'buttonColor' }
-    ];
-    
-    selects.forEach(({ id, key }) => {
-        const select = document.getElementById(id);
-        if (select) {
-            select.addEventListener('change', function() {
-                chrome.storage.sync.get('userSettings', (data) => {
-                    const settings = data.userSettings || {};
-                    settings[key] = this.value;
-                    chrome.storage.sync.set({ userSettings: settings });
-                    
-                    if (window.userSettings) {
-                        window.userSettings[key] = this.value;
-                    }
-                });
-            });
-        }
-    });
-});
+  
   // Réinitialiser toutes les données
   translations = [];
   flashcards = [];
@@ -2008,7 +1923,10 @@ document.addEventListener('DOMContentLoaded', function() {
     deepSeekApiKey: '',
     autoDetectSameLanguage: true,
     showConfidence: true,
-    animationsEnabled: true
+    animationsEnabled: true,
+    hoverTranslation: true,
+    immersionMode: false,
+    autoSaveToFlashcards: false
   };
   
   // Sauvegarder
@@ -2169,21 +2087,114 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
     
-    // Paramètres - Toggles
+    // Paramètres - Toggles avec gestion des fonctionnalités manquantes
     const toggles = [
-      { id: 'enabledToggle', setting: 'isEnabled', label: 'Extension' },
-      { id: 'shortcutToggle', setting: 'enableShortcut', label: 'Raccourci' },
-      { id: 'smartDetectionToggle', setting: 'autoDetectSameLanguage', label: 'Détection intelligente' },
-      { id: 'animationsToggle', setting: 'animationsEnabled', label: 'Animations' }
+      { 
+        id: 'enabledToggle', 
+        setting: 'isEnabled', 
+        label: 'Extension',
+        action: (enabled) => {
+          chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+            if (tabs[0]) {
+              chrome.tabs.sendMessage(tabs[0].id, {
+                action: 'toggleExtension',
+                enabled: enabled
+              }).catch(() => {});
+            }
+          });
+        }
+      },
+      { 
+        id: 'shortcutToggle', 
+        setting: 'enableShortcut', 
+        label: 'Raccourci' 
+      },
+      { 
+        id: 'smartDetectionToggle', 
+        setting: 'autoDetectSameLanguage', 
+        label: 'Détection intelligente' 
+      },
+      { 
+        id: 'animationsToggle', 
+        setting: 'animationsEnabled', 
+        label: 'Animations',
+        action: (enabled) => {
+          if (!enabled) {
+            document.body.classList.add('no-animations');
+          } else {
+            document.body.classList.remove('no-animations');
+          }
+        }
+      }
     ];
     
-    toggles.forEach(({ id, setting, label }) => {
+    // IMPORTANT: Créer les toggles manquants dynamiquement
+    setTimeout(() => {
+      const settingsSection = document.querySelector('.settings-section:nth-of-type(2)');
+      if (settingsSection) {
+        // Ajouter les toggles manquants
+        const missingToggles = [
+          { 
+            id: 'hoverToggle',
+            setting: 'hoverTranslation', 
+            label: 'Traduction au survol',
+            description: 'Traduit automatiquement après 1 seconde de sélection'
+          },
+          { 
+            id: 'immersionToggle',
+            setting: 'immersionMode', 
+            label: 'Mode immersion',
+            description: 'Ajoute des indicateurs de traduction sur les éléments de la page'
+          },
+          { 
+            id: 'autoSaveToggle',
+            setting: 'autoSaveToFlashcards', 
+            label: 'Sauvegarde automatique',
+            description: 'Crée automatiquement une flashcard après chaque traduction'
+          }
+        ];
+        
+        missingToggles.forEach(toggle => {
+          // Vérifier si le toggle n'existe pas déjà
+          if (!document.getElementById(toggle.id)) {
+            const settingRow = document.createElement('div');
+            settingRow.className = 'setting-row';
+            settingRow.innerHTML = `
+              <div class="setting-info">
+                <div class="setting-label">${toggle.label}</div>
+                <div class="setting-description">${toggle.description}</div>
+              </div>
+              <div class="toggle-switch ${userSettings[toggle.setting] ? 'active' : ''}" id="${toggle.id}"></div>
+            `;
+            settingsSection.appendChild(settingRow);
+            
+            // Ajouter l'event listener
+            const toggleElement = document.getElementById(toggle.id);
+            if (toggleElement) {
+              toggleElement.addEventListener('click', () => {
+                userSettings[toggle.setting] = !userSettings[toggle.setting];
+                toggleElement.classList.toggle('active', userSettings[toggle.setting]);
+                saveSettings();
+                showNotification(`${toggle.label} ${userSettings[toggle.setting] ? 'activé' : 'désactivé'}`, 'info');
+              });
+            }
+          }
+        });
+      }
+    }, 100);
+    
+    toggles.forEach(({ id, setting, label, action }) => {
       const toggle = document.getElementById(id);
       if (toggle) {
         toggle.addEventListener('click', () => {
           userSettings[setting] = !userSettings[setting];
           toggle.classList.toggle('active', userSettings[setting]);
           saveSettings();
+          
+          if (action) {
+            action(userSettings[setting]);
+          }
+          
           showNotification(`${label} ${userSettings[setting] ? 'activé' : 'désactivé'}`, 'info');
         });
       }
