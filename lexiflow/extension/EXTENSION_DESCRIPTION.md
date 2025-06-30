@@ -1,6 +1,23 @@
 # 🚀 LexiFlow - Extension Chrome de Traduction et d'Apprentissage
 
-## 📋 Vue d'ensemble
+
+## 📁 Arborescence du dossier `lexiflow/extension`
+
+L'arborescence ci-dessous présente les fichiers principaux de l'extension Chrome LexiFlow. Chaque fichier a un rôle précis dans le fonctionnement de l'extension :
+
+```
+extension/
+├── background.js           # Service Worker : logique d'arrière-plan, gestion des événements, alarmes, etc.
+├── content.js              # Script injecté dans les pages web pour détecter la sélection de texte et afficher la bulle de traduction.
+├── EXTENSION_DESCRIPTION.md# Ce fichier de documentation détaillant l'extension et sa structure.
+├── manifest.json           # Fichier de configuration principal (Manifest V3) de l'extension Chrome.
+├── popup.css               # Styles du popup (mini-app d'interface utilisateur de l'extension).
+├── popup.html              # Structure HTML du popup.
+├── popup.js                # Logique JavaScript du popup.
+├── test.html               # Fichier de test pour le développement de l'extension.
+```
+
+## �📋 Vue d'ensemble
 
 **LexiFlow** est une extension Chrome innovante conçue pour révolutionner la manière dont les utilisateurs interagissent avec les langues sur le web. Elle offre une traduction instantanée de texte sélectionné, un système intelligent de flashcards pour la mémorisation de vocabulaire, et des fonctionnalités avancées propulsées par l'IA DeepSeek pour les utilisateurs Premium.
 

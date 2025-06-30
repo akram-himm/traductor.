@@ -122,12 +122,15 @@ async function translateWithGoogleFree(text, targetLang, sourceLang) {
   return null;
 }
 
-// LibreTranslate
+// LibreTranslate (avec gestion d'erreur CORS améliorée)
 async function translateWithLibreTranslate(text, targetLang, sourceLang) {
   try {
     const response = await fetch('https://libretranslate.de/translate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
       body: JSON.stringify({
         q: text,
         source: sourceLang === 'auto' ? 'auto' : sourceLang,
@@ -143,9 +146,15 @@ async function translateWithLibreTranslate(text, targetLang, sourceLang) {
         detectedLanguage: data.detectedLanguage?.language || sourceLang,
         confidence: data.detectedLanguage?.confidence || 0.8
       };
+    } else {
+      console.warn(`LibreTranslate HTTP ${response.status}: ${response.statusText}`);
     }
   } catch (error) {
-    console.error('LibreTranslate error:', error);
+    console.error('LibreTranslate error:', error.message);
+    // Les erreurs CORS sont courantes avec LibreTranslate, on les ignore silencieusement
+    if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+      console.warn('LibreTranslate CORS/Network error - using fallback service');
+    }
   }
   return null;
 }
@@ -343,6 +352,13 @@ async function handleTranslation(event) {
 function displayTranslation(bubble, result) {
   const { translatedText, detectedLanguage, confidence } = result;
   
+  // Vérifier si le texte est déjà dans la langue cible
+  const isAlreadyInTargetLanguage = detectedLanguage === userSettings.targetLanguage;
+  const sameLanguageNote = isAlreadyInTargetLanguage ? 
+    `<div style="background: #fef3c7; color: #92400e; padding: 8px; border-radius: 6px; font-size: 12px; margin-bottom: 8px; border-left: 3px solid #f59e0b;">
+      ℹ️ Déjà en ${getLanguageName(userSettings.targetLanguage)}
+    </div>` : '';
+  
   // Structure exacte du design original
   bubble.innerHTML = `
     <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 12px;">
@@ -369,6 +385,8 @@ function displayTranslation(bubble, result) {
           </select>
         </div>
       </div>
+      
+      ${sameLanguageNote}
       
       <div style="color: #111827; padding: 12px; background: #f8fafc; border-radius: 8px; font-weight: 500; font-size: 15px;">
         ${translatedText}

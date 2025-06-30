@@ -1383,6 +1383,8 @@ function updateFlashcards() {
           const action = btn.dataset.action;
           const cardId = parseInt(btn.dataset.cardId);
           
+          console.log('Action flashcard:', { action, cardId });
+          
           switch(action) {
             case 'favorite':
               moveToFolder(cardId, 'favorites');
@@ -1394,6 +1396,7 @@ function updateFlashcards() {
               moveToFolder(cardId, 'learned');
               break;
             case 'delete':
+              console.log('Suppression de la flashcard:', cardId);
               deleteFlashcard(cardId);
               break;
           }
@@ -1810,6 +1813,104 @@ function showNotification(message, type = 'info') {
   }, 3000);
 }
 
+// Afficher la fenêtre de login
+function showLoginWindow() {
+  const loginModal = document.createElement('div');
+  loginModal.className = 'login-modal';
+  loginModal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  `;
+  
+  loginModal.innerHTML = `
+    <div style="background: white; padding: 32px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); max-width: 400px; width: 90%;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div style="font-size: 48px; margin-bottom: 16px;">🔐</div>
+        <h2 style="font-size: 24px; margin-bottom: 8px;">Connexion à LexiFlow</h2>
+        <p style="color: #6b7280;">Connectez-vous pour accéder aux fonctionnalités Premium</p>
+      </div>
+      
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; margin-bottom: 8px; font-weight: 500;">Email :</label>
+        <input type="email" id="loginEmail" class="input" placeholder="votre@email.com" style="width: 100%;">
+      </div>
+      
+      <div style="margin-bottom: 24px;">
+        <label style="display: block; margin-bottom: 8px; font-weight: 500;">Mot de passe :</label>
+        <input type="password" id="loginPassword" class="input" placeholder="••••••••" style="width: 100%;">
+      </div>
+      
+      <div style="display: flex; gap: 12px;">
+        <button class="btn btn-primary btn-block js-login-submit">
+          Se connecter
+        </button>
+        <button class="btn btn-secondary js-login-cancel">
+          Annuler
+        </button>
+      </div>
+      
+      <div style="text-align: center; margin-top: 16px;">
+        <a href="#" style="color: var(--primary-color); font-size: 12px;">Mot de passe oublié ?</a>
+        <span style="margin: 0 8px; color: #d1d5db;">|</span>
+        <a href="#" style="color: var(--primary-color); font-size: 12px;">Créer un compte</a>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(loginModal);
+  
+  // Event listeners
+  loginModal.querySelector('.js-login-cancel').addEventListener('click', () => {
+    loginModal.remove();
+  });
+  
+  loginModal.querySelector('.js-login-submit').addEventListener('click', () => {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    
+    if (!email || !password) {
+      showNotification('Veuillez remplir tous les champs', 'warning');
+      return;
+    }
+    
+    // TODO: Implémenter la vraie logique de connexion
+    showNotification('Connexion en cours...', 'info');
+    
+    // Simuler une connexion
+    setTimeout(() => {
+      loginModal.remove();
+      showNotification('Connexion réussie!', 'success');
+      
+      // Mettre à jour l'interface
+      const loginButton = document.getElementById('loginButton');
+      if (loginButton) {
+        loginButton.textContent = '👤 Connecté';
+        loginButton.style.background = 'rgba(16, 185, 129, 0.2)';
+      }
+    }, 1500);
+  });
+  
+  // Fermer en cliquant à l'extérieur
+  loginModal.addEventListener('click', (e) => {
+    if (e.target === loginModal) {
+      loginModal.remove();
+    }
+  });
+  
+  // Focus sur l'email
+  setTimeout(() => {
+    document.getElementById('loginEmail').focus();
+  }, 100);
+}
+
 // Effacer tout l'historique
 function clearHistory() {
   if (!confirm('Effacer tout l\'historique des traductions ?')) return;
@@ -2023,6 +2124,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
     
+    // Bouton de connexion
+    const loginButton = document.getElementById('loginButton');
+    if (loginButton) {
+      loginButton.addEventListener('click', () => {
+        // Ouvrir la fenêtre de login
+        showLoginWindow();
+      });
+    }
+    
     // Actions globales
     document.addEventListener('click', (e) => {
       const target = e.target.closest('[data-action]');
@@ -2200,48 +2310,70 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
     
-    // DeepSeek settings
+    // DeepSeek settings - Nouveau comportement
     const deepSeekToggle = document.getElementById('deepSeekToggle');
-    const deepSeekApiGroup = document.getElementById('deepSeekApiGroup');
-    const deepSeekApiKey = document.getElementById('deepSeekApiKey');
+    const deepSeekStatus = document.getElementById('deepSeekStatus');
     
     if (deepSeekToggle) {
-      deepSeekToggle.addEventListener('click', async () => {
+      // Initialiser l'état du toggle selon le statut de connexion/premium
+      const isLoggedIn = false; // TODO: vérifier le statut de connexion réel
+      const isPremium = false;  // TODO: vérifier le statut premium réel
+      
+      // Désactiver le toggle si non connecté ou non premium
+      if (!isLoggedIn) {
+        deepSeekToggle.classList.add('disabled');
+        deepSeekToggle.style.opacity = '0.5';
+        deepSeekToggle.style.cursor = 'not-allowed';
+        deepSeekToggle.title = 'Vous devez vous connecter';
+        
+        if (deepSeekStatus) {
+          deepSeekStatus.innerHTML = '<span>ℹ️</span><span>Connectez-vous pour accéder à DeepSeek AI</span>';
+        }
+      } else if (!isPremium) {
+        deepSeekToggle.classList.add('disabled');
+        deepSeekToggle.style.opacity = '0.5';
+        deepSeekToggle.style.cursor = 'not-allowed';
+        deepSeekToggle.title = 'Vous devez souscrire à Premium';
+        
+        if (deepSeekStatus) {
+          deepSeekStatus.innerHTML = '<span>ℹ️</span><span>Vous devez souscrire à Premium</span>';
+        }
+      }
+      
+      deepSeekToggle.addEventListener('click', async (e) => {
+        // Empêcher l'action si désactivé
+        if (deepSeekToggle.classList.contains('disabled')) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          if (!isLoggedIn) {
+            showNotification('Vous devez vous connecter pour activer DeepSeek AI', 'warning');
+          } else if (!isPremium) {
+            showNotification('Vous devez souscrire à Premium pour activer DeepSeek AI', 'warning');
+          }
+          return;
+        }
+        
+        // Logique normale si connecté et premium
         userSettings.deepSeekEnabled = !userSettings.deepSeekEnabled;
         deepSeekToggle.classList.toggle('active', userSettings.deepSeekEnabled);
-        
-        if (deepSeekApiGroup) {
-          deepSeekApiGroup.style.display = userSettings.deepSeekEnabled ? 'block' : 'none';
-        }
         
         saveSettings();
         await checkPremiumStatus();
         
-        if (userSettings.deepSeekEnabled && deepSeekApiKey) {
-          deepSeekApiKey.focus();
-          showNotification('Entrez votre clé API DeepSeek pour activer l\'IA', 'info');
-        }
-      });
-    }
-    
-    if (deepSeekApiKey) {
-      let validateTimeout;
-      
-      deepSeekApiKey.addEventListener('input', async (e) => {
-        const apiKey = e.target.value.trim();
-        userSettings.deepSeekApiKey = apiKey;
-        
-        clearTimeout(validateTimeout);
-        validateTimeout = setTimeout(async () => {
-          saveSettings();
-          if (apiKey) {
-            const isValid = await validateDeepSeekKey(apiKey);
-            if (isValid) {
-              await checkPremiumStatus();
-              showNotification('✅ DeepSeek AI activé avec succès!', 'success');
-            }
+        if (userSettings.deepSeekEnabled) {
+          showNotification('DeepSeek AI activé!', 'success');
+          if (deepSeekStatus) {
+            deepSeekStatus.innerHTML = '<span>✅</span><span>DeepSeek AI activé</span>';
+            deepSeekStatus.className = 'deepseek-status active';
           }
-        }, 1000);
+        } else {
+          showNotification('DeepSeek AI désactivé', 'info');
+          if (deepSeekStatus) {
+            deepSeekStatus.innerHTML = '<span>❌</span><span>DeepSeek AI désactivé</span>';
+            deepSeekStatus.className = 'deepseek-status inactive';
+          }
+        }
       });
     }
     

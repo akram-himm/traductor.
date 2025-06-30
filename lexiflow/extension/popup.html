@@ -1191,8 +1191,16 @@
 <body>
     <div class="header">
         <div class="header-content">
+            <div style="position: absolute; top: 16px; right: 16px; z-index: 10;">
+                <button class="btn btn-sm" id="loginButton" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3);">
+                    👤 Se connecter
+                </button>
+            </div>
             <div class="logo">🌐</div>
-            <div class="title">Quick Translator Pro</div>
+            <div class="title">
+                <div>Quick Translator</div>
+                <div>Pro</div>
+            </div>
             <div class="subtitle">Intelligence linguistique avancée</div>
             <div class="badges">
                 <div class="pro-badge" id="proBadge" style="display: none;">
@@ -1426,26 +1434,12 @@
                     <div class="setting-label">Mode DeepSeek AI</div>
                     <div class="setting-description">Utiliser l'IA avancée pour des traductions parfaites</div>
                 </div>
-                <div class="toggle-switch" id="deepSeekToggle"></div>
+                <div class="toggle-switch" id="deepSeekToggle" title="Connectez-vous pour activer"></div>
             </div>
             
-            <div id="deepSeekApiGroup" style="display: none;">
-                <div class="setting-row">
-                    <div class="setting-info" style="width: 100%;">
-                        <div class="setting-label">Clé API DeepSeek</div>
-                        <div class="setting-description">
-                            Obtenez votre clé sur 
-                            <a href="https://platform.deepseek.com" target="_blank" style="color: var(--primary-color);">platform.deepseek.com</a>
-                        </div>
-                        <input type="password" class="input input-api" id="deepSeekApiKey" 
-                               placeholder="sk-..." style="margin-top: 12px;">
-                    </div>
-                </div>
-                
-                <div class="deepseek-status inactive" id="deepSeekStatus">
-                    <span>❌</span>
-                    <span>DeepSeek non configuré</span>
-                </div>
+            <div class="deepseek-status inactive" id="deepSeekStatus">
+                <span>ℹ️</span>
+                <span>Connectez-vous pour accéder à DeepSeek AI</span>
             </div>
         </div>
 

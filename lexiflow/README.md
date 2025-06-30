@@ -1,4 +1,19 @@
+
 # LexiFlow - Extension Chrome de Traduction Instantanée
+
+## 📁 Arborescence du dossier `lexiflow/`
+
+Ce dossier contient l'ensemble du projet LexiFlow, incluant l'extension Chrome, le backend API, le site web, et les scripts/outils associés.
+
+```
+lexiflow/
+├── README.md                # Documentation générale du projet LexiFlow
+├── backend/                 # Backend Node.js (API, modèles, routes, scripts, tests)
+├── data/                    # Données statiques (ex: waitlist)
+├── extension/               # Code source de l'extension Chrome LexiFlow
+├── start-lexiflow.bat       # Script de démarrage rapide (Windows)
+├── website/                 # Code source du site web vitrine LexiFlow
+```
 
 <div align="center">
   <img src="assets/logo.png" alt="LexiFlow Logo" width="120" height="120" />

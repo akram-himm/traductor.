@@ -1,4 +1,20 @@
+
 # 🚀 LexiFlow Backend - Instructions Complètes
+
+## 📁 Arborescence du dossier `lexiflow/backend/`
+
+Ce dossier contient le backend Node.js de LexiFlow, qui gère l'API, la base de données, l'authentification, la facturation et la logique métier.
+
+```
+backend/
+├── backend-instructions.md  # Documentation technique du backend
+├── migrations/              # Scripts de migration de base de données
+├── node_modules/            # Dépendances Node.js
+├── package.json             # Dépendances et scripts du backend
+├── scripts/                 # Scripts utilitaires (init, seed, tests, etc.)
+├── src/                     # Code source principal (app, routes, modèles, services, middlewares)
+├── tests/                   # Tests du backend
+```
 
 Backend API pour l'extension Chrome LexiFlow - Documentation technique et état du développement
 

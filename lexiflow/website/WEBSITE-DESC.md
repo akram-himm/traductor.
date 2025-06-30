@@ -1,4 +1,30 @@
+
 # WEBSITE_DESC.md - Plan de construction du site web LexiFlow
+
+## 📁 Arborescence du dossier `lexiflow/website/`
+
+Ce dossier contient le site web vitrine de LexiFlow, avec toutes les pages publiques, les ressources statiques et les fichiers de style/scripts.
+
+```
+website/
+├── WEBSITE-DESC.md      # Documentation et plan du site web
+├── about.html           # Page À propos
+├── coming-soon.html     # Page Early Bird
+├── contact.html         # Page de contact
+├── css/                 # Feuilles de style CSS
+├── dashboard.html       # Tableau de bord utilisateur
+├── faq.html             # Foire aux questions
+├── features.html        # Page des fonctionnalités
+├── images/              # Images et illustrations
+├── index.html           # Landing page
+├── js/                  # Scripts JavaScript du site
+├── login.html           # Page de connexion
+├── pricing.html         # Tarifs
+├── privacy.html         # Politique de confidentialité
+├── register.html        # Page d'inscription
+├── support.html         # Support utilisateur
+├── terms.html           # Conditions générales d'utilisation
+```
 
 ## 🌐 Vue d'ensemble
 
