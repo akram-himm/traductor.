@@ -1891,8 +1891,14 @@ function showLoginWindow() {
       // Mettre à jour l'interface
       const loginButton = document.getElementById('loginButton');
       if (loginButton) {
-        loginButton.textContent = '👤 Connecté';
-        loginButton.style.background = 'rgba(16, 185, 129, 0.2)';
+        loginButton.innerHTML = '<span style="font-size: 14px;">✅</span><span>Connecté</span>';
+        loginButton.style.background = 'rgba(16, 185, 129, 0.3)';
+        loginButton.style.borderColor = 'rgba(16, 185, 129, 0.5)';
+        loginButton.style.cursor = 'default';
+        
+        // Supprimer les event listeners hover
+        loginButton.onmouseenter = null;
+        loginButton.onmouseleave = null;
       }
     }, 1500);
   });
@@ -2157,6 +2163,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Bouton de connexion
     const loginButton = document.getElementById('loginButton');
     if (loginButton) {
+      // Effets hover
+      loginButton.addEventListener('mouseenter', () => {
+        loginButton.style.background = 'rgba(255,255,255,0.25)';
+        loginButton.style.transform = 'translateY(-1px)';
+        loginButton.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+      });
+      
+      loginButton.addEventListener('mouseleave', () => {
+        loginButton.style.background = 'rgba(255,255,255,0.15)';
+        loginButton.style.transform = 'translateY(0)';
+        loginButton.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+      });
+      
       loginButton.addEventListener('click', () => {
         // Ouvrir la fenêtre de login
         showLoginWindow();

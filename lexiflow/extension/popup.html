@@ -103,12 +103,26 @@
         }
         
         .title {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 6px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            line-height: 1.1;
+            font-size: 26px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            text-shadow: 0 3px 6px rgba(0,0,0,0.25);
+            line-height: 0.9;
             text-align: center;
+            letter-spacing: -0.5px;
+        }
+        
+        .title div:first-child {
+            margin-bottom: -2px;
+        }
+        
+        .title div:last-child {
+            font-size: 28px;
+            font-weight: 900;
+            background: linear-gradient(45deg, #ffffff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
         .subtitle {
@@ -1193,9 +1207,25 @@
 <body>
     <div class="header">
         <div class="header-content">
-            <div style="position: absolute; top: 16px; right: 16px; z-index: 10;">
-                <button class="btn btn-sm" id="loginButton" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3);">
-                    👤 Se connecter
+            <div style="position: absolute; top: 20px; right: 20px; z-index: 10;">
+                <button id="loginButton" style="
+                    background: rgba(255,255,255,0.15); 
+                    color: white; 
+                    border: 1px solid rgba(255,255,255,0.25);
+                    padding: 8px 14px;
+                    border-radius: 20px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    backdrop-filter: blur(10px);
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                ">
+                    <span style="font-size: 14px;">👤</span>
+                    <span>Se connecter</span>
                 </button>
             </div>
             <div class="logo">🌐</div>

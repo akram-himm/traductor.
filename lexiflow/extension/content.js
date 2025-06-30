@@ -125,7 +125,6 @@ async function translateWithGoogleFree(text, targetLang, sourceLang) {
 // LibreTranslate (désactivé à cause des problèmes CORS)
 async function translateWithLibreTranslate(text, targetLang, sourceLang) {
   // LibreTranslate a des problèmes CORS persistants, on passe directement au service suivant
-  console.warn('LibreTranslate skipped due to CORS issues');
   return null;
 }
 
@@ -435,10 +434,11 @@ function displayTranslation(bubble, result) {
         
         try {
           const newResult = await translateText(selectedText, newLang, lastTranslation?.detectedLanguage || 'auto');
-          if (translationDiv) {
-            translationDiv.innerHTML = newResult.translatedText;
-          }
           lastTranslation = newResult;
+          
+          // Reconstruire complètement la bulle avec le nouveau résultat
+          displayTranslation(bubble, newResult);
+          
           saveTranslation(selectedText, newResult.translatedText, newResult.detectedLanguage, newLang);
         } catch (error) {
           if (translationDiv) {
