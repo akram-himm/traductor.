@@ -122,40 +122,10 @@ async function translateWithGoogleFree(text, targetLang, sourceLang) {
   return null;
 }
 
-// LibreTranslate (avec gestion d'erreur CORS améliorée)
+// LibreTranslate (désactivé à cause des problèmes CORS)
 async function translateWithLibreTranslate(text, targetLang, sourceLang) {
-  try {
-    const response = await fetch('https://libretranslate.de/translate', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        q: text,
-        source: sourceLang === 'auto' ? 'auto' : sourceLang,
-        target: targetLang,
-        format: 'text'
-      })
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      return {
-        translatedText: data.translatedText,
-        detectedLanguage: data.detectedLanguage?.language || sourceLang,
-        confidence: data.detectedLanguage?.confidence || 0.8
-      };
-    } else {
-      console.warn(`LibreTranslate HTTP ${response.status}: ${response.statusText}`);
-    }
-  } catch (error) {
-    console.error('LibreTranslate error:', error.message);
-    // Les erreurs CORS sont courantes avec LibreTranslate, on les ignore silencieusement
-    if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
-      console.warn('LibreTranslate CORS/Network error - using fallback service');
-    }
-  }
+  // LibreTranslate a des problèmes CORS persistants, on passe directement au service suivant
+  console.warn('LibreTranslate skipped due to CORS issues');
   return null;
 }
 
@@ -353,7 +323,9 @@ function displayTranslation(bubble, result) {
   const { translatedText, detectedLanguage, confidence } = result;
   
   // Vérifier si le texte est déjà dans la langue cible
-  const isAlreadyInTargetLanguage = detectedLanguage === userSettings.targetLanguage;
+  const isAlreadyInTargetLanguage = detectedLanguage === userSettings.targetLanguage || 
+                                   translatedText.toLowerCase().trim() === selectedText.toLowerCase().trim();
+  
   const sameLanguageNote = isAlreadyInTargetLanguage ? 
     `<div style="background: #fef3c7; color: #92400e; padding: 8px; border-radius: 6px; font-size: 12px; margin-bottom: 8px; border-left: 3px solid #f59e0b;">
       ℹ️ Déjà en ${getLanguageName(userSettings.targetLanguage)}

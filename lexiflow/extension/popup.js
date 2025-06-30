@@ -1831,36 +1831,35 @@ function showLoginWindow() {
   `;
   
   loginModal.innerHTML = `
-    <div style="background: white; padding: 32px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); max-width: 400px; width: 90%;">
-      <div style="text-align: center; margin-bottom: 24px;">
-        <div style="font-size: 48px; margin-bottom: 16px;">🔐</div>
-        <h2 style="font-size: 24px; margin-bottom: 8px;">Connexion à LexiFlow</h2>
-        <p style="color: #6b7280;">Connectez-vous pour accéder aux fonctionnalités Premium</p>
-      </div>
-      
-      <div style="margin-bottom: 16px;">
-        <label style="display: block; margin-bottom: 8px; font-weight: 500;">Email :</label>
-        <input type="email" id="loginEmail" class="input" placeholder="votre@email.com" style="width: 100%;">
-      </div>
-      
-      <div style="margin-bottom: 24px;">
-        <label style="display: block; margin-bottom: 8px; font-weight: 500;">Mot de passe :</label>
-        <input type="password" id="loginPassword" class="input" placeholder="••••••••" style="width: 100%;">
-      </div>
-      
-      <div style="display: flex; gap: 12px;">
-        <button class="btn btn-primary btn-block js-login-submit">
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2px; border-radius: 18px; max-width: 380px; width: 90%; box-shadow: 0 25px 60px rgba(0,0,0,0.3);">
+      <div style="background: white; padding: 28px; border-radius: 16px; position: relative;">
+        <button style="position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 18px; color: #9ca3af; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all 0.2s;" class="js-login-cancel">×</button>
+        
+        <div style="text-align: center; margin-bottom: 28px;">
+          <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 24px;">🌐</div>
+          <h2 style="font-size: 22px; margin-bottom: 6px; color: #1f2937; font-weight: 700;">Connexion à LexiFlow</h2>
+          <p style="color: #6b7280; font-size: 14px;">Débloquez toutes les fonctionnalités Premium</p>
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 13px;">Adresse email</label>
+          <input type="email" id="loginEmail" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s; background: #f9fafb;" placeholder="votre@email.com">
+        </div>
+        
+        <div style="margin-bottom: 24px;">
+          <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 13px;">Mot de passe</label>
+          <input type="password" id="loginPassword" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s; background: #f9fafb;" placeholder="••••••••">
+        </div>
+        
+        <button class="js-login-submit" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
           Se connecter
         </button>
-        <button class="btn btn-secondary js-login-cancel">
-          Annuler
-        </button>
-      </div>
-      
-      <div style="text-align: center; margin-top: 16px;">
-        <a href="#" style="color: var(--primary-color); font-size: 12px;">Mot de passe oublié ?</a>
-        <span style="margin: 0 8px; color: #d1d5db;">|</span>
-        <a href="#" style="color: var(--primary-color); font-size: 12px;">Créer un compte</a>
+        
+        <div style="text-align: center;">
+          <a href="#" style="color: #667eea; font-size: 13px; text-decoration: none; margin-right: 12px;">Mot de passe oublié ?</a>
+          <span style="color: #d1d5db;">•</span>
+          <a href="#" style="color: #667eea; font-size: 13px; text-decoration: none; margin-left: 12px;">Créer un compte</a>
+        </div>
       </div>
     </div>
   `;
@@ -1905,9 +1904,40 @@ function showLoginWindow() {
     }
   });
   
-  // Focus sur l'email
+  // Focus sur l'email et ajouter les effets
   setTimeout(() => {
-    document.getElementById('loginEmail').focus();
+    const emailInput = document.getElementById('loginEmail');
+    const passwordInput = document.getElementById('loginPassword');
+    const submitButton = loginModal.querySelector('.js-login-submit');
+    
+    // Focus sur l'email
+    emailInput.focus();
+    
+    // Effets de focus pour les inputs
+    [emailInput, passwordInput].forEach(input => {
+      input.addEventListener('focus', () => {
+        input.style.borderColor = '#667eea';
+        input.style.background = 'white';
+        input.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+      });
+      
+      input.addEventListener('blur', () => {
+        input.style.borderColor = '#e5e7eb';
+        input.style.background = '#f9fafb';
+        input.style.boxShadow = 'none';
+      });
+    });
+    
+    // Effet hover pour le bouton
+    submitButton.addEventListener('mouseenter', () => {
+      submitButton.style.transform = 'translateY(-1px)';
+      submitButton.style.boxShadow = '0 6px 16px rgba(102, 126, 234, 0.5)';
+    });
+    
+    submitButton.addEventListener('mouseleave', () => {
+      submitButton.style.transform = 'translateY(0)';
+      submitButton.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+    });
   }, 100);
 }
 
