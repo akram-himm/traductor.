@@ -322,7 +322,7 @@ function displayTranslation(bubble, result) {
   const { translatedText, detectedLanguage, confidence } = result;
   
   // Vérifier si le texte est déjà dans la langue cible
-  const isAlreadyInTargetLanguage = detectedLanguage === userSettings.targetLanguage || 
+  const isAlreadyInTargetLanguage = detectedLanguage === userSettings.targetLanguage && 
                                    translatedText.toLowerCase().trim() === selectedText.toLowerCase().trim();
   
   const sameLanguageNote = isAlreadyInTargetLanguage ? 
