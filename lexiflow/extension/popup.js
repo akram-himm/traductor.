@@ -1972,29 +1972,6 @@ function clearHistory() {
   });
 }
 
-// Exporter les données
-function exportData() {
-  const data = {
-    translations: translations,
-    flashcards: flashcards,
-    flashcardFolders: flashcardFolders,
-    settings: userSettings,
-    exportDate: new Date().toISOString(),
-    version: '3.0'
-  };
-  
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `quick-translator-export-${new Date().toISOString().split('T')[0]}.json`;
-  a.click();
-  
-  URL.revokeObjectURL(url);
-  showNotification('Données exportées avec succès!', 'success');
-}
-
 // Importer des données
 function importData() {
   const input = document.createElement('input');
@@ -2211,9 +2188,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           break;
         case 'goToSettings':
           switchTab('settings');
-          break;
-        case 'exportData':
-          exportData();
           break;
         case 'importData':
           importData();
