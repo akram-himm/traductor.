@@ -418,7 +418,18 @@ function moveToFolder(cardId, folderId) {
 function deleteFlashcard(cardId) {
   if (!confirm('Supprimer cette flashcard ?')) return;
   
-  flashcards = flashcards.filter(c => c.id !== parseInt(cardId));
+  const cardIdInt = parseInt(cardId);
+  flashcards = flashcards.filter(c => c.id !== cardIdInt);
+  
+  // Supprimer aussi du localStorage
+  chrome.storage.sync.get(['flashcards'], (result) => {
+    const storedFlashcards = result.flashcards || [];
+    const updatedFlashcards = storedFlashcards.filter(c => c.id !== cardIdInt);
+    chrome.storage.sync.set({ flashcards: updatedFlashcards }, () => {
+      console.log('Flashcard supprimée du storage');
+    });
+  });
+  
   saveFlashcards();
   updateFlashcards();
   updateStats();
@@ -982,7 +993,9 @@ function initSettings() {
   if (animationsToggle) animationsToggle.classList.toggle('active', userSettings.animationsEnabled);
   
   if (deepSeekToggle) {
-    deepSeekToggle.classList.toggle('active', userSettings.deepSeekEnabled);
+    // Toujours désactiver DeepSeek par défaut si l'utilisateur n'est pas connecté
+    deepSeekToggle.classList.remove('active');
+    userSettings.deepSeekEnabled = false;
   }
   
   if (deepSeekApiKey && userSettings.deepSeekApiKey) {
@@ -2283,6 +2296,22 @@ document.addEventListener('DOMContentLoaded', async () => {
           } else {
             document.body.classList.remove('no-animations');
           }
+        }
+      },
+      {
+        id: 'autoSaveToggle',
+        setting: 'autoSaveToFlashcards',
+        label: 'Sauvegarde automatique',
+        action: (enabled) => {
+          // Notifier les content scripts du changement
+          chrome.tabs.query({}, (tabs) => {
+            tabs.forEach(tab => {
+              chrome.tabs.sendMessage(tab.id, {
+                action: 'updateSettings',
+                settings: { autoSaveToFlashcards: enabled }
+              }).catch(() => {});
+            });
+          });
         }
       }
     ];
