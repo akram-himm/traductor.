@@ -75,12 +75,12 @@ Pour installer et tester l'extension localement :
 
 ## 📊 Interface du Popup
 
-Le popup de LexiFlow est une application complète avec plusieurs sections :
+Le popup de LexiFlow est une application complète avec plusieurs sections (largeur optimisée à 480px) :
 
 1.  **Tableau de bord** : Vue d'ensemble des statistiques d'utilisation (nombre total de traductions, flashcards créées) et accès rapide aux fonctionnalités Premium.
-2.  **Historique** : Liste chronologique de toutes vos traductions, organisées par paires de langues. Vous pouvez copier, créer des flashcards ou supprimer des entrées.
-3.  **Flashcards** : Gérez vos flashcards, organisées par dossiers (Non classées, Favoris, Difficiles, Maîtrisées). Accédez au mode pratique pour réviser votre vocabulaire.
-4.  **Paramètres** : Personnalisez l'extension (langue cible, couleur du bouton), activez/désactivez des fonctionnalités (raccourcis, animations), configurez l'intégration DeepSeek AI et gérez vos données (export/import/réinitialisation).
+2.  **Historique** : Liste chronologique de toutes vos traductions, organisées par paires de langues. Vous pouvez copier, créer des flashcards ou supprimer des entrées individuelles ou effacer tout l'historique.
+3.  **Flashcards** : Gérez vos flashcards, organisées par dossiers (Non classées, Favoris, Difficiles, Maîtrisées). Accédez au mode pratique pour réviser votre vocabulaire. Possibilité d'effacer toutes les flashcards d'un coup.
+4.  **Paramètres** : Personnalisez l'extension (langue cible, couleur du bouton), activez/désactivez des fonctionnalités (raccourcis, animations), configurez l'intégration DeepSeek AI et gérez vos données (import/réinitialisation).
 
 ## 💾 Gestion des Données
 

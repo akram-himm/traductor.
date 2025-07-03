@@ -57,6 +57,9 @@ lexiflow/
 - ✅ Serveur de développement opérationnel
 - ✅ **Mode développement sans base de données**
 - ✅ **Toutes les pages web complétées**
+- ✅ **Interface popup optimisée** (largeur 480px, meilleur affichage des flashcards)
+- ✅ **Bouton "Effacer tout" pour les flashcards**
+- ✅ **Option export/import retirée des menus contextuels**
 
 ### 🚧 État actuel du site web
 

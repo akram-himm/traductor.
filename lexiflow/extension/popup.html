@@ -12,6 +12,12 @@
             box-sizing: border-box;
         }
         
+        html {
+            width: 500px !important;
+            min-width: 500px !important;
+            max-width: 500px !important;
+        }
+        
         :root {
             --primary-color: #3b82f6;
             --primary-dark: #2563eb;
@@ -39,13 +45,18 @@
         }
         
         body {
-            width: 420px;
+            width: 480px !important;
+            min-width: 480px !important;
+            max-width: 500px !important;
             height: 600px;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: #ffffff;
             color: var(--gray-900);
-            overflow-x: hidden;
-            overflow-y: auto;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
         }
         
         /* Animations */
@@ -73,11 +84,12 @@
         /* Header */
         .header {
             background: var(--gradient-primary);
-            padding: 24px;
+            padding: 20px;
             text-align: center;
             color: white;
             position: relative;
             overflow: hidden;
+            flex-shrink: 0;
         }
         
         .header::before {
@@ -97,16 +109,16 @@
         }
         
         .logo {
-            font-size: 48px;
-            margin-bottom: 12px;
+            font-size: 36px;
+            margin-bottom: 8px;
             filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
             animation: pulse 2s ease-in-out infinite;
         }
         
         .title {
-            font-size: 26px;
+            font-size: 22px;
             font-weight: 800;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             text-shadow: 0 3px 6px rgba(0,0,0,0.25);
             line-height: 0.9;
             text-align: center;
@@ -119,7 +131,7 @@
         }
         
         .title div:last-child {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 900;
             background: linear-gradient(45deg, #ffffff, #e0e7ff);
             -webkit-background-clip: text;
@@ -171,9 +183,9 @@
             display: flex;
             background: var(--gray-50);
             border-bottom: 1px solid var(--gray-200);
-            position: sticky;
-            top: 0;
+            position: relative;
             z-index: 100;
+            flex-shrink: 0;
         }
         
         .nav-tab {
@@ -225,14 +237,17 @@
         /* Tab Content */
         .tab-content {
             display: none;
-            padding: 20px;
-            height: calc(600px - 180px);
+            padding: 24px;
+            padding-bottom: 30px;
+            flex: 1;
             overflow-y: auto;
+            overflow-x: hidden;
             animation: fadeIn 0.3s ease-out;
         }
         
         .tab-content.active {
-            display: block;
+            display: flex;
+            flex-direction: column;
         }
         
         /* Dashboard */
@@ -579,11 +594,11 @@
             background: white;
             border: 1px solid var(--gray-200);
             border-radius: 10px;
-            padding: 20px;
+            padding: 24px;
             cursor: pointer;
             transition: var(--transition-base);
             position: relative;
-            min-height: 120px;
+            min-height: 150px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1110,10 +1125,10 @@
         }
         
         /* Responsive */
-        @media (max-width: 450px) {
+        @media (max-width: 700px) {
             body {
                 width: 100%;
-                min-width: 360px;
+                min-width: 650px;
             }
             
             .nav-tab {
@@ -1362,11 +1377,15 @@
                     <span>🎯</span>
                     <span>Mes Flashcards</span>
                 </h3>
-                <div class="setting-control">
+                <div class="setting-control" style="display: flex; gap: 8px;">
                     <button class="btn btn-primary disabled" data-action="startPracticeMode" disabled title="Bientôt disponible! Cette fonctionnalité arrive dans la prochaine mise à jour.">
                         <span>🎮</span>
                         <span>Mode Pratique</span>
                         <span style="font-size: 10px; margin-left: 4px;">🔒</span>
+                    </button>
+                    <button class="btn btn-sm btn-secondary" data-action="clearFlashcards">
+                        <span>🗑️</span>
+                        <span>Effacer</span>
                     </button>
                 </div>
             </div>

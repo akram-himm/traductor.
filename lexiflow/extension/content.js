@@ -726,8 +726,12 @@ function createFlashcard(front, back, language) {
 
 // Détecter la langue
 function detectLanguage(text) {
-  if (!text) return 'en';
+  if (!text) return 'fr';
   
+  // Nettoyer le texte
+  const cleanText = text.toLowerCase().trim();
+  
+  // Détection par caractères spéciaux (priorité absolue)
   const patterns = {
     'fr': /[àâäéêëèîïôùûüÿç]/i,
     'es': /[áéíóúñ¿¡]/i,
@@ -741,11 +745,37 @@ function detectLanguage(text) {
     'ar': /[\u0600-\u06ff]/
   };
   
+  // Si on trouve des caractères spéciaux, c'est définitif
   for (const [lang, pattern] of Object.entries(patterns)) {
-    if (pattern.test(text)) return lang;
+    if (pattern.test(text)) {
+      console.log(`🎯 Langue détectée par caractères spéciaux: ${lang} pour "${text}"`);
+      return lang;
+    }
   }
   
-  return 'en';
+  // Détection par mots courants pour textes sans accents
+  const words = cleanText.split(/\s+/);
+  const langWords = {
+    'fr': ['le', 'la', 'les', 'de', 'du', 'des', 'un', 'une', 'et', 'est', 'dans', 'avec', 'pour', 'sur', 'ce', 'cette', 'que', 'qui', 'ne', 'pas'],
+    'en': ['the', 'a', 'an', 'is', 'and', 'in', 'on', 'at', 'to', 'for', 'with', 'this', 'that', 'have', 'has', 'will', 'would', 'could'],
+    'es': ['el', 'la', 'los', 'las', 'y', 'es', 'en', 'de', 'un', 'una', 'con', 'por', 'para', 'que', 'no', 'se'],
+    'de': ['der', 'die', 'das', 'und', 'ist', 'in', 'ein', 'eine', 'mit', 'für', 'auf', 'nicht', 'ich', 'du'],
+    'it': ['il', 'la', 'lo', 'le', 'e', 'è', 'in', 'un', 'una', 'con', 'per', 'che', 'non', 'di']
+  };
+  
+  let maxScore = 0;
+  let detectedLang = 'fr'; // Par défaut français
+  
+  for (const [lang, keywords] of Object.entries(langWords)) {
+    const score = words.filter(w => keywords.includes(w)).length;
+    if (score > maxScore) {
+      maxScore = score;
+      detectedLang = lang;
+    }
+  }
+  
+  console.log(`🔍 Langue détectée par mots: ${detectedLang} (score: ${maxScore}) pour "${text}"`);
+  return detectedLang;
 }
 
 // Obtenir l'emoji du drapeau

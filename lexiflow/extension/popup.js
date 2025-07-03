@@ -126,10 +126,6 @@ function showFolderMenu(event, key, type) {
         <span style="margin-right: 8px;">🗑️</span>
         Supprimer ce dossier
       </div>
-      <div class="menu-item js-export-folder" data-key="${key}" data-type="history" style="padding: 8px 16px; cursor: pointer; transition: background 0.2s;">
-        <span style="margin-right: 8px;">📤</span>
-        Exporter ce dossier
-      </div>
     `;
   } else if (type === 'flashcards') {
     menu.innerHTML = `
@@ -140,10 +136,6 @@ function showFolderMenu(event, key, type) {
       <div class="menu-item js-practice-folder" data-key="${key}" style="padding: 8px 16px; cursor: pointer; transition: background 0.2s;">
         <span style="margin-right: 8px;">🎮</span>
         Pratiquer ce dossier
-      </div>
-      <div class="menu-item js-export-folder" data-key="${key}" data-type="flashcards" style="padding: 8px 16px; cursor: pointer; transition: background 0.2s;">
-        <span style="margin-right: 8px;">📤</span>
-        Exporter ce dossier
       </div>
     `;
   }
@@ -161,8 +153,6 @@ function showFolderMenu(event, key, type) {
       deleteFlashcardFolder(item.dataset.key);
     } else if (item.classList.contains('js-practice-folder')) {
       practiceFolder(item.dataset.key);
-    } else if (item.classList.contains('js-export-folder')) {
-      exportFolderData(item.dataset.key, item.dataset.type);
     }
     
     menu.remove();
@@ -981,6 +971,7 @@ function initSettings() {
   const shortcutToggle = document.getElementById('shortcutToggle');
   const smartDetectionToggle = document.getElementById('smartDetectionToggle');
   const animationsToggle = document.getElementById('animationsToggle');
+  const autoSaveToggle = document.getElementById('autoSaveToggle');
   const deepSeekToggle = document.getElementById('deepSeekToggle');
   const deepSeekApiKey = document.getElementById('deepSeekApiKey');
   const deepSeekApiGroup = document.getElementById('deepSeekApiGroup');
@@ -991,6 +982,7 @@ function initSettings() {
   if (shortcutToggle) shortcutToggle.classList.toggle('active', userSettings.enableShortcut);
   if (smartDetectionToggle) smartDetectionToggle.classList.toggle('active', userSettings.autoDetectSameLanguage);
   if (animationsToggle) animationsToggle.classList.toggle('active', userSettings.animationsEnabled);
+  if (autoSaveToggle) autoSaveToggle.classList.toggle('active', userSettings.autoSaveToFlashcards);
   
   if (deepSeekToggle) {
     // Toujours désactiver DeepSeek par défaut si l'utilisateur n'est pas connecté
@@ -1447,11 +1439,11 @@ function renderFlashcards(cards, fromLang, toLang) {
               <span>${getFlagEmoji(displayToLang)}</span>
               <span>${getLanguageName(displayToLang)}</span>
             </div>
-            <div class="flashcard-actions" style="margin-top: 12px; display: flex; justify-content: center; gap: 8px;">
-              <button class="btn btn-sm js-card-action" data-action="favorite" data-card-id="${card.id}" title="Favori">⭐</button>
-              <button class="btn btn-sm js-card-action" data-action="difficult" data-card-id="${card.id}" title="Difficile">🔥</button>
-              <button class="btn btn-sm js-card-action" data-action="learned" data-card-id="${card.id}" title="Maîtrisée">✅</button>
-              <button class="btn btn-sm btn-danger js-card-action" data-action="delete" data-card-id="${card.id}" title="Supprimer">🗑️</button>
+            <div class="flashcard-actions" style="margin-top: 12px; padding: 8px 0; display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;">
+              <button class="btn btn-sm js-card-action" data-action="favorite" data-card-id="${card.id}" title="Favori" style="min-width: 36px;">⭐</button>
+              <button class="btn btn-sm js-card-action" data-action="difficult" data-card-id="${card.id}" title="Difficile" style="min-width: 36px;">🔥</button>
+              <button class="btn btn-sm js-card-action" data-action="learned" data-card-id="${card.id}" title="Maîtrisée" style="min-width: 36px;">✅</button>
+              <button class="btn btn-sm btn-danger js-card-action" data-action="delete" data-card-id="${card.id}" title="Supprimer" style="min-width: 36px;">🗑️</button>
             </div>
           </div>
         </div>
@@ -1972,6 +1964,18 @@ function clearHistory() {
   });
 }
 
+// Effacer toutes les flashcards
+function clearFlashcards() {
+  if (!confirm('Effacer toutes les flashcards ?')) return;
+  
+  flashcards = [];
+  chrome.storage.local.set({ flashcards }, () => {
+    updateFlashcards();
+    updateStats();
+    showNotification('Flashcards effacées', 'info');
+  });
+}
+
 // Importer des données
 function importData() {
   const input = document.createElement('input');
@@ -2182,6 +2186,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       switch(action) {
         case 'clearHistory':
           clearHistory();
+          break;
+        case 'clearFlashcards':
+          clearFlashcards();
           break;
         case 'viewAllHistory':
           switchTab('history');
