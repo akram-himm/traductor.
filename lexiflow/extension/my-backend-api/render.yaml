@@ -1,0 +1,33 @@
+databases:
+  - name: lexiflow-db
+    databaseName: lexiflow_db
+    user: lexiflow_user
+    region: oregon
+
+services:
+  - type: web
+    name: lexiflow-backend
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lexiflow-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+      - key: CLIENT_URL
+        value: https://your-frontend-url.com
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_MONTHLY_PRICE_ID
+        sync: false
+      - key: STRIPE_YEARLY_PRICE_ID
+        sync: false

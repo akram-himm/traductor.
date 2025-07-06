@@ -3,10 +3,10 @@ let userSettings = {};
 let translations = [];
 let flashcards = [];
 let flashcardFolders = {
-  default: { name: 'Non classées', icon: '📁' },
-  favorites: { name: 'Favoris', icon: '⭐' },
-  difficult: { name: 'Difficiles', icon: '🔥' },
-  learned: { name: 'Maîtrisées', icon: '✅' }
+  default: { name: 'Uncategorized', icon: '📁' },
+  favorites: { name: 'Favorites', icon: '⭐' },
+  difficult: { name: 'Difficult', icon: '🔥' },
+  learned: { name: 'Mastered', icon: '✅' }
 };
 let practiceMode = {
   active: false,
@@ -124,18 +124,18 @@ function showFolderMenu(event, key, type) {
     menu.innerHTML = `
       <div class="menu-item js-delete-folder" data-key="${key}" style="padding: 8px 16px; cursor: pointer; transition: background 0.2s;">
         <span style="margin-right: 8px;">🗑️</span>
-        Supprimer ce dossier
+        Delete this folder
       </div>
     `;
   } else if (type === 'flashcards') {
     menu.innerHTML = `
       <div class="menu-item js-delete-flashcard-folder" data-key="${key}" style="padding: 8px 16px; cursor: pointer; transition: background 0.2s;">
         <span style="margin-right: 8px;">🗑️</span>
-        Supprimer ce dossier
+        Delete this folder
       </div>
       <div class="menu-item js-practice-folder" data-key="${key}" style="padding: 8px 16px; cursor: pointer; transition: background 0.2s;">
         <span style="margin-right: 8px;">🎮</span>
-        Pratiquer ce dossier
+        Practice this folder
       </div>
     `;
   }
@@ -174,7 +174,7 @@ function deleteHistoryFolder(key) {
     return `${langs[0]}_${langs[1]}` === key;
   }).length;
   
-  if (!confirm(`Supprimer ${count} traductions de ce dossier ?`)) return;
+  if (!confirm(`Delete ${count} translations from this folder?`)) return;
   
   translations = translations.filter(t => {
     const langs = [t.fromLang, t.toLang].sort();
@@ -184,7 +184,7 @@ function deleteHistoryFolder(key) {
   chrome.storage.local.set({ translations }, () => {
     updateHistory();
     updateStats();
-    showNotification('Dossier supprimé', 'info');
+    showNotification('Folder deleted', 'info');
   });
 }
 
@@ -196,7 +196,7 @@ function deleteFlashcardFolder(key) {
     return `${langs[0]}_${langs[1]}` === key;
   });
   
-  if (!confirm(`Supprimer ${cards.length} flashcards de ce dossier ?`)) return;
+  if (!confirm(`Delete ${cards.length} flashcards from this folder?`)) return;
   
   flashcards = flashcards.filter(card => {
     const fromLang = detectLanguage(card.front);
@@ -208,7 +208,7 @@ function deleteFlashcardFolder(key) {
   saveFlashcards();
   updateFlashcards();
   updateStats();
-  showNotification('Dossier de flashcards supprimé', 'info');
+  showNotification('Flashcards folder deleted', 'info');
 }
 
 function practiceFolder(key) {
@@ -220,7 +220,7 @@ function practiceFolder(key) {
   });
   
   if (cards.length === 0) {
-    showNotification('Aucune flashcard dans ce dossier!', 'warning');
+    showNotification('No flashcards in this folder!', 'warning');
     return;
   }
   
@@ -266,14 +266,14 @@ function exportFolderData(key, type) {
   a.click();
   
   URL.revokeObjectURL(url);
-  showNotification('Dossier exporté avec succès!', 'success');
+  showNotification('Folder exported successfully!', 'success');
 }
 
 function toggleFlashcardFolder(key) {
   console.log('toggleFlashcardFolder appelé avec key:', key);
   const folder = document.querySelector(`.flashcard-language-folder[data-key="${key}"]`);
   if (!folder) {
-    console.error('Dossier flashcard non trouvé:', key);
+    console.error('Flashcard folder not found:', key);
     return;
   }
   
@@ -281,7 +281,7 @@ function toggleFlashcardFolder(key) {
   const arrow = folder.querySelector('.folder-arrow');
   
   if (!content) {
-    console.error('Contenu flashcard non trouvé:', `flashcard-folder-content-${key}`);
+    console.error('Flashcard content not found:', `flashcard-folder-content-${key}`);
     return;
   }
   
@@ -406,7 +406,7 @@ function moveToFolder(cardId, folderId) {
 }
 
 function deleteFlashcard(cardId) {
-  if (!confirm('Supprimer cette flashcard ?')) return;
+  if (!confirm('Delete this flashcard?')) return;
   
   const cardIdInt = parseInt(cardId);
   flashcards = flashcards.filter(c => c.id !== cardIdInt);
@@ -416,7 +416,7 @@ function deleteFlashcard(cardId) {
     const storedFlashcards = result.flashcards || [];
     const updatedFlashcards = storedFlashcards.filter(c => c.id !== cardIdInt);
     chrome.storage.sync.set({ flashcards: updatedFlashcards }, () => {
-      console.log('Flashcard supprimée du storage');
+      console.log('Flashcard deleted from storage');
     });
   });
   
@@ -424,24 +424,24 @@ function deleteFlashcard(cardId) {
   updateFlashcards();
   updateStats();
   
-  showNotification('Flashcard supprimée', 'info');
+  showNotification('Flashcard deleted', 'info');
 }
 
 function showFlashcardTips() {
-  alert(`💡 Conseils pour utiliser les flashcards:
+  alert(`💡 Tips for using flashcards:
 
-1. 📝 Créez des flashcards après chaque traduction importante
-2. 🎯 Pratiquez régulièrement avec le Mode Pratique
-3. ⭐ Marquez vos cartes favorites pour les réviser plus souvent
-4. 🔥 Les cartes difficiles seront prioritaires en pratique
-5. ✅ Les cartes maîtrisées apparaîtront moins souvent
+1. 📝 Create flashcards after each important translation
+2. 🎯 Practice regularly with Practice Mode
+3. ⭐ Mark your favorite cards to review them more often
+4. 🔥 Difficult cards will be prioritized in practice
+5. ✅ Mastered cards will appear less often
 
-Astuce: Utilisez les dossiers pour organiser vos cartes par thème!`);
+Tip: Use folders to organize your cards by theme!`);
 }
 
 function startPracticeMode() {
   if (flashcards.length === 0) {
-    showNotification('Aucune flashcard disponible pour la pratique!', 'warning');
+    showNotification('No flashcards available for practice!', 'warning');
     return;
   }
   
@@ -647,7 +647,7 @@ function quitPractice() {
 
 function copyTranslation(text) {
   navigator.clipboard.writeText(text).then(() => {
-    showNotification('Traduction copiée!', 'success');
+    showNotification('Translation copied!', 'success');
   }).catch(() => {
     showNotification('Erreur lors de la copie', 'error');
   });
@@ -676,14 +676,14 @@ function createFlashcardFromHistory(original, translated, language) {
   );
   
   if (exists) {
-    showNotification('Cette flashcard existe déjà!', 'warning');
+    showNotification('This flashcard already exists!', 'warning');
     return;
   }
   
   flashcards.unshift(flashcard);
   saveFlashcards();
   updateStats();
-  showNotification('Flashcard créée avec succès!', 'success');
+  showNotification('Flashcard created successfully!', 'success');
 }
 
 function deleteTranslation(id) {
@@ -693,7 +693,7 @@ function deleteTranslation(id) {
   chrome.storage.local.set({ translations }, () => {
     updateHistory();
     updateStats();
-    showNotification('Traduction supprimée', 'info');
+    showNotification('Translation deleted', 'info');
   });
 }
 
@@ -725,7 +725,7 @@ function checkLimits(type = 'translation') {
   if (type === 'flashcard') {
     // Limite de flashcards
     if (flashcards.length >= 100) {
-      showNotification('Limite atteinte! Passez à Premium pour créer plus de flashcards', 'warning');
+      showNotification('Limit reached! Upgrade to Premium to create more flashcards', 'warning');
       showPremiumPrompt();
       return false;
     }
@@ -737,7 +737,7 @@ function checkLimits(type = 'translation') {
     ).length;
     
     if (todayTranslations >= 50) {
-      showNotification('Limite quotidienne atteinte! Passez à Premium pour des traductions illimitées', 'warning');
+      showNotification('Daily limit reached! Upgrade to Premium for unlimited translations', 'warning');
       showPremiumPrompt();
       return false;
     }
@@ -2012,7 +2012,7 @@ function importData() {
           flashcardFolders 
         }, () => {
           initUI();
-          showNotification('Données importées avec succès!', 'success');
+          showNotification('Data imported successfully!', 'success');
         });
       }
     } catch (error) {
@@ -2029,7 +2029,7 @@ function resetApp() {
     return;
   }
   
-  if (!confirm('Êtes-vous vraiment sûr ? Cette action est irréversible!')) {
+  if (!confirm('Are you really sure? This action is irreversible!')) {
     return;
   }
   
@@ -2204,7 +2204,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           break;
         case 'startPracticeMode':
           // Fonctionnalité temporairement désactivée
-          showNotification('Cette fonctionnalité arrive bientôt! 🚀', 'info');
+          showNotification('This feature is coming soon! 🚀', 'info');
           break;
       }
     });
@@ -2306,7 +2306,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           { 
             id: 'hoverToggle',
             setting: 'hoverTranslation', 
-            label: 'Traduction au survol',
+            label: 'Translation on hover',
             description: 'Traduit automatiquement après 1 seconde de sélection'
           },
           { 

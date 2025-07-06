@@ -13,9 +13,30 @@ app.use('/api/subscription/webhook', express.raw({ type: 'application/json' }));
 // Middleware de sécurité
 app.use(helmet());
 app.use(cors({
-  origin: ['http://localhost:5000', 'http://localhost:8000'],
+  origin: function(origin, callback) {
+    const allowedOrigins = [
+      'http://localhost:5000',
+      'http://localhost:8000',
+      'http://localhost:3000',
+      process.env.FRONTEND_URL,
+      process.env.CLIENT_URL
+    ];
+    
+    // Allow requests with no origin (like mobile apps or Postman)
+    if (!origin) return callback(null, true);
+    
+    // Allow Chrome extension requests
+    if (origin.startsWith('chrome-extension://')) {
+      return callback(null, true);
+    }
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
-  // Ajouter l'extension Chrome aux origines autorisées
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -48,6 +69,11 @@ app.use('/api/auth', authRoute);
 // Route de test
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'LexiFlow Backend is running!' });
+});
+
+// Ping endpoint
+app.get('/ping', (req, res) => {
+  res.send('pong');
 });
 
 // List all routes (for debugging)

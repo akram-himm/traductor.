@@ -38,9 +38,9 @@ async function loadSettings() {
       autoSaveToFlashcards: false
     });
     userSettings = result;
-    console.log('⚙️ Paramètres chargés:', userSettings);
+    console.log('⚙️ Settings loaded:', userSettings);
   } catch (error) {
-    console.error('❌ Erreur chargement paramètres:', error);
+    console.error('❌ Error loading settings:', error);
   }
 }
 
@@ -48,8 +48,8 @@ async function loadSettings() {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'updateSettings') {
     userSettings = { ...userSettings, ...request.settings };
-    console.log('🔄 Paramètres mis à jour:', userSettings);
-    console.log('📌 Sauvegarde auto flashcards:', userSettings.autoSaveToFlashcards);
+    console.log('🔄 Settings updated:', userSettings);
+    console.log('📌 Auto save flashcards:', userSettings.autoSaveToFlashcards);
   } else if (request.action === 'toggleExtension') {
     userSettings.isEnabled = request.enabled;
   } else if (request.action === 'updateButtonColor') {
@@ -62,7 +62,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // API de traduction avec plusieurs services
 async function translateText(text, targetLang = 'fr', sourceLang = 'auto') {
-  console.log('🌐 Traduction:', { text, from: sourceLang, to: targetLang });
+  console.log('🌐 Translation:', { text, from: sourceLang, to: targetLang });
   
   // Ne pas traduire si même langue
   if (sourceLang === targetLang && sourceLang !== 'auto') {
@@ -87,7 +87,7 @@ async function translateText(text, targetLang = 'fr', sourceLang = 'auto') {
         return result;
       }
     } catch (error) {
-      console.warn('⚠️ Erreur avec un service de traduction:', error);
+      console.warn('⚠️ Error with translation service:', error);
     }
   }
   
@@ -275,7 +275,7 @@ async function handleTranslation(event) {
         <div style="width: 20px; height: 20px; border: 2px solid ${userSettings.buttonColor}; 
                     border-top: 2px solid transparent; border-radius: 50%; 
                     animation: spin 1s linear infinite; margin: 0 auto;"></div>
-        <div style="color: #6b7280; font-size: 12px; margin-top: 8px;">Traduction en cours...</div>
+        <div style="color: #6b7280; font-size: 12px; margin-top: 8px;">Translating...</div>
       </div>
     `;
     
@@ -296,7 +296,7 @@ async function handleTranslation(event) {
       );
       
       // Créer automatiquement une flashcard si activé
-      console.log('🔍 Vérification sauvegarde auto:', userSettings.autoSaveToFlashcards);
+      console.log('🔍 Checking auto save:', userSettings.autoSaveToFlashcards);
       if (userSettings.autoSaveToFlashcards) {
         console.log('✅ Sauvegarde automatique activée, création de la flashcard...');
         createFlashcard(selectedText, result.translatedText, userSettings.targetLanguage);
@@ -304,7 +304,7 @@ async function handleTranslation(event) {
     }
     
   } catch (error) {
-    console.error('❌ Erreur traduction:', error);
+    console.error('❌ Translation error:', error);
     if (qtBubble) {
       qtBubble.innerHTML = `
         <div style="color: #ef4444; text-align: center; padding: 12px;">
@@ -398,7 +398,7 @@ function displayTranslation(bubble, result) {
         copyBtn.textContent = '✅ Copié!';
         copyBtn.style.background = '#059669';
         setTimeout(() => {
-          copyBtn.textContent = '📋 Copier';
+          copyBtn.textContent = '📋 Copy';
           copyBtn.style.background = '#6b7280';
         }, 2000);
       });
@@ -442,7 +442,7 @@ function displayTranslation(bubble, result) {
           saveTranslation(selectedText, newResult.translatedText, newResult.detectedLanguage, newLang);
         } catch (error) {
           if (translationDiv) {
-            translationDiv.innerHTML = '❌ Erreur de retraduction';
+            translationDiv.innerHTML = '❌ Retranslation error';
           }
         }
       });
@@ -564,7 +564,7 @@ function showLanguageDropdown(anchor) {
             langCode
           );
         } catch (error) {
-          console.error('❌ Erreur retraduction:', error);
+          console.error('❌ Retranslation error:', error);
         }
       }
     });
@@ -653,18 +653,18 @@ async function saveTranslation(original, translated, fromLang, toLang) {
       }
       
       chrome.storage.local.set({ translations }, () => {
-        console.log('✅ Traduction sauvegardée');
+        console.log('✅ Translation saved');
       });
     });
   } catch (error) {
-    console.error('❌ Erreur sauvegarde:', error);
+    console.error('❌ Save error:', error);
   }
 }
 
 // Créer une flashcard
 function createFlashcard(front, back, language) {
   try {
-    console.log('💾 Création flashcard:', { front, back, language, autoSave: userSettings.autoSaveToFlashcards });
+    console.log('💾 Creating flashcard:', { front, back, language, autoSave: userSettings.autoSaveToFlashcards });
     
     const flashcard = {
       id: Date.now(),
@@ -689,7 +689,7 @@ function createFlashcard(front, back, language) {
       if (!exists) {
         flashcards.push(flashcard);
         chrome.storage.local.set({ flashcards }, () => {
-          console.log('✅ Flashcard sauvegardée automatiquement');
+          console.log('✅ Flashcard saved automatically');
           
           // Si c'est une sauvegarde manuelle, afficher le feedback
           if (!userSettings.autoSaveToFlashcards) {
@@ -705,7 +705,7 @@ function createFlashcard(front, back, language) {
           }
         });
       } else {
-        console.log('⚠️ Flashcard existe déjà');
+        console.log('⚠️ Flashcard already exists');
         if (!userSettings.autoSaveToFlashcards) {
           const btn = document.getElementById('qt-save-flashcard');
           if (btn) {
@@ -720,7 +720,7 @@ function createFlashcard(front, back, language) {
       }
     });
   } catch (error) {
-    console.error('❌ Erreur création flashcard:', error);
+    console.error('❌ Flashcard creation error:', error);
   }
 }
 

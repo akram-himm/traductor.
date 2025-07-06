@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Quick Translator Pro - DeepSeek AI",
-  "description": "Traduction instantanée avec IA DeepSeek, flashcards intelligentes et mode pratique",
+  "description": "Instant translation with DeepSeek AI, smart flashcards and practice mode",
   "version": "3.0",
   "permissions": [
     "storage",
@@ -17,7 +17,9 @@
     "https://translate.googleapis.com/*",
     "https://libretranslate.de/*",
     "https://translate.google.com/*",
-    "https://clients5.google.com/*"
+    "https://clients5.google.com/*",
+    "https://your-lexiflow-backend.onrender.com/*",
+    "http://localhost:5000/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -39,7 +41,7 @@
         "default": "Ctrl+Q",
         "mac": "Command+Q"
       },
-      "description": "Traduire le texte sélectionné"
+      "description": "Translate selected text"
     }
   }
 }
