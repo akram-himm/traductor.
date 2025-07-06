@@ -32,71 +32,109 @@ const API_CONFIG = {
 
 // Fonction helper pour les requêtes API
 async function apiRequest(endpoint, options = {}) {
-  const token = localStorage.getItem('authToken');
-  
-  const defaultOptions = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
-    },
-    credentials: 'include'
-  };
-  
-  const finalOptions = {
-    ...defaultOptions,
-    ...options,
-    headers: {
-      ...defaultOptions.headers,
-      ...options.headers
-    }
-  };
-  
-  try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, finalOptions);
-    
-    if (!response.ok) {
-      if (response.status === 401) {
-        // Token expiré ou invalide
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('user');
-        // Rediriger vers la page de connexion
-        showAuthSection();
+  // Utiliser chrome.storage au lieu de localStorage
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get(['authToken'], async (result) => {
+      const token = result.authToken;
+      
+      const defaultOptions = {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
+        credentials: 'include'
+      };
+      
+      const finalOptions = {
+        ...defaultOptions,
+        ...options,
+        headers: {
+          ...defaultOptions.headers,
+          ...options.headers
+        }
+      };
+      
+      try {
+        const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, finalOptions);
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            // Token expiré ou invalide
+            chrome.storage.local.remove(['authToken', 'user'], () => {
+              console.log('Token invalide, authentification requise');
+              // Déclencher un événement pour afficher la page de connexion
+              window.dispatchEvent(new Event('auth-required'));
+            });
+            throw new Error('Authentication required');
+          }
+          
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        resolve(data);
+      } catch (error) {
+        console.error('API Request failed:', error);
+        reject(error);
       }
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('API Request failed:', error);
-    throw error;
-  }
+    });
+  });
 }
 
 // Fonctions d'authentification
 const authAPI = {
   async login(email, password) {
-    const data = await apiRequest(API_CONFIG.ENDPOINTS.LOGIN, {
+    // Appel direct sans token pour le login
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
     
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || 'Login failed');
+    }
+    
+    const data = await response.json();
+    
     if (data.token) {
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      // Sauvegarder dans chrome.storage
+      await new Promise((resolve) => {
+        chrome.storage.local.set({
+          authToken: data.token,
+          user: data.user
+        }, resolve);
+      });
     }
     
     return data;
   },
   
   async register(name, email, password) {
-    const data = await apiRequest(API_CONFIG.ENDPOINTS.REGISTER, {
+    // Appel direct sans token pour l'inscription
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTER}`, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password })
     });
     
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || 'Registration failed');
+    }
+    
+    const data = await response.json();
+    
     if (data.token) {
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      // Sauvegarder dans chrome.storage
+      await new Promise((resolve) => {
+        chrome.storage.local.set({
+          authToken: data.token,
+          user: data.user
+        }, resolve);
+      });
     }
     
     return data;
@@ -105,10 +143,10 @@ const authAPI = {
   async logout() {
     await apiRequest(API_CONFIG.ENDPOINTS.LOGOUT, {
       method: 'POST'
-    });
+    }).catch(() => {}); // Ignorer les erreurs de logout
     
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
+    // Effacer de chrome.storage
+    chrome.storage.local.remove(['authToken', 'user']);
   },
   
   async verifyToken() {
@@ -118,6 +156,24 @@ const authAPI = {
     } catch {
       return false;
     }
+  },
+  
+  // Fonction helper pour obtenir le token actuel
+  async getToken() {
+    return new Promise((resolve) => {
+      chrome.storage.local.get(['authToken'], (result) => {
+        resolve(result.authToken || null);
+      });
+    });
+  },
+  
+  // Fonction helper pour obtenir l'utilisateur actuel
+  async getCurrentUser() {
+    return new Promise((resolve) => {
+      chrome.storage.local.get(['user'], (result) => {
+        resolve(result.user || null);
+      });
+    });
   }
 };
 
