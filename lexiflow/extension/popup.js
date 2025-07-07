@@ -653,7 +653,7 @@ function copyTranslation(text) {
   });
 }
 
-function createFlashcardFromHistory(original, translated, language) {
+async function createFlashcardFromHistory(original, translated, language) {
   // Vérifier les limites pour les utilisateurs gratuits
   if (!checkLimits('flashcard')) return;
   
@@ -681,7 +681,7 @@ function createFlashcardFromHistory(original, translated, language) {
   }
   
   flashcards.unshift(flashcard);
-  saveFlashcards();
+  await saveFlashcards();
   updateStats();
   showNotification('Flashcard created successfully!', 'success');
 }
@@ -719,27 +719,44 @@ async function checkPremiumStatus() {
 }
 
 // Vérifier les limites pour les utilisateurs gratuits
-function checkLimits(type = 'translation') {
-  if (userSettings.isPro) return true; // Pas de limites pour Premium
+async function checkLimits(type = 'translation') {
+  // Récupérer l'utilisateur actuel depuis le storage
+  const user = await new Promise(resolve => {
+    chrome.storage.local.get(['user'], result => resolve(result.user));
+  });
+  
+  // Si pas d'utilisateur connecté, appliquer les limites gratuites
+  const isPremium = user && user.subscriptionStatus === 'premium';
+  
+  if (isPremium) return true; // Pas de limites pour Premium
   
   if (type === 'flashcard') {
-    // Limite de flashcards
-    if (flashcards.length >= 100) {
-      showNotification('Limit reached! Upgrade to Premium to create more flashcards', 'warning');
-      showPremiumPrompt();
+    // Limite de flashcards selon le backend
+    const limit = isPremium ? 200 : 50;
+    const currentCount = user ? (user.flashcardsCount || 0) : flashcards.length;
+    
+    if (currentCount >= limit) {
+      showNotification(`Limite atteinte! ${isPremium ? '200' : '50'} flashcards max. ${!user ? 'Connectez-vous ou ' : ''}Passez à Premium pour plus!`, 'warning');
+      if (!user) {
+        showLoginWindow();
+      } else {
+        showPremiumPrompt();
+      }
       return false;
     }
   } else if (type === 'translation') {
-    // Limite de traductions par jour
-    const today = new Date().toDateString();
-    const todayTranslations = translations.filter(t => 
-      new Date(t.timestamp).toDateString() === today
-    ).length;
-    
-    if (todayTranslations >= 50) {
-      showNotification('Daily limit reached! Upgrade to Premium for unlimited translations', 'warning');
-      showPremiumPrompt();
-      return false;
+    // Limite de traductions par jour (seulement en local pour les non-connectés)
+    if (!user) {
+      const today = new Date().toDateString();
+      const todayTranslations = translations.filter(t => 
+        new Date(t.timestamp).toDateString() === today
+      ).length;
+      
+      if (todayTranslations >= 20) {
+        showNotification('Limite quotidienne atteinte! Connectez-vous pour continuer', 'warning');
+        showLoginWindow();
+        return false;
+      }
     }
   }
   
@@ -1453,10 +1470,39 @@ function renderFlashcards(cards, fromLang, toLang) {
 }
 
 // Sauvegarder les flashcards
-function saveFlashcards() {
+async function saveFlashcards() {
+  // Sauvegarder localement d'abord
   chrome.storage.local.set({ flashcards }, () => {
-    console.log('💾 Flashcards sauvegardées');
+    console.log('💾 Flashcards sauvegardées localement');
   });
+  
+  // Si l'utilisateur est connecté, synchroniser avec le backend
+  const token = await authAPI.getToken();
+  if (token && window.flashcardSync) {
+    // Obtenir la dernière flashcard ajoutée (elle est ajoutée avec unshift donc en position 0)
+    const latestFlashcard = flashcards[0];
+    if (latestFlashcard && !latestFlashcard.synced) {
+      try {
+        const result = await window.flashcardSync.save({
+          originalText: latestFlashcard.front,
+          translatedText: latestFlashcard.back,
+          sourceLanguage: detectLanguage(latestFlashcard.front),
+          targetLanguage: latestFlashcard.language,
+          folder: latestFlashcard.folder || 'default',
+          difficulty: latestFlashcard.difficulty || 'normal'
+        });
+        
+        if (result.success) {
+          console.log('✅ Flashcard synchronisée avec le serveur');
+          // Marquer comme synchronisée
+          latestFlashcard.synced = true;
+          latestFlashcard.serverId = result.data.id;
+        }
+      } catch (error) {
+        console.error('Erreur lors de la synchronisation:', error);
+      }
+    }
+  }
 }
 
 // Afficher le mode pratique
@@ -1860,10 +1906,30 @@ function showLoginWindow() {
           Se connecter
         </button>
         
+        <div style="position: relative; text-align: center; margin-bottom: 16px;">
+          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 0;">
+          <span style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: white; padding: 0 12px; color: #9ca3af; font-size: 12px;">ou continuer avec</span>
+        </div>
+        
+        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+          <button class="js-oauth-google" style="flex: 1; padding: 10px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Google
+          </button>
+          <button class="js-oauth-facebook" style="flex: 1; padding: 10px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#1877F2" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            Facebook
+          </button>
+          <button class="js-oauth-apple" style="flex: 1; padding: 10px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#000000" d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg>
+            Apple
+          </button>
+        </div>
+        
         <div style="text-align: center;">
           <a href="#" style="color: #667eea; font-size: 13px; text-decoration: none; margin-right: 12px;">Mot de passe oublié ?</a>
           <span style="color: #d1d5db;">•</span>
-          <a href="#" style="color: #667eea; font-size: 13px; text-decoration: none; margin-left: 12px;">Créer un compte</a>
+          <a href="#" class="js-register-link" style="color: #667eea; font-size: 13px; text-decoration: none; margin-left: 12px;">Créer un compte</a>
         </div>
       </div>
     </div>
@@ -1876,7 +1942,7 @@ function showLoginWindow() {
     loginModal.remove();
   });
   
-  loginModal.querySelector('.js-login-submit').addEventListener('click', () => {
+  loginModal.querySelector('.js-login-submit').addEventListener('click', async () => {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     
@@ -1885,27 +1951,29 @@ function showLoginWindow() {
       return;
     }
     
-    // TODO: Implémenter la vraie logique de connexion
-    showNotification('Connexion en cours...', 'info');
+    // Désactiver le bouton pendant la connexion
+    const submitButton = loginModal.querySelector('.js-login-submit');
+    submitButton.disabled = true;
+    submitButton.textContent = 'Connexion en cours...';
     
-    // Simuler une connexion
-    setTimeout(() => {
+    try {
+      // Appel API réel pour la connexion
+      const response = await authAPI.login(email, password);
+      
       loginModal.remove();
       showNotification('Connexion réussie!', 'success');
       
-      // Mettre à jour l'interface
-      const loginButton = document.getElementById('loginButton');
-      if (loginButton) {
-        loginButton.innerHTML = '<span style="font-size: 14px;">✅</span><span>Connecté</span>';
-        loginButton.style.background = 'rgba(16, 185, 129, 0.3)';
-        loginButton.style.borderColor = 'rgba(16, 185, 129, 0.5)';
-        loginButton.style.cursor = 'default';
-        
-        // Supprimer les event listeners hover
-        loginButton.onmouseenter = null;
-        loginButton.onmouseleave = null;
-      }
-    }, 1500);
+      // Mettre à jour l'interface utilisateur
+      updateUIAfterLogin(response.user);
+      
+      // Synchroniser les flashcards après connexion
+      syncFlashcardsAfterLogin();
+      
+    } catch (error) {
+      showNotification(error.message || 'Erreur de connexion', 'error');
+      submitButton.disabled = false;
+      submitButton.textContent = 'Se connecter';
+    }
   });
   
   // Fermer en cliquant à l'extérieur
@@ -1950,6 +2018,400 @@ function showLoginWindow() {
       submitButton.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
     });
   }, 100);
+  
+  // Event listener pour le lien "Créer un compte"
+  loginModal.querySelector('.js-register-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    loginModal.remove();
+    showRegisterWindow();
+  });
+  
+  // Event listeners pour OAuth
+  loginModal.querySelector('.js-oauth-google').addEventListener('click', () => {
+    handleOAuthLogin('google');
+  });
+  
+  loginModal.querySelector('.js-oauth-facebook').addEventListener('click', () => {
+    handleOAuthLogin('facebook');
+  });
+  
+  loginModal.querySelector('.js-oauth-apple').addEventListener('click', () => {
+    handleOAuthLogin('apple');
+  });
+}
+
+// Fonction pour gérer la connexion OAuth
+function handleOAuthLogin(provider) {
+  // Pour une extension Chrome, nous devons utiliser chrome.identity API
+  // ou ouvrir une nouvelle fenêtre popup
+  const authUrl = `${API_CONFIG.BASE_URL}/api/auth/${provider}`;
+  
+  // Méthode 1: Utiliser chrome.identity (recommandé pour les extensions)
+  if (chrome.identity && chrome.identity.launchWebAuthFlow) {
+    chrome.identity.launchWebAuthFlow({
+      url: authUrl,
+      interactive: true
+    }, (redirectUrl) => {
+      if (chrome.runtime.lastError) {
+        showNotification(`Erreur OAuth: ${chrome.runtime.lastError.message}`, 'error');
+        return;
+      }
+      
+      // Extraire le token de l'URL de redirection
+      const url = new URL(redirectUrl);
+      const token = url.searchParams.get('token');
+      
+      if (token) {
+        // Sauvegarder le token et récupérer les infos utilisateur
+        chrome.storage.local.set({ authToken: token }, async () => {
+          try {
+            const response = await apiRequest('/api/user/profile');
+            if (response && response.user) {
+              updateUIAfterLogin(response.user);
+              syncFlashcardsAfterLogin();
+              showNotification('Connexion réussie!', 'success');
+            }
+          } catch (error) {
+            showNotification('Erreur lors de la récupération du profil', 'error');
+          }
+        });
+      }
+    });
+  } else {
+    // Méthode 2: Ouvrir dans une nouvelle fenêtre (fallback)
+    const authWindow = window.open(
+      authUrl,
+      'oauth-popup',
+      'width=500,height=600,menubar=no,toolbar=no'
+    );
+    
+    // Écouter les messages de la fenêtre popup
+    window.addEventListener('message', async (event) => {
+      if (event.origin !== API_CONFIG.BASE_URL) return;
+      
+      if (event.data.type === 'oauth-success' && event.data.token) {
+        authWindow.close();
+        
+        // Sauvegarder le token
+        chrome.storage.local.set({ authToken: event.data.token }, async () => {
+          try {
+            const response = await apiRequest('/api/user/profile');
+            if (response && response.user) {
+              updateUIAfterLogin(response.user);
+              syncFlashcardsAfterLogin();
+              showNotification('Connexion réussie!', 'success');
+            }
+          } catch (error) {
+            showNotification('Erreur lors de la récupération du profil', 'error');
+          }
+        });
+      }
+    });
+  }
+}
+
+// Afficher la fenêtre d'inscription
+function showRegisterWindow() {
+  const registerModal = document.createElement('div');
+  registerModal.className = 'register-modal';
+  registerModal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  `;
+  
+  registerModal.innerHTML = `
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2px; border-radius: 18px; max-width: 380px; width: 90%; box-shadow: 0 25px 60px rgba(0,0,0,0.3);">
+      <div style="background: white; padding: 28px; border-radius: 16px; position: relative;">
+        <button style="position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 18px; color: #9ca3af; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all 0.2s;" class="js-register-cancel">×</button>
+        
+        <div style="text-align: center; margin-bottom: 28px;">
+          <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 24px;">🚀</div>
+          <h2 style="font-size: 22px; margin-bottom: 6px; color: #1f2937; font-weight: 700;">Créer un compte LexiFlow</h2>
+          <p style="color: #6b7280; font-size: 14px;">Commencez avec 50 flashcards gratuites</p>
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 13px;">Nom complet</label>
+          <input type="text" id="registerName" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s; background: #f9fafb;" placeholder="Jean Dupont">
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 13px;">Adresse email</label>
+          <input type="email" id="registerEmail" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s; background: #f9fafb;" placeholder="votre@email.com">
+        </div>
+        
+        <div style="margin-bottom: 24px;">
+          <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 13px;">Mot de passe</label>
+          <input type="password" id="registerPassword" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s; background: #f9fafb;" placeholder="••••••••">
+          <p style="font-size: 11px; color: #6b7280; margin-top: 4px;">Au moins 8 caractères</p>
+        </div>
+        
+        <button class="js-register-submit" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
+          Créer mon compte
+        </button>
+        
+        <div style="text-align: center;">
+          <span style="color: #6b7280; font-size: 13px;">Déjà un compte ?</span>
+          <a href="#" class="js-login-link" style="color: #667eea; font-size: 13px; text-decoration: none; margin-left: 8px;">Se connecter</a>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(registerModal);
+  
+  // Event listeners
+  registerModal.querySelector('.js-register-cancel').addEventListener('click', () => {
+    registerModal.remove();
+  });
+  
+  registerModal.querySelector('.js-register-submit').addEventListener('click', async () => {
+    const name = document.getElementById('registerName').value;
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+    
+    if (!name || !email || !password) {
+      showNotification('Veuillez remplir tous les champs', 'warning');
+      return;
+    }
+    
+    if (password.length < 8) {
+      showNotification('Le mot de passe doit contenir au moins 8 caractères', 'warning');
+      return;
+    }
+    
+    // Désactiver le bouton pendant l'inscription
+    const submitButton = registerModal.querySelector('.js-register-submit');
+    submitButton.disabled = true;
+    submitButton.textContent = 'Création en cours...';
+    
+    try {
+      // Appel API pour créer le compte
+      const response = await authAPI.register(name, email, password);
+      
+      registerModal.remove();
+      showNotification('Compte créé avec succès!', 'success');
+      
+      // Mettre à jour l'interface utilisateur
+      updateUIAfterLogin(response.user);
+      
+      // Synchroniser les flashcards locales
+      syncFlashcardsAfterLogin();
+      
+    } catch (error) {
+      showNotification(error.message || 'Erreur lors de la création du compte', 'error');
+      submitButton.disabled = false;
+      submitButton.textContent = 'Créer mon compte';
+    }
+  });
+  
+  // Lien pour revenir à la connexion
+  registerModal.querySelector('.js-login-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    registerModal.remove();
+    showLoginWindow();
+  });
+  
+  // Fermer en cliquant à l'extérieur
+  registerModal.addEventListener('click', (e) => {
+    if (e.target === registerModal) {
+      registerModal.remove();
+    }
+  });
+  
+  // Focus sur le nom et ajouter les effets
+  setTimeout(() => {
+    const nameInput = document.getElementById('registerName');
+    if (nameInput) nameInput.focus();
+  }, 100);
+}
+
+// Fonction pour mettre à jour l'UI après connexion
+function updateUIAfterLogin(user) {
+  const loginButton = document.getElementById('loginButton');
+  if (loginButton) {
+    const isPremium = user.subscriptionStatus === 'premium';
+    loginButton.innerHTML = `
+      <span style="font-size: 14px;">${isPremium ? '⭐' : '✅'}</span>
+      <span>${user.name || user.email}</span>
+    `;
+    loginButton.style.background = isPremium ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' : 'rgba(16, 185, 129, 0.3)';
+    loginButton.style.borderColor = isPremium ? 'transparent' : 'rgba(16, 185, 129, 0.5)';
+    loginButton.style.cursor = 'pointer';
+    
+    // Changer le comportement du bouton pour afficher le menu utilisateur
+    loginButton.onclick = () => showUserMenu(user);
+    loginButton.onmouseenter = null;
+    loginButton.onmouseleave = null;
+  }
+  
+  // Afficher le statut et les limites
+  updateUserQuota(user);
+}
+
+// Fonction pour afficher le menu utilisateur
+function showUserMenu(user) {
+  const menu = document.createElement('div');
+  menu.className = 'user-menu';
+  menu.style.cssText = `
+    position: fixed;
+    top: 60px;
+    right: 10px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    z-index: 1000;
+    min-width: 200px;
+  `;
+  
+  const isPremium = user.subscriptionStatus === 'premium';
+  menu.innerHTML = `
+    <div style="padding: 8px; border-bottom: 1px solid #e5e7eb; margin-bottom: 8px;">
+      <div style="font-weight: 600; color: #1f2937;">${user.name || user.email}</div>
+      <div style="font-size: 12px; color: ${isPremium ? '#f5576c' : '#6b7280'}; margin-top: 4px;">
+        ${isPremium ? '⭐ Compte Premium' : '📦 Compte Gratuit'}
+      </div>
+    </div>
+    <div style="padding: 8px; font-size: 13px; color: #4b5563;">
+      <div>Flashcards: ${user.flashcardsCount || 0}/${isPremium ? 200 : 50}</div>
+    </div>
+    <button id="logoutBtn" style="
+      width: 100%;
+      padding: 8px;
+      margin-top: 8px;
+      background: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    ">
+      Se déconnecter
+    </button>
+  `;
+  
+  document.body.appendChild(menu);
+  
+  // Fermer le menu en cliquant ailleurs
+  const closeMenu = (e) => {
+    if (!menu.contains(e.target) && e.target.id !== 'loginButton') {
+      menu.remove();
+      document.removeEventListener('click', closeMenu);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', closeMenu), 100);
+  
+  // Gérer la déconnexion
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await authAPI.logout();
+    menu.remove();
+    showNotification('Déconnexion réussie', 'success');
+    resetUIAfterLogout();
+  });
+}
+
+// Fonction pour réinitialiser l'UI après déconnexion
+function resetUIAfterLogout() {
+  const loginButton = document.getElementById('loginButton');
+  if (loginButton) {
+    loginButton.innerHTML = '<span style="font-size: 14px;">🔒</span><span>Se connecter</span>';
+    loginButton.style.background = 'rgba(255,255,255,0.15)';
+    loginButton.style.borderColor = 'rgba(255,255,255,0.25)';
+    loginButton.style.cursor = 'pointer';
+    
+    // Restaurer le comportement original
+    loginButton.onclick = () => showLoginWindow();
+    
+    // Restaurer les effets hover
+    loginButton.addEventListener('mouseenter', () => {
+      loginButton.style.background = 'rgba(255,255,255,0.25)';
+      loginButton.style.transform = 'translateY(-1px)';
+      loginButton.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+    });
+    
+    loginButton.addEventListener('mouseleave', () => {
+      loginButton.style.background = 'rgba(255,255,255,0.15)';
+      loginButton.style.transform = 'translateY(0)';
+      loginButton.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+    });
+  }
+  
+  // Cacher les infos de quota
+  const quotaIndicator = document.getElementById('quotaIndicator');
+  if (quotaIndicator) quotaIndicator.style.display = 'none';
+}
+
+// Fonction pour mettre à jour le quota affiché
+function updateUserQuota(user) {
+  const quotaIndicator = document.getElementById('quotaIndicator');
+  const quotaText = document.getElementById('quotaText');
+  
+  if (!quotaIndicator || !quotaText) return;
+  
+  const isPremium = user.subscriptionStatus === 'premium';
+  const flashcardsLimit = isPremium ? 200 : 50;
+  const flashcardsCount = user.flashcardsCount || 0;
+  
+  // Afficher l'indicateur
+  quotaIndicator.style.display = 'block';
+  
+  // Mettre à jour le texte
+  quotaText.textContent = `${flashcardsCount}/${flashcardsLimit}`;
+  
+  // Changer la couleur selon le pourcentage d'utilisation
+  const percentage = (flashcardsCount / flashcardsLimit) * 100;
+  if (percentage >= 90) {
+    quotaIndicator.style.background = 'rgba(239, 68, 68, 0.2)'; // Rouge
+    quotaIndicator.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+  } else if (percentage >= 70) {
+    quotaIndicator.style.background = 'rgba(245, 158, 11, 0.2)'; // Orange
+    quotaIndicator.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+  } else {
+    quotaIndicator.style.background = 'rgba(16, 185, 129, 0.2)'; // Vert
+    quotaIndicator.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+  }
+  
+  // Ajouter une icône premium si applicable
+  if (isPremium) {
+    quotaText.innerHTML = `⭐ ${flashcardsCount}/${flashcardsLimit}`;
+  }
+}
+
+// Fonction pour synchroniser les flashcards après connexion
+async function syncFlashcardsAfterLogin() {
+  try {
+    // Charger les flashcards du serveur
+    const serverFlashcards = await flashcardSync.load();
+    if (serverFlashcards.success) {
+      console.log('Flashcards chargées du serveur:', serverFlashcards.data);
+    }
+    
+    // Proposer de synchroniser les flashcards locales
+    const localFlashcards = JSON.parse(localStorage.getItem('flashcards') || '[]');
+    if (localFlashcards.length > 0) {
+      if (confirm(`Vous avez ${localFlashcards.length} flashcards locales. Voulez-vous les synchroniser avec votre compte ?`)) {
+        const syncResult = await flashcardSync.syncAll();
+        if (syncResult.success) {
+          showNotification(`${syncResult.synced} flashcards synchronisées!`, 'success');
+          // Recharger les flashcards pour afficher la liste mise à jour
+          updateFlashcards();
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Erreur lors de la synchronisation:', error);
+  }
 }
 
 // Effacer tout l'historique
@@ -2098,6 +2560,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadData();
     await initUI();
     
+    // Vérifier l'authentification au démarrage
+    const token = await authAPI.getToken();
+    if (token) {
+      try {
+        // Vérifier la validité du token et récupérer les infos utilisateur
+        const response = await apiRequest('/api/user/profile');
+        if (response && response.user) {
+          console.log('Utilisateur connecté:', response.user);
+          updateUIAfterLogin(response.user);
+          
+          // Synchroniser les flashcards au démarrage
+          syncFlashcardsAfterLogin();
+        }
+      } catch (error) {
+        console.log('Token invalide, réinitialisation...');
+        // Token invalide, réinitialiser
+        await authAPI.logout();
+        resetUIAfterLogout();
+      }
+    }
+    
     // Navigation
     document.querySelectorAll('.nav-tab').forEach(tab => {
       tab.addEventListener('click', () => switchTab(tab.dataset.tab));
@@ -2154,26 +2637,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
     
-    // Bouton de connexion
+    // Bouton de connexion - configuration initiale
     const loginButton = document.getElementById('loginButton');
     if (loginButton) {
-      // Effets hover
-      loginButton.addEventListener('mouseenter', () => {
-        loginButton.style.background = 'rgba(255,255,255,0.25)';
-        loginButton.style.transform = 'translateY(-1px)';
-        loginButton.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-      });
-      
-      loginButton.addEventListener('mouseleave', () => {
-        loginButton.style.background = 'rgba(255,255,255,0.15)';
-        loginButton.style.transform = 'translateY(0)';
-        loginButton.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-      });
-      
-      loginButton.addEventListener('click', () => {
-        // Ouvrir la fenêtre de login
-        showLoginWindow();
-      });
+      // Ne configurer les événements que si l'utilisateur n'est pas connecté
+      if (!token) {
+        // Effets hover
+        loginButton.addEventListener('mouseenter', () => {
+          loginButton.style.background = 'rgba(255,255,255,0.25)';
+          loginButton.style.transform = 'translateY(-1px)';
+          loginButton.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+        });
+        
+        loginButton.addEventListener('mouseleave', () => {
+          loginButton.style.background = 'rgba(255,255,255,0.15)';
+          loginButton.style.transform = 'translateY(0)';
+          loginButton.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+        });
+        
+        loginButton.addEventListener('click', () => {
+          // Ouvrir la fenêtre de login
+          showLoginWindow();
+        });
+      }
     }
     
     // Actions globales

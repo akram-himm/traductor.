@@ -1225,7 +1225,22 @@
 <body>
     <div class="header">
         <div class="header-content">
-            <div style="position: absolute; top: 10px; right: 10px; z-index: 10;">
+            <div style="position: absolute; top: 10px; right: 10px; z-index: 10; display: flex; align-items: center; gap: 10px;">
+                <!-- Quota indicator -->
+                <div id="quotaIndicator" style="
+                    display: none;
+                    background: rgba(255,255,255,0.1);
+                    backdrop-filter: blur(10px);
+                    padding: 4px 10px;
+                    border-radius: 15px;
+                    font-size: 11px;
+                    color: white;
+                    font-weight: 500;
+                    border: 1px solid rgba(255,255,255,0.2);
+                ">
+                    <span id="quotaText">0/50</span>
+                </div>
+                
                 <button id="loginButton" style="
                     background: rgba(255,255,255,0.15); 
                     color: white; 

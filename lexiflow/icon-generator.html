@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LexiFlow Icon Generator</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1>LexiFlow Icon Generator 1024x1024</h1>
+    <p>1. Faites un clic droit sur l'image ci-dessous</p>
+    <p>2. Sélectionnez "Enregistrer l'image sous..."</p>
+    <p>3. Uploadez sur Facebook Developer Console</p>
+    
+    <canvas id="canvas" width="1024" height="1024"></canvas>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Créer le dégradé
+        const gradient = ctx.createLinearGradient(0, 0, 1024, 1024);
+        gradient.addColorStop(0, '#667eea');
+        gradient.addColorStop(1, '#764ba2');
+        
+        // Remplir le fond
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 1024, 1024);
+        
+        // Ajouter l'emoji globe
+        ctx.font = '280px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'white';
+        ctx.fillText('🌐', 512, 380);
+        
+        // Ajouter le texte LexiFlow
+        ctx.font = 'bold 120px Arial';
+        ctx.fillText('LexiFlow', 512, 650);
+        
+        // Convertir en image PNG
+        canvas.toBlob(function(blob) {
+            const url = URL.createObjectURL(blob);
+            const img = new Image();
+            img.src = url;
+            img.style.border = '2px solid #667eea';
+            img.style.marginTop = '20px';
+            document.body.appendChild(img);
+        });
+    </script>
+</body>
+</html>
