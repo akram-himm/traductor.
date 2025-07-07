@@ -58,18 +58,15 @@ app.use('/api/translations', require('./routes/translations'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/sync', require('./routes/sync'));
 app.use('/api/waitlist', require('./routes/waitlist'));
+app.use('/api', require('./routes/health'));
 
-// Ensure all routes are loaded from src/routes
-const healthRoute = require('./routes/health');
-const authRoute = require('./routes/auth');
+// Legal pages (privacy, terms)
+app.use('/', require('./routes/legal'));
 
-app.use('/api', healthRoute);
-app.use('/api/auth', authRoute);
+// Data deletion endpoints for Facebook
+app.use('/', require('./routes/dataDeletion'));
 
-// Route de test
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'LexiFlow Backend is running!' });
-});
+// Route de test (déjà définie dans routes/health.js)
 
 // Ping endpoint
 app.get('/ping', (req, res) => {

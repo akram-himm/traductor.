@@ -24,6 +24,11 @@ const User = sequelize.define('User', {
     unique: true,
     allowNull: true
   },
+  facebookId: {
+    type: DataTypes.STRING,
+    unique: true,
+    allowNull: true
+  },
   stripeCustomerId: {
     type: DataTypes.STRING,
     unique: true,
