@@ -2085,36 +2085,21 @@ function handleOAuthLogin(provider) {
     }
   };
   
-  // Utiliser chrome.identity si disponible
-  if (chrome.identity && chrome.identity.launchWebAuthFlow) {
-    chrome.identity.launchWebAuthFlow({
-      url: authUrl,
-      interactive: true
-    }, (redirectUrl) => {
-      if (chrome.runtime.lastError) {
-        handleAuthError(chrome.runtime.lastError.message);
-        return;
-      }
-      
-      try {
-        const url = new URL(redirectUrl);
-        const token = url.searchParams.get('token');
-        if (token) {
-          handleSuccessfulAuth(token);
-        } else {
-          handleAuthError('Token non trouvé dans la réponse');
-        }
-      } catch (error) {
-        handleAuthError('URL de redirection invalide');
-      }
-    });
-  } else {
-    // Fallback: ouvrir dans une nouvelle fenêtre
+  // Utiliser uniquement la méthode window.open qui fonctionne toujours
+  console.log('OAuth: Utilisation de window.open pour:', authUrl);
+  
+  try {
+    // Ouvrir dans une nouvelle fenêtre
     const authWindow = window.open(
       authUrl,
       'oauth-popup',
       'width=500,height=600,menubar=no,toolbar=no'
     );
+    
+    if (!authWindow) {
+      handleAuthError('Impossible d\'ouvrir la fenêtre de connexion. Vérifiez que les popups ne sont pas bloqués.');
+      return;
+    }
     
     // Event listener temporaire
     const messageListener = async (event) => {
@@ -2149,6 +2134,9 @@ function handleOAuthLogin(provider) {
         }
       }
     }, 1000);
+  } catch (error) {
+    console.error('Erreur lors de l\'ouverture de la fenêtre OAuth:', error);
+    handleAuthError('Erreur technique: ' + error.message);
   }
 }
 
