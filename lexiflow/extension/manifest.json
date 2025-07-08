@@ -8,7 +8,8 @@
     "activeTab",
     "clipboardWrite",
     "alarms",
-    "tabs"
+    "tabs",
+    "identity"
   ],
   "host_permissions": [
     "https://api.deepseek.com/*",
@@ -18,8 +19,9 @@
     "https://libretranslate.de/*",
     "https://translate.google.com/*",
     "https://clients5.google.com/*",
-    "https://your-lexiflow-backend.onrender.com/*",
-    "http://localhost:5000/*"
+    "https://my-backend-api-cng7.onrender.com/*",
+    "http://localhost:5000/*",
+    "http://localhost:3000/*"
   ],
   "background": {
     "service_worker": "background.js"
