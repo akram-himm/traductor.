@@ -2037,8 +2037,8 @@ function handleOAuthLogin(provider) {
     `;
   }
   
-  // Utiliser directement l'URL du backend avec prompt pour forcer la sélection
-  const authUrl = `${API_CONFIG.BASE_URL}/api/auth/${provider}?prompt=select_account`;
+  // Utiliser directement l'URL du backend
+  const authUrl = `${API_CONFIG.BASE_URL}/api/auth/${provider}`;
   
   // Fonction pour gérer la connexion réussie
   const handleSuccessfulAuth = async (token) => {
@@ -2491,6 +2491,58 @@ function syncFlashcardsAfterLogin() {
     .catch(error => {
       console.error('Erreur lors du chargement des flashcards:', error);
     });
+          }
+        } else {
+          showNotification('Erreur lors de la synchronisation', 'error');
+        }
+      } else {
+        // User chose not to sync, clear local flashcards
+        console.log('🗑️ User chose not to sync, clearing local flashcards');
+        localStorage.removeItem('flashcards');
+        flashcards = [];
+      }
+    }
+    
+    // 2. Load flashcards from server (this will be the merged set if user synced)
+    console.log('📥 Loading flashcards from server...');
+    const serverFlashcards = await flashcardSync.load();
+    
+    if (serverFlashcards.success && serverFlashcards.data) {
+      // Convert backend flashcards to local format
+      flashcards = serverFlashcards.data.map(card => ({
+        id: card._id || card.id,
+        text: card.originalText,
+        translation: card.translatedText,
+        sourceLanguage: card.sourceLanguage,
+        targetLanguage: card.targetLanguage,
+        context: card.context || '',
+        difficulty: card.difficulty || 'medium',
+        tags: card.tags || [],
+        folder: card.folder || 'default',
+        createdAt: card.createdAt || new Date().toISOString(),
+        isFavorite: card.tags?.includes('favorite') || false,
+        reviewCount: card.reviewCount || 0,
+        lastReviewed: card.lastReviewed || null
+      }));
+      
+      console.log(`✅ Loaded ${flashcards.length} flashcards from server`);
+      
+      // Save to chrome storage for offline access
+      chrome.storage.local.set({ flashcards }, () => {
+        console.log('💾 Flashcards saved to chrome storage');
+      });
+      
+      // Update the UI
+      updateFlashcards();
+      updateStats();
+    } else {
+      console.log('ℹ️ No flashcards on server or error loading');
+    }
+    
+  } catch (error) {
+    console.error('❌ Error during flashcard synchronization:', error);
+    showNotification('Erreur lors de la synchronisation des flashcards', 'error');
+  }
 }
 
 // Effacer tout l'historique
