@@ -2052,13 +2052,24 @@ function handleOAuthLogin(provider) {
       loginModal.remove();
     }
     
+    // Afficher un message de chargement
+    showNotification('Connexion en cours...', 'info');
+    
     // Sauvegarder le token
     chrome.storage.local.set({ authToken: token }, async () => {
       try {
+        // Récupérer le profil utilisateur
         const response = await apiRequest('/api/user/profile');
         if (response && response.user) {
+          // Sauvegarder les infos utilisateur
+          chrome.storage.local.set({ user: response.user });
+          
+          // Mettre à jour l'interface
           updateUIAfterLogin(response.user);
+          
+          // Charger les flashcards du serveur
           syncFlashcardsAfterLogin();
+          
           showNotification('Connexion réussie!', 'success');
         }
       } catch (error) {
@@ -2112,11 +2123,19 @@ function handleOAuthLogin(provider) {
       });
       showNotification('Connexion en cours dans le nouvel onglet...', 'info');
     } else {
-      // Vérifier périodiquement si la fenêtre est fermée
+      // Vérifier périodiquement si la fenêtre est fermée et si on a reçu un token
       const checkInterval = setInterval(() => {
         if (oauthWindow.closed) {
           clearInterval(checkInterval);
           console.log('Fenêtre OAuth fermée');
+          
+          // Vérifier si on a reçu un token dans le storage
+          chrome.storage.local.get(['authToken'], (result) => {
+            if (result.authToken) {
+              console.log('Token trouvé dans le storage après fermeture');
+              handleSuccessfulAuth(result.authToken);
+            }
+          });
         }
       }, 1000);
       
@@ -2479,17 +2498,47 @@ function updateUserQuota(user) {
 
 // Fonction pour synchroniser les flashcards après connexion
 function syncFlashcardsAfterLogin() {
+  console.log('🔄 Synchronisation des flashcards...');
+  
   // Charger les flashcards depuis le backend
   flashcardsAPI.getAll()
     .then(response => {
       if (response && response.flashcards) {
         console.log(`✅ ${response.flashcards.length} flashcards chargées du serveur`);
-        // Mettre à jour les flashcards locales
+        
+        // Convertir et stocker les flashcards dans la variable globale
+        flashcards = response.flashcards.map(card => ({
+          id: card._id || card.id,
+          text: card.originalText,
+          translation: card.translatedText,
+          sourceLanguage: card.sourceLanguage || 'auto',
+          targetLanguage: card.targetLanguage || 'fr',
+          context: card.context || '',
+          difficulty: card.difficulty || 'medium',
+          tags: card.tags || [],
+          folder: card.folder || 'default',
+          createdAt: card.createdAt || new Date().toISOString(),
+          isFavorite: card.tags?.includes('favorite') || false,
+          reviewCount: card.reviewCount || 0,
+          lastReviewed: card.lastReviewed || null
+        }));
+        
+        // Sauvegarder dans le storage local
+        localStorage.setItem('flashcards', JSON.stringify(flashcards));
+        chrome.storage.local.set({ flashcards });
+        
+        // Mettre à jour l'interface
+        updateFlashcards();
+        updateStats();
+      } else {
+        console.log('ℹ️ Aucune flashcard sur le serveur');
+        flashcards = [];
         updateFlashcards();
       }
     })
     .catch(error => {
-      console.error('Erreur lors du chargement des flashcards:', error);
+      console.error('❌ Erreur lors du chargement des flashcards:', error);
+      showNotification('Erreur lors du chargement des flashcards', 'error');
     });
 }
 
