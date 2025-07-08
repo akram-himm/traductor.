@@ -13,7 +13,6 @@ const API_CONFIG = {
     
     // OAuth
     GOOGLE_AUTH: '/api/auth/google',
-    FACEBOOK_AUTH: '/api/auth/facebook',
     
     // User
     PROFILE: '/api/user/profile',
