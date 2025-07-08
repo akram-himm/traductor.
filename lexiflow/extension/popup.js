@@ -2024,6 +2024,10 @@ function showLoginWindow() {
 
 // Fonction pour gérer la connexion OAuth
 function handleOAuthLogin(provider) {
+  // TEMPORAIRE: Désactiver OAuth pour tester rapidement
+  showNotification('Utilisez email/password pour le moment', 'info');
+  return;
+  
   // Récupérer le modal de connexion actuel
   const loginModal = document.querySelector('.login-modal');
   
@@ -2037,6 +2041,7 @@ function handleOAuthLogin(provider) {
     `;
   }
   
+  // Utiliser directement l'URL du backend
   const authUrl = `${API_CONFIG.BASE_URL}/api/auth/${provider}`;
   
   // Fonction pour gérer la connexion réussie
@@ -2089,51 +2094,21 @@ function handleOAuthLogin(provider) {
   console.log('OAuth: Utilisation de window.open pour:', authUrl);
   
   try {
-    // Ouvrir dans une nouvelle fenêtre
-    const authWindow = window.open(
-      authUrl,
-      'oauth-popup',
-      'width=500,height=600,menubar=no,toolbar=no'
-    );
+    // Ouvrir dans un nouvel onglet au lieu d'un popup pour éviter les blocages
+    chrome.tabs.create({ url: authUrl }, (tab) => {
+      console.log('Onglet OAuth ouvert:', tab.id);
+      
+      // Stocker l'ID de l'onglet pour le fermer plus tard
+      chrome.storage.local.set({ oauthTabId: tab.id });
+    });
     
-    if (!authWindow) {
-      handleAuthError('Impossible d\'ouvrir la fenêtre de connexion. Vérifiez que les popups ne sont pas bloqués.');
-      return;
+    // Fermer le modal immédiatement car on ouvre un nouvel onglet
+    if (loginModal) {
+      loginModal.remove();
     }
     
-    // Event listener temporaire
-    const messageListener = async (event) => {
-      if (event.origin !== API_CONFIG.BASE_URL) return;
-      
-      if (event.data.type === 'oauth-success' && event.data.token) {
-        // Nettoyer l'event listener
-        window.removeEventListener('message', messageListener);
-        
-        if (authWindow && !authWindow.closed) {
-          authWindow.close();
-        }
-        
-        handleSuccessfulAuth(event.data.token);
-      } else if (event.data.type === 'oauth-error') {
-        window.removeEventListener('message', messageListener);
-        handleAuthError(event.data.error || 'Erreur inconnue');
-      }
-    };
-    
-    window.addEventListener('message', messageListener);
-    
-    // Vérifier si la fenêtre a été fermée
-    const checkInterval = setInterval(() => {
-      if (authWindow && authWindow.closed) {
-        clearInterval(checkInterval);
-        window.removeEventListener('message', messageListener);
-        
-        // Si la fenêtre est fermée sans succès, réactiver le bouton
-        if (googleButton && googleButton.disabled) {
-          handleAuthError('Connexion annulée');
-        }
-      }
-    }, 1000);
+    // Message pour l'utilisateur
+    showNotification('Connexion en cours dans le nouvel onglet...', 'info');
   } catch (error) {
     console.error('Erreur lors de l\'ouverture de la fenêtre OAuth:', error);
     handleAuthError('Erreur technique: ' + error.message);
@@ -2961,5 +2936,32 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (error) {
     console.error('❌ Erreur initialisation:', error);
     showNotification('Erreur lors du chargement', 'error');
+  }
+});
+
+// Écouter les messages du background script pour OAuth
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'oauth-success' && message.token) {
+    console.log('Message OAuth reçu avec token');
+    
+    // Sauvegarder le token
+    chrome.storage.local.set({ authToken: message.token }, async () => {
+      try {
+        const response = await apiRequest('/api/user/profile');
+        if (response && response.user) {
+          updateUIAfterLogin(response.user);
+          syncFlashcardsAfterLogin();
+          showNotification('Connexion réussie!', 'success');
+        }
+      } catch (error) {
+        console.error('Erreur profil:', error);
+        showNotification('Erreur lors de la récupération du profil', 'error');
+        await authAPI.logout();
+        resetUIAfterLogout();
+      }
+    });
+  } else if (message.type === 'oauth-error') {
+    console.error('Erreur OAuth reçue:', message.error);
+    showNotification(`Erreur de connexion: ${message.error}`, 'error');
   }
 });

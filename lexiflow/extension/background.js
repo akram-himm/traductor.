@@ -44,6 +44,47 @@ chrome.commands.onCommand.addListener((command) => {
   }
 });
 
+// Gestion des retours OAuth
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete' && tab.url) {
+    // Vérifier si c'est notre URL de callback OAuth
+    if (tab.url.includes('my-backend-api-cng7.onrender.com/oauth-success.html') ||
+        tab.url.includes('my-backend-api-cng7.onrender.com/oauth-error.html')) {
+      
+      // Extraire le token de l'URL
+      const url = new URL(tab.url);
+      const token = url.searchParams.get('token');
+      const error = url.searchParams.get('error');
+      
+      if (token) {
+        // Sauvegarder le token
+        chrome.storage.local.set({ authToken: token }, () => {
+          // Fermer l'onglet OAuth
+          chrome.tabs.remove(tabId);
+          
+          // Notifier l'utilisateur
+          chrome.notifications.create({
+            type: 'basic',
+            iconUrl: 'icon-128.png',
+            title: 'Connexion réussie!',
+            message: 'Vous êtes maintenant connecté à LexiFlow.'
+          });
+        });
+      } else if (error) {
+        // Fermer l'onglet et afficher l'erreur
+        chrome.tabs.remove(tabId);
+        
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: 'icon-128.png',
+          title: 'Erreur de connexion',
+          message: error
+        });
+      }
+    }
+  }
+});
+
 // Gestion des messages
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'openOptionsPage') {
