@@ -1955,8 +1955,8 @@ function showLoginWindow() {
       
       // Ensuite afficher la notification et mettre à jour l'UI
       showNotification('Connexion réussie!', 'success');
-      await updateUIAfterLogin(response.user);
-      await syncFlashcardsAfterLogin();
+      updateUIAfterLogin(response.user);
+      syncFlashcardsAfterLogin();
       
     } catch (error) {
       showNotification(error.message || 'Erreur de connexion', 'error');
@@ -2057,8 +2057,8 @@ function handleOAuthLogin(provider) {
       try {
         const response = await apiRequest('/api/user/profile');
         if (response && response.user) {
-          await updateUIAfterLogin(response.user);
-          await syncFlashcardsAfterLogin();
+          updateUIAfterLogin(response.user);
+          syncFlashcardsAfterLogin();
           showNotification('Connexion réussie!', 'success');
         }
       } catch (error) {
@@ -2236,10 +2236,10 @@ function showRegisterWindow() {
       showNotification('Compte créé avec succès!', 'success');
       
       // Mettre à jour l'interface utilisateur
-      await updateUIAfterLogin(response.user);
+      updateUIAfterLogin(response.user);
       
       // Synchroniser les flashcards locales
-      await syncFlashcardsAfterLogin();
+      syncFlashcardsAfterLogin();
       
     } catch (error) {
       showNotification(error.message || 'Erreur lors de la création du compte', 'error');
@@ -2309,11 +2309,11 @@ async function updateUIAfterLogin(user) {
   // 4. Load user's flashcards from backend
   try {
     console.log('📥 Loading user flashcards from backend...');
-    const serverFlashcards = await flashcardSync.load();
+    const response = await flashcardsAPI.getAll();
     
-    if (serverFlashcards.success && serverFlashcards.data) {
+    if (response && response.flashcards) {
       // Convert backend flashcards to local format
-      flashcards = serverFlashcards.data.map(card => ({
+      flashcards = response.flashcards.map(card => ({
         id: card._id || card.id,
         text: card.originalText,
         translation: card.translatedText,
@@ -2772,10 +2772,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const response = await apiRequest('/api/user/profile');
         if (response && response.user) {
           console.log('Utilisateur connecté:', response.user);
-          await updateUIAfterLogin(response.user);
+          updateUIAfterLogin(response.user);
           
           // Synchroniser les flashcards au démarrage
-          await syncFlashcardsAfterLogin();
+          syncFlashcardsAfterLogin();
         }
       } catch (error) {
         console.log('Token invalide, réinitialisation...');
@@ -3148,8 +3148,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       try {
         const response = await apiRequest('/api/user/profile');
         if (response && response.user) {
-          await updateUIAfterLogin(response.user);
-          await syncFlashcardsAfterLogin();
+          updateUIAfterLogin(response.user);
+          syncFlashcardsAfterLogin();
           showNotification('Connexion réussie!', 'success');
         }
       } catch (error) {
