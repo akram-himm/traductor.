@@ -2024,10 +2024,6 @@ function showLoginWindow() {
 
 // Fonction pour gérer la connexion OAuth
 function handleOAuthLogin(provider) {
-  // TEMPORAIRE: Désactiver OAuth pour tester rapidement
-  showNotification('Utilisez email/password pour le moment', 'info');
-  return;
-  
   // Récupérer le modal de connexion actuel
   const loginModal = document.querySelector('.login-modal');
   
