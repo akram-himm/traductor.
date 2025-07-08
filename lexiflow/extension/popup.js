@@ -1955,8 +1955,8 @@ function showLoginWindow() {
       
       // Ensuite afficher la notification et mettre à jour l'UI
       showNotification('Connexion réussie!', 'success');
-      updateUIAfterLogin(response.user);
-      syncFlashcardsAfterLogin();
+      await updateUIAfterLogin(response.user);
+      await syncFlashcardsAfterLogin();
       
     } catch (error) {
       showNotification(error.message || 'Erreur de connexion', 'error');
@@ -2057,8 +2057,8 @@ function handleOAuthLogin(provider) {
       try {
         const response = await apiRequest('/api/user/profile');
         if (response && response.user) {
-          updateUIAfterLogin(response.user);
-          syncFlashcardsAfterLogin();
+          await updateUIAfterLogin(response.user);
+          await syncFlashcardsAfterLogin();
           showNotification('Connexion réussie!', 'success');
         }
       } catch (error) {
@@ -2086,25 +2086,59 @@ function handleOAuthLogin(provider) {
     }
   };
   
-  // Utiliser uniquement la méthode window.open qui fonctionne toujours
-  console.log('OAuth: Utilisation de window.open pour:', authUrl);
+  // Ouvrir OAuth dans un popup au lieu d'un nouvel onglet
+  console.log('OAuth: Ouverture dans un popup pour:', authUrl);
   
   try {
-    // Ouvrir dans un nouvel onglet au lieu d'un popup pour éviter les blocages
-    chrome.tabs.create({ url: authUrl }, (tab) => {
-      console.log('Onglet OAuth ouvert:', tab.id);
-      
-      // Stocker l'ID de l'onglet pour le fermer plus tard
-      chrome.storage.local.set({ oauthTabId: tab.id });
-    });
+    // Calculer la position centrée pour le popup
+    const width = 500;
+    const height = 600;
+    const left = Math.round((screen.width - width) / 2);
+    const top = Math.round((screen.height - height) / 2);
     
-    // Fermer le modal immédiatement car on ouvre un nouvel onglet
-    if (loginModal) {
-      loginModal.remove();
+    // Ouvrir dans un popup centré
+    const oauthWindow = window.open(
+      authUrl,
+      'LexiFlow OAuth',
+      `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes,resizable=yes`
+    );
+    
+    if (!oauthWindow) {
+      // Si le popup est bloqué, utiliser chrome.tabs comme fallback
+      console.log('Popup bloqué, utilisation de chrome.tabs');
+      chrome.tabs.create({ url: authUrl }, (tab) => {
+        console.log('Onglet OAuth ouvert:', tab.id);
+        chrome.storage.local.set({ oauthTabId: tab.id });
+      });
+      showNotification('Connexion en cours dans le nouvel onglet...', 'info');
+    } else {
+      // Vérifier périodiquement si la fenêtre est fermée
+      const checkInterval = setInterval(() => {
+        if (oauthWindow.closed) {
+          clearInterval(checkInterval);
+          console.log('Fenêtre OAuth fermée');
+        }
+      }, 1000);
+      
+      // Écouter les messages de la fenêtre OAuth
+      window.addEventListener('message', function handleOAuthMessage(event) {
+        if (event.origin !== API_CONFIG.BASE_URL) return;
+        
+        if (event.data.type === 'oauth-success' && event.data.token) {
+          clearInterval(checkInterval);
+          oauthWindow.close();
+          window.removeEventListener('message', handleOAuthMessage);
+          handleSuccessfulAuth(event.data.token);
+        } else if (event.data.type === 'oauth-error') {
+          clearInterval(checkInterval);
+          oauthWindow.close();
+          window.removeEventListener('message', handleOAuthMessage);
+          handleAuthError(event.data.error);
+        }
+      });
     }
     
-    // Message pour l'utilisateur
-    showNotification('Connexion en cours dans le nouvel onglet...', 'info');
+    // Ne pas fermer le modal immédiatement, attendre la réponse
   } catch (error) {
     console.error('Erreur lors de l\'ouverture de la fenêtre OAuth:', error);
     handleAuthError('Erreur technique: ' + error.message);
@@ -2202,10 +2236,10 @@ function showRegisterWindow() {
       showNotification('Compte créé avec succès!', 'success');
       
       // Mettre à jour l'interface utilisateur
-      updateUIAfterLogin(response.user);
+      await updateUIAfterLogin(response.user);
       
       // Synchroniser les flashcards locales
-      syncFlashcardsAfterLogin();
+      await syncFlashcardsAfterLogin();
       
     } catch (error) {
       showNotification(error.message || 'Erreur lors de la création du compte', 'error');
@@ -2236,7 +2270,22 @@ function showRegisterWindow() {
 }
 
 // Fonction pour mettre à jour l'UI après connexion
-function updateUIAfterLogin(user) {
+async function updateUIAfterLogin(user) {
+  // 1. Clear local data first
+  console.log('🧹 Clearing local data before loading user data...');
+  
+  // Clear translations from localStorage and memory
+  translations = [];
+  localStorage.removeItem('translations');
+  
+  // Clear flashcards from localStorage and memory
+  flashcards = [];
+  localStorage.removeItem('flashcards');
+  
+  // Clear any saved folder directions
+  localStorage.removeItem('folderDirections');
+  
+  // 2. Update login button UI
   const loginButton = document.getElementById('loginButton');
   if (loginButton) {
     const isPremium = user.subscriptionStatus === 'premium';
@@ -2254,8 +2303,50 @@ function updateUIAfterLogin(user) {
     loginButton.onmouseleave = null;
   }
   
-  // Afficher le statut et les limites
+  // 3. Update user quota display
   updateUserQuota(user);
+  
+  // 4. Load user's flashcards from backend
+  try {
+    console.log('📥 Loading user flashcards from backend...');
+    const serverFlashcards = await flashcardSync.load();
+    
+    if (serverFlashcards.success && serverFlashcards.data) {
+      // Convert backend flashcards to local format
+      flashcards = serverFlashcards.data.map(card => ({
+        id: card._id || card.id,
+        text: card.originalText,
+        translation: card.translatedText,
+        sourceLanguage: card.sourceLanguage,
+        targetLanguage: card.targetLanguage,
+        context: card.context || '',
+        difficulty: card.difficulty || 'medium',
+        tags: card.tags || [],
+        folder: card.folder || 'default',
+        createdAt: card.createdAt || new Date().toISOString(),
+        isFavorite: card.tags?.includes('favorite') || false,
+        reviewCount: card.reviewCount || 0,
+        lastReviewed: card.lastReviewed || null
+      }));
+      
+      console.log(`✅ Loaded ${flashcards.length} flashcards from server`);
+      
+      // Save to chrome storage for offline access
+      chrome.storage.local.set({ flashcards }, () => {
+        console.log('💾 Flashcards saved to local storage');
+      });
+    }
+  } catch (error) {
+    console.error('❌ Error loading flashcards from backend:', error);
+    showNotification('Erreur lors du chargement des flashcards', 'error');
+  }
+  
+  // 5. Refresh all UI components
+  updateHistory();
+  updateFlashcards();
+  updateStats();
+  
+  console.log('✅ UI updated after login');
 }
 
 // Fonction pour afficher le menu utilisateur
@@ -2324,6 +2415,36 @@ function showUserMenu(user) {
 
 // Fonction pour réinitialiser l'UI après déconnexion
 function resetUIAfterLogout() {
+  console.log('🚪 Resetting UI after logout...');
+  
+  // 1. Clear all local data
+  // Clear translations
+  translations = [];
+  localStorage.removeItem('translations');
+  chrome.storage.local.remove(['translations']);
+  
+  // Clear flashcards
+  flashcards = [];
+  localStorage.removeItem('flashcards');
+  chrome.storage.local.remove(['flashcards']);
+  
+  // Clear folder directions
+  localStorage.removeItem('folderDirections');
+  
+  // Clear user settings
+  userSettings = {};
+  chrome.storage.local.remove(['userSettings']);
+  
+  // Clear practice mode data
+  practiceMode = {
+    active: false,
+    cards: [],
+    currentIndex: 0,
+    score: { correct: 0, incorrect: 0 },
+    startTime: null
+  };
+  
+  // 2. Reset login button UI
   const loginButton = document.getElementById('loginButton');
   if (loginButton) {
     loginButton.innerHTML = '<span style="font-size: 14px;">🔒</span><span>Se connecter</span>';
@@ -2348,9 +2469,27 @@ function resetUIAfterLogout() {
     });
   }
   
-  // Cacher les infos de quota
+  // 3. Hide quota indicator
   const quotaIndicator = document.getElementById('quotaIndicator');
   if (quotaIndicator) quotaIndicator.style.display = 'none';
+  
+  // 4. Refresh all UI components to show empty state
+  updateHistory();
+  updateFlashcards();
+  updateStats();
+  
+  // 5. If practice mode is active, exit it
+  if (practiceMode.active) {
+    const practiceSection = document.getElementById('practiceSection');
+    if (practiceSection) practiceSection.style.display = 'none';
+    
+    const historySection = document.getElementById('historySection');
+    const flashcardsSection = document.getElementById('flashcardsSection');
+    if (historySection) historySection.style.display = 'block';
+    if (flashcardsSection) flashcardsSection.style.display = 'block';
+  }
+  
+  console.log('✅ UI reset completed after logout');
 }
 
 // Fonction pour mettre à jour le quota affiché
@@ -2392,26 +2531,90 @@ function updateUserQuota(user) {
 // Fonction pour synchroniser les flashcards après connexion
 async function syncFlashcardsAfterLogin() {
   try {
-    // Charger les flashcards du serveur
-    const serverFlashcards = await flashcardSync.load();
-    if (serverFlashcards.success) {
-      console.log('Flashcards chargées du serveur:', serverFlashcards.data);
-    }
+    console.log('🔄 Starting flashcard synchronization after login...');
     
-    // Proposer de synchroniser les flashcards locales
+    // 1. Check if there are local flashcards to sync
     const localFlashcards = JSON.parse(localStorage.getItem('flashcards') || '[]');
+    
     if (localFlashcards.length > 0) {
-      if (confirm(`Vous avez ${localFlashcards.length} flashcards locales. Voulez-vous les synchroniser avec votre compte ?`)) {
+      console.log(`📤 Found ${localFlashcards.length} local flashcards`);
+      
+      // Ask user if they want to sync local flashcards
+      const shouldSync = confirm(
+        `Vous avez ${localFlashcards.length} flashcards locales non synchronisées.\n\n` +
+        `Voulez-vous les ajouter à votre compte ?\n\n` +
+        `(Si vous choisissez Non, elles seront supprimées pour charger vos flashcards du serveur)`
+      );
+      
+      if (shouldSync) {
+        // Sync local flashcards to backend
+        showNotification('Synchronisation en cours...', 'info');
+        
         const syncResult = await flashcardSync.syncAll();
+        
         if (syncResult.success) {
-          showNotification(`${syncResult.synced} flashcards synchronisées!`, 'success');
-          // Recharger les flashcards pour afficher la liste mise à jour
-          updateFlashcards();
+          showNotification(
+            `✅ ${syncResult.synced}/${syncResult.total} flashcards synchronisées!`, 
+            'success'
+          );
+          
+          if (syncResult.errors && syncResult.errors.length > 0) {
+            console.error('Sync errors:', syncResult.errors);
+            showNotification(
+              `⚠️ ${syncResult.errors.length} flashcards n'ont pas pu être synchronisées`, 
+              'warning'
+            );
+          }
+        } else {
+          showNotification('Erreur lors de la synchronisation', 'error');
         }
+      } else {
+        // User chose not to sync, clear local flashcards
+        console.log('🗑️ User chose not to sync, clearing local flashcards');
+        localStorage.removeItem('flashcards');
+        flashcards = [];
       }
     }
+    
+    // 2. Load flashcards from server (this will be the merged set if user synced)
+    console.log('📥 Loading flashcards from server...');
+    const serverFlashcards = await flashcardSync.load();
+    
+    if (serverFlashcards.success && serverFlashcards.data) {
+      // Convert backend flashcards to local format
+      flashcards = serverFlashcards.data.map(card => ({
+        id: card._id || card.id,
+        text: card.originalText,
+        translation: card.translatedText,
+        sourceLanguage: card.sourceLanguage,
+        targetLanguage: card.targetLanguage,
+        context: card.context || '',
+        difficulty: card.difficulty || 'medium',
+        tags: card.tags || [],
+        folder: card.folder || 'default',
+        createdAt: card.createdAt || new Date().toISOString(),
+        isFavorite: card.tags?.includes('favorite') || false,
+        reviewCount: card.reviewCount || 0,
+        lastReviewed: card.lastReviewed || null
+      }));
+      
+      console.log(`✅ Loaded ${flashcards.length} flashcards from server`);
+      
+      // Save to chrome storage for offline access
+      chrome.storage.local.set({ flashcards }, () => {
+        console.log('💾 Flashcards saved to chrome storage');
+      });
+      
+      // Update the UI
+      updateFlashcards();
+      updateStats();
+    } else {
+      console.log('ℹ️ No flashcards on server or error loading');
+    }
+    
   } catch (error) {
-    console.error('Erreur lors de la synchronisation:', error);
+    console.error('❌ Error during flashcard synchronization:', error);
+    showNotification('Erreur lors de la synchronisation des flashcards', 'error');
   }
 }
 
@@ -2569,10 +2772,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const response = await apiRequest('/api/user/profile');
         if (response && response.user) {
           console.log('Utilisateur connecté:', response.user);
-          updateUIAfterLogin(response.user);
+          await updateUIAfterLogin(response.user);
           
           // Synchroniser les flashcards au démarrage
-          syncFlashcardsAfterLogin();
+          await syncFlashcardsAfterLogin();
         }
       } catch (error) {
         console.log('Token invalide, réinitialisation...');
@@ -2945,8 +3148,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       try {
         const response = await apiRequest('/api/user/profile');
         if (response && response.user) {
-          updateUIAfterLogin(response.user);
-          syncFlashcardsAfterLogin();
+          await updateUIAfterLogin(response.user);
+          await syncFlashcardsAfterLogin();
           showNotification('Connexion réussie!', 'success');
         }
       } catch (error) {
