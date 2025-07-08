@@ -1,7 +1,7 @@
 // Configuration API Backend
 const API_CONFIG = {
-  // URL du backend - REMPLACER avec votre URL ngrok
-  BASE_URL: 'https://VOTRE-URL-NGROK.ngrok.io', // Ex: https://abc123.ngrok.io
+  // URL du backend - Utiliser Render ou localhost
+  BASE_URL: 'https://my-backend-api-cng7.onrender.com', // Backend sur Render
   
   // Endpoints
   ENDPOINTS: {
