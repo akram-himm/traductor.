@@ -66,7 +66,6 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
           if (chrome.notifications) {
             chrome.notifications.create({
               type: 'basic',
-              iconUrl: 'icon-128.png',
               title: 'Connexion réussie!',
               message: 'Vous êtes maintenant connecté à LexiFlow.'
             });
@@ -79,7 +78,6 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         if (chrome.notifications) {
           chrome.notifications.create({
             type: 'basic',
-            iconUrl: 'icon-128.png',
             title: 'Erreur de connexion',
             message: error
           });
