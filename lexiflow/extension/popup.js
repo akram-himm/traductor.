@@ -2137,7 +2137,7 @@ function showLoginWindow() {
       
       if (previousUserId && previousUserId !== currentUserId) {
         // C'est un utilisateur différent, nettoyer les données
-        console.log('🔄 Changement d'utilisateur détecté, nettoyage des données...');
+        console.log('🔄 Changement d\'utilisateur détecté, nettoyage des données...');
         flashcards = [];
         translations = [];
         localStorage.removeItem('flashcards');
@@ -2271,7 +2271,7 @@ function handleOAuthLogin(provider) {
             
             if (previousUserId && previousUserId !== currentUserId) {
               // C'est un utilisateur différent, nettoyer les données
-              console.log('🔄 Changement d'utilisateur détecté, nettoyage des données...');
+              console.log('🔄 Changement d\'utilisateur détecté, nettoyage des données...');
               flashcards = [];
               translations = [];
               localStorage.removeItem('flashcards');
