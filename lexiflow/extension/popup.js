@@ -2131,15 +2131,26 @@ function showLoginWindow() {
       showNotification('Connexion réussie!', 'success');
       updateUIAfterLogin(response.user);
       
-      // IMPORTANT: Nettoyer les données locales avant de charger celles du nouveau compte
-      console.log('🔄 Connexion à un compte, nettoyage des données locales...');
-      flashcards = [];
-      translations = [];
-      localStorage.removeItem('flashcards');
-      localStorage.removeItem('translations');
-      chrome.storage.local.remove(['flashcards', 'translations']);
+      // Vérifier si c'est le même utilisateur ou un nouveau
+      const previousUserId = localStorage.getItem('lastUserId');
+      const currentUserId = response.user.id || response.user._id;
       
-      // Charger les données du compte
+      if (previousUserId && previousUserId !== currentUserId) {
+        // C'est un utilisateur différent, nettoyer les données
+        console.log('🔄 Changement d'utilisateur détecté, nettoyage des données...');
+        flashcards = [];
+        translations = [];
+        localStorage.removeItem('flashcards');
+        localStorage.removeItem('translations');
+        chrome.storage.local.remove(['flashcards', 'translations']);
+      } else {
+        console.log('✅ Même utilisateur, conservation des données locales');
+      }
+      
+      // Sauvegarder l'ID de l'utilisateur actuel
+      localStorage.setItem('lastUserId', currentUserId);
+      
+      // Charger/synchroniser les données du compte
       syncFlashcardsAfterLogin();
       
     } catch (error) {
@@ -2254,17 +2265,26 @@ function handleOAuthLogin(provider) {
           
           // Gérer les flashcards en arrière-plan après l'UI
           setTimeout(() => {
-            // IMPORTANT: Pour un changement de compte, on doit nettoyer les données de l'ancien compte
-            console.log('🔄 Changement de compte détecté, nettoyage des données...');
+            // Vérifier si c'est le même utilisateur ou un nouveau
+            const previousUserId = localStorage.getItem('lastUserId');
+            const currentUserId = response.user.id || response.user._id;
             
-            // Réinitialiser TOUTES les données pour le nouveau compte
-            flashcards = [];
-            translations = [];
-            localStorage.removeItem('flashcards');
-            localStorage.removeItem('translations');
-            chrome.storage.local.remove(['flashcards', 'translations']);
+            if (previousUserId && previousUserId !== currentUserId) {
+              // C'est un utilisateur différent, nettoyer les données
+              console.log('🔄 Changement d'utilisateur détecté, nettoyage des données...');
+              flashcards = [];
+              translations = [];
+              localStorage.removeItem('flashcards');
+              localStorage.removeItem('translations');
+              chrome.storage.local.remove(['flashcards', 'translations']);
+            } else {
+              console.log('✅ Même utilisateur, conservation des données locales');
+            }
             
-            // Charger les données du nouveau compte depuis le serveur
+            // Sauvegarder l'ID de l'utilisateur actuel
+            localStorage.setItem('lastUserId', currentUserId);
+            
+            // Charger/synchroniser les données du compte
             syncFlashcardsAfterLogin();
             
             // Réinitialiser le currentUser avec les nouvelles infos
@@ -2596,15 +2616,16 @@ function resetUIAfterLogout() {
   localStorage.removeItem('translations');
   chrome.storage.local.remove(['translations']);
   
-  // IMPORTANT: Pour la cohérence entre comptes, on doit aussi nettoyer les flashcards
-  // Sinon les flashcards d'un compte apparaissent sur l'autre
-  flashcards = [];
-  localStorage.removeItem('flashcards');
-  chrome.storage.local.remove(['flashcards']);
-  console.log('🧹 Flashcards nettoyées pour permettre le changement de compte');
+  // NE PAS nettoyer les flashcards ici pour permettre à l'utilisateur de les retrouver
+  // lors de sa prochaine connexion. On nettoiera seulement si c'est un autre utilisateur
+  // qui se connecte.
+  console.log('📚 Conservation des flashcards locales après déconnexion');
   
   // Clear folder directions
   localStorage.removeItem('folderDirections');
+  
+  // Clear last user ID to ensure proper detection on next login
+  localStorage.removeItem('lastUserId');
   
   // Clear user settings
   userSettings = {};
@@ -2766,13 +2787,19 @@ function syncFlashcardsAfterLogin() {
         updateStats();
       } else {
         console.log('ℹ️ Aucune flashcard sur le serveur pour ce compte');
-        // IMPORTANT: Pour un nouveau compte ou un compte sans flashcards,
-        // on doit effacer les flashcards locales pour éviter le mélange entre comptes
-        flashcards = [];
-        localStorage.setItem('flashcards', JSON.stringify([]));
-        chrome.storage.local.set({ flashcards: [] });
         
-        console.log('🧹 Flashcards locales effacées pour ce nouveau compte');
+        // Si on a des flashcards locales, on les envoie au serveur
+        if (backupFlashcards.length > 0) {
+          console.log('📤 Envoi des flashcards locales vers le serveur...');
+          flashcards = backupFlashcards;
+          
+          // Synchroniser les flashcards locales avec le serveur
+          saveFlashcards().catch(error => {
+            console.error('Erreur lors de la synchronisation:', error);
+          });
+        } else {
+          console.log('📭 Aucune flashcard locale ou serveur');
+        }
         
         updateFlashcards();
         updateStats();
