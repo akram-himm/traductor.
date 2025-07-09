@@ -2132,7 +2132,7 @@ function showLoginWindow() {
       updateUIAfterLogin(response.user);
       
       // Vérifier si c'est le même utilisateur ou un nouveau
-      const previousUserId = localStorage.getItem('lastUserId');
+      const previousUserId = localStorage.getItem('lastUserId') || localStorage.getItem('lastDisconnectedUserId');
       const currentUserId = response.user.id || response.user._id;
       
       if (previousUserId && previousUserId !== currentUserId) {
@@ -2233,7 +2233,9 @@ function handleOAuthLogin(provider) {
   }
   
   // Utiliser directement l'URL du backend avec prompt pour forcer la sélection
-  const authUrl = `${API_CONFIG.BASE_URL}/api/auth/${provider}?prompt=select_account`;
+  // Ajouter un timestamp pour éviter le cache et forcer une nouvelle authentification
+  const timestamp = Date.now();
+  const authUrl = `${API_CONFIG.BASE_URL}/api/auth/${provider}?prompt=select_account&t=${timestamp}`;
   
   // Fonction pour gérer la connexion réussie
   const handleSuccessfulAuth = async (token) => {
@@ -2266,7 +2268,7 @@ function handleOAuthLogin(provider) {
           // Gérer les flashcards en arrière-plan après l'UI
           setTimeout(() => {
             // Vérifier si c'est le même utilisateur ou un nouveau
-            const previousUserId = localStorage.getItem('lastUserId');
+            const previousUserId = localStorage.getItem('lastUserId') || localStorage.getItem('lastDisconnectedUserId');
             const currentUserId = response.user.id || response.user._id;
             
             if (previousUserId && previousUserId !== currentUserId) {
@@ -2599,6 +2601,13 @@ function showUserMenu(user) {
   
   // Gérer la déconnexion
   document.getElementById('logoutBtn').addEventListener('click', async () => {
+    // Sauvegarder l'ID utilisateur avant la déconnexion pour le reconnaître plus tard
+    const currentUser = await authAPI.getCurrentUser();
+    if (currentUser) {
+      const userId = currentUser.id || currentUser._id;
+      localStorage.setItem('lastDisconnectedUserId', userId);
+    }
+    
     await authAPI.logout();
     menu.remove();
     showNotification('Déconnexion réussie', 'success');
@@ -2624,8 +2633,8 @@ function resetUIAfterLogout() {
   // Clear folder directions
   localStorage.removeItem('folderDirections');
   
-  // Clear last user ID to ensure proper detection on next login
-  localStorage.removeItem('lastUserId');
+  // NE PAS supprimer lastUserId pour pouvoir reconnaître l'utilisateur lors de la reconnexion
+  // localStorage.removeItem('lastUserId');
   
   // Clear user settings
   userSettings = {};
@@ -3054,7 +3063,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               updateUIAfterLogin(response.user);
               
               // Vérifier si c'est le même utilisateur
-              const previousUserId = localStorage.getItem('lastUserId');
+              const previousUserId = localStorage.getItem('lastUserId') || localStorage.getItem('lastDisconnectedUserId');
               const currentUserId = response.user.id || response.user._id;
               
               if (!previousUserId || previousUserId === currentUserId) {
