@@ -678,18 +678,42 @@ function createFlashcard(front, back, language) {
       difficulty: 'normal'
     };
     
-    chrome.storage.local.get({ flashcards: [] }, (data) => {
+    chrome.storage.local.get({ flashcards: [], authToken: null }, (data) => {
       const flashcards = data.flashcards || [];
       
       const exists = flashcards.some(f => 
-        f.front.toLowerCase() === front.toLowerCase() && 
-        f.back.toLowerCase() === back.toLowerCase()
+        f.front?.toLowerCase() === front.toLowerCase() && 
+        f.back?.toLowerCase() === back.toLowerCase()
       );
       
       if (!exists) {
-        flashcards.push(flashcard);
+        // Ajouter en utilisant le format correct (compatible avec popup.js)
+        const newFlashcard = {
+          ...flashcard,
+          text: front,  // Ajouter les champs attendus par popup.js
+          translation: back,
+          sourceLanguage: 'auto',
+          targetLanguage: language
+        };
+        
+        flashcards.unshift(newFlashcard); // Ajouter au début comme dans popup.js
         chrome.storage.local.set({ flashcards }, () => {
-          console.log('✅ Flashcard saved automatically');
+          console.log('✅ Flashcard saved locally');
+          
+          // Envoyer un message au background pour synchroniser avec le serveur
+          if (data.authToken) {
+            chrome.runtime.sendMessage({
+              action: 'syncFlashcard',
+              flashcard: {
+                originalText: front,
+                translatedText: back,
+                sourceLanguage: 'auto',
+                targetLanguage: language,
+                folder: 'default',
+                difficulty: 'normal'
+              }
+            });
+          }
           
           // Si c'est une sauvegarde manuelle, afficher le feedback
           if (!userSettings.autoSaveToFlashcards) {

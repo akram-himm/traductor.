@@ -98,6 +98,33 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
     return true;
   }
+  
+  // Synchroniser une flashcard avec le serveur
+  if (request.action === 'syncFlashcard') {
+    chrome.storage.local.get(['authToken'], async (result) => {
+      if (result.authToken && request.flashcard) {
+        try {
+          const response = await fetch('https://my-backend-api-cng7.onrender.com/api/flashcards', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${result.authToken}`
+            },
+            body: JSON.stringify(request.flashcard)
+          });
+          
+          if (response.ok) {
+            console.log('✅ Flashcard synchronisée avec le serveur');
+          } else {
+            console.error('❌ Erreur lors de la synchronisation');
+          }
+        } catch (error) {
+          console.error('❌ Erreur réseau:', error);
+        }
+      }
+    });
+    return true;
+  }
 });
 
 // Garder le service worker actif

@@ -661,6 +661,10 @@ async function createFlashcardFromHistory(original, translated, language) {
     id: Date.now(),
     front: original,
     back: translated,
+    text: original, // Pour la compatibilité
+    translation: translated, // Pour la compatibilité
+    sourceLanguage: 'auto',
+    targetLanguage: language,
     language: language,
     created: new Date().toISOString(),
     folder: 'default',
@@ -671,19 +675,41 @@ async function createFlashcardFromHistory(original, translated, language) {
   
   // Vérifier si elle existe déjà
   const exists = flashcards.some(f => 
-    f.front.toLowerCase() === original.toLowerCase() && 
-    f.back.toLowerCase() === translated.toLowerCase()
+    (f.front?.toLowerCase() === original.toLowerCase() || f.text?.toLowerCase() === original.toLowerCase()) && 
+    (f.back?.toLowerCase() === translated.toLowerCase() || f.translation?.toLowerCase() === translated.toLowerCase())
   );
   
   if (exists) {
-    showNotification('This flashcard already exists!', 'warning');
+    showNotification('Cette flashcard existe déjà!', 'warning');
     return;
   }
   
   flashcards.unshift(flashcard);
-  await saveFlashcards();
+  
+  // Sauvegarder localement
+  chrome.storage.local.set({ flashcards });
+  
+  // Si connecté, synchroniser avec le serveur
+  const token = await authAPI.getToken();
+  if (token) {
+    try {
+      const response = await flashcardsAPI.create({
+        originalText: original,
+        translatedText: translated,
+        sourceLanguage: 'auto',
+        targetLanguage: language,
+        folder: 'default',
+        difficulty: 'normal'
+      });
+      console.log('✅ Flashcard synchronisée:', response);
+    } catch (error) {
+      console.error('❌ Erreur de synchronisation:', error);
+    }
+  }
+  
+  updateFlashcards();
   updateStats();
-  showNotification('Flashcard created successfully!', 'success');
+  showNotification('Flashcard créée avec succès!', 'success');
 }
 
 function deleteTranslation(id) {
@@ -1282,8 +1308,15 @@ function updateFlashcards() {
   // Grouper par paires de langues
   const grouped = {};
   flashcards.forEach(card => {
-    const fromLang = detectLanguage(card.front);
-    const toLang = card.language;
+    // Support des deux formats (ancien et nouveau)
+    const frontText = card.front || card.text || card.originalText;
+    const backText = card.back || card.translation || card.translatedText;
+    const targetLang = card.language || card.targetLanguage || 'fr';
+    
+    if (!frontText || !backText) return;
+    
+    const fromLang = detectLanguage(frontText);
+    const toLang = targetLang;
     
     if (fromLang === toLang) return;
     
@@ -1299,7 +1332,17 @@ function updateFlashcards() {
       };
     }
     
-    grouped[key].cards.push({...card, fromLang, toLang});
+    // Normaliser le format de la carte
+    const normalizedCard = {
+      ...card,
+      front: frontText,
+      back: backText,
+      language: targetLang,
+      fromLang,
+      toLang
+    };
+    
+    grouped[key].cards.push(normalizedCard);
   });
   
   // Récupérer les directions sauvegardées
