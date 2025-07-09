@@ -1581,28 +1581,33 @@ async function saveFlashcards() {
     
     console.log(`📤 ${unsyncedCards.length} flashcards à synchroniser`);
     
-    for (const card of unsyncedCards) {
-      try {
-        const response = await flashcardsAPI.create({
-          originalText: card.front || card.text,
-          translatedText: card.back || card.translation,
-          sourceLanguage: card.sourceLanguage || 'auto',
-          targetLanguage: card.targetLanguage || card.language,
-          folder: card.folder || 'default',
-          difficulty: card.difficulty || 'normal'
-        });
-        
-        if (response && response.id) {
-          console.log('✅ Flashcard synchronisée:', card.front || card.text);
-          // Marquer comme synchronisée
-          card.synced = true;
-          card.syncedWithServer = true;
-          card.serverId = response.id;
+    // Vérifier que flashcardsAPI est disponible
+    if (typeof flashcardsAPI !== 'undefined' && flashcardsAPI.create) {
+      for (const card of unsyncedCards) {
+        try {
+          const response = await flashcardsAPI.create({
+            originalText: card.front || card.text,
+            translatedText: card.back || card.translation,
+            sourceLanguage: card.sourceLanguage || 'auto',
+            targetLanguage: card.targetLanguage || card.language,
+            folder: card.folder || 'default',
+            difficulty: card.difficulty || 'normal'
+          });
+          
+          if (response && response.id) {
+            console.log('✅ Flashcard synchronisée:', card.front || card.text);
+            // Marquer comme synchronisée
+            card.synced = true;
+            card.syncedWithServer = true;
+            card.serverId = response.id;
+          }
+        } catch (error) {
+          console.error('Erreur lors de la synchronisation:', error);
+          // Garder la flashcard locale même si la sync échoue
         }
-      } catch (error) {
-        console.error('Erreur lors de la synchronisation:', error);
-        // Garder la flashcard locale même si la sync échoue
       }
+    } else {
+      console.warn('⚠️ flashcardsAPI non disponible, synchronisation ignorée');
     }
     
     // Sauvegarder à nouveau avec les états de sync mis à jour
@@ -2629,6 +2634,14 @@ function syncFlashcardsAfterLogin() {
   
   // Créer un backup des flashcards actuelles au cas où
   const backupFlashcards = [...flashcards];
+  
+  // Vérifier que flashcardsAPI est disponible
+  if (typeof flashcardsAPI === 'undefined' || !flashcardsAPI.getAll) {
+    console.error('❌ flashcardsAPI non disponible');
+    updateFlashcards();
+    updateStats();
+    return;
+  }
   
   // Charger les flashcards depuis le backend
   flashcardsAPI.getAll()

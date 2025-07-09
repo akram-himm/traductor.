@@ -62,24 +62,28 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
           // Fermer l'onglet OAuth
           chrome.tabs.remove(tabId);
           
-          // Notifier l'utilisateur
-          chrome.notifications.create({
-            type: 'basic',
-            iconUrl: 'icon-128.png',
-            title: 'Connexion réussie!',
-            message: 'Vous êtes maintenant connecté à LexiFlow.'
-          });
+          // Notifier l'utilisateur (vérifier que l'API est disponible)
+          if (chrome.notifications) {
+            chrome.notifications.create({
+              type: 'basic',
+              iconUrl: 'icon-128.png',
+              title: 'Connexion réussie!',
+              message: 'Vous êtes maintenant connecté à LexiFlow.'
+            });
+          }
         });
       } else if (error) {
         // Fermer l'onglet et afficher l'erreur
         chrome.tabs.remove(tabId);
         
-        chrome.notifications.create({
-          type: 'basic',
-          iconUrl: 'icon-128.png',
-          title: 'Erreur de connexion',
-          message: error
-        });
+        if (chrome.notifications) {
+          chrome.notifications.create({
+            type: 'basic',
+            iconUrl: 'icon-128.png',
+            title: 'Erreur de connexion',
+            message: error
+          });
+        }
       }
     }
   }

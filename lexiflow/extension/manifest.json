@@ -9,7 +9,8 @@
     "clipboardWrite",
     "alarms",
     "tabs",
-    "identity"
+    "identity",
+    "notifications"
   ],
   "host_permissions": [
     "https://api.deepseek.com/*",
@@ -28,7 +29,17 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Quick Translator Pro"
+    "default_title": "Quick Translator Pro",
+    "default_icon": {
+      "16": "icon-16.png",
+      "48": "icon-48.png",
+      "128": "icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
   },
   "content_scripts": [
     {
