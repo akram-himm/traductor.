@@ -1619,12 +1619,18 @@ function renderFlashcards(cards, fromLang, toLang) {
 
 // Sauvegarder les flashcards
 async function saveFlashcards() {
+  console.log('📝 saveFlashcards appelée avec', flashcards.length, 'flashcards');
+  
   // Sauvegarder dans TOUS les stockages pour éviter la perte
   localStorage.setItem('flashcards', JSON.stringify(flashcards));
+  console.log('✅ Sauvegardé dans localStorage');
   
   // Sauvegarder dans chrome.storage.local aussi
   chrome.storage.local.set({ flashcards }, () => {
-    console.log('💾 Flashcards sauvegardées localement');
+    console.log('💾 Flashcards sauvegardées dans chrome.storage.local');
+    if (chrome.runtime.lastError) {
+      console.error('❌ Erreur chrome.storage:', chrome.runtime.lastError);
+    }
   });
   
   // Si l'utilisateur est connecté, synchroniser avec le backend
@@ -2235,7 +2241,8 @@ function handleOAuthLogin(provider) {
   // Utiliser directement l'URL du backend avec prompt pour forcer la sélection
   // Ajouter un timestamp pour éviter le cache et forcer une nouvelle authentification
   const timestamp = Date.now();
-  const authUrl = `${API_CONFIG.BASE_URL}/api/auth/${provider}?prompt=select_account&t=${timestamp}`;
+  // Ajouter max_age=0 pour forcer la re-authentification
+  const authUrl = `${API_CONFIG.BASE_URL}/api/auth/${provider}?prompt=select_account&max_age=0&t=${timestamp}`;
   
   // Fonction pour gérer la connexion réussie
   const handleSuccessfulAuth = async (token) => {
@@ -2786,6 +2793,29 @@ function syncFlashcardsAfterLogin() {
         
         console.log(`✅ ${flashcards.length} flashcards chargées pour ce compte`);
         
+        // Si on avait des flashcards locales ET qu'elles appartiennent au même utilisateur,
+        // on doit les fusionner plutôt que de les écraser
+        if (backupFlashcards.length > 0 && currentUserId) {
+          console.log('🔀 Fusion des flashcards locales avec celles du serveur');
+          // Créer un set d'IDs serveur pour éviter les doublons
+          const serverIds = new Set(flashcards.map(f => f.serverId).filter(id => id));
+          
+          // Ajouter les flashcards locales qui ne sont pas sur le serveur
+          const localOnlyCards = backupFlashcards.filter(card => 
+            !card.serverId || !serverIds.has(card.serverId)
+          );
+          
+          if (localOnlyCards.length > 0) {
+            console.log(`➕ ${localOnlyCards.length} flashcards locales à synchroniser`);
+            flashcards = [...flashcards, ...localOnlyCards];
+            
+            // Synchroniser les nouvelles cartes avec le serveur
+            saveFlashcards().catch(err => {
+              console.error('Erreur sync des nouvelles cartes:', err);
+            });
+          }
+        }
+        
         // Sauvegarder dans TOUS les stockages
         localStorage.setItem('flashcards', JSON.stringify(flashcards));
         chrome.storage.local.set({ flashcards });
@@ -3045,6 +3075,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     await loadData();
     await initUI();
+    
+    // Debug: Vérifier les flashcards au démarrage
+    console.log('🚀 Démarrage - Flashcards chargées:', flashcards.length);
+    const storedLocal = localStorage.getItem('flashcards');
+    if (storedLocal) {
+      console.log('📦 localStorage flashcards:', JSON.parse(storedLocal).length);
+    }
     
     // Vérifier l'authentification au démarrage (en arrière-plan pour ne pas bloquer)
     // Mais pas trop souvent pour éviter les erreurs répétées
