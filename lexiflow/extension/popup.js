@@ -995,15 +995,19 @@ async function initUI() {
 
 // Fonction pour s'assurer que l'interface reste interactive
 function enableUIInteractions() {
-  // Retirer tous les blocages potentiels
-  document.querySelectorAll('.disabled').forEach(el => {
-    if (!el.id || el.id !== 'deepSeekToggle') { // Garder DeepSeek désactivé si pas connecté
-      el.classList.remove('disabled');
-      el.style.pointerEvents = 'auto';
-      el.style.opacity = '1';
-      el.style.cursor = 'pointer';
+  // S'assurer que le bouton de connexion est TOUJOURS cliquable
+  const loginButton = document.getElementById('loginButton');
+  if (loginButton) {
+    loginButton.classList.remove('disabled');
+    loginButton.disabled = false;
+    loginButton.style.pointerEvents = 'auto';
+    loginButton.style.opacity = '1';
+    loginButton.style.cursor = 'pointer';
+    // S'assurer que l'onclick est bien défini
+    if (!loginButton.onclick) {
+      loginButton.onclick = () => showLoginWindow();
     }
-  });
+  }
   
   // S'assurer que les boutons principaux sont cliquables
   const elementsToEnable = [
@@ -2147,25 +2151,26 @@ function handleOAuthLogin(provider) {
         // Récupérer le profil utilisateur
         const response = await apiRequest('/api/user/profile');
         if (response && response.user) {
-          // IMPORTANT: Nettoyer les données de l'ancien utilisateur avant de charger le nouveau
-          // Créer un backup au cas où
-          backupFlashcards();
-          
-          // Réinitialiser les flashcards pour le nouveau compte
-          flashcards = [];
-          localStorage.removeItem('flashcards');
-          chrome.storage.local.remove(['flashcards']);
-          
-          // Sauvegarder les infos utilisateur
+          // Sauvegarder immédiatement les infos utilisateur
           chrome.storage.local.set({ user: response.user });
           
-          // Mettre à jour l'interface
+          // Mettre à jour l'interface immédiatement pour feedback rapide
           updateUIAfterLogin(response.user);
-          
-          // Charger les flashcards du serveur pour le nouveau compte
-          syncFlashcardsAfterLogin();
-          
           showNotification('Connexion réussie!', 'success');
+          
+          // Gérer les flashcards en arrière-plan après l'UI
+          setTimeout(() => {
+            // IMPORTANT: Nettoyer les données de l'ancien utilisateur
+            backupFlashcards();
+            
+            // Réinitialiser les flashcards pour le nouveau compte
+            flashcards = [];
+            localStorage.removeItem('flashcards');
+            chrome.storage.local.remove(['flashcards']);
+            
+            // Charger les flashcards du serveur pour le nouveau compte
+            syncFlashcardsAfterLogin();
+          }, 100);
         }
       } catch (error) {
         console.error('Erreur profil:', error);
@@ -2519,6 +2524,9 @@ function resetUIAfterLogout() {
     loginButton.style.background = 'rgba(255,255,255,0.15)';
     loginButton.style.borderColor = 'rgba(255,255,255,0.25)';
     loginButton.style.cursor = 'pointer';
+    loginButton.style.pointerEvents = 'auto'; // S'assurer qu'il est cliquable
+    loginButton.disabled = false; // S'assurer qu'il n'est pas désactivé
+    loginButton.classList.remove('disabled'); // Retirer toute classe disabled
     
     // Restaurer le comportement original
     loginButton.onclick = () => showLoginWindow();
@@ -2857,26 +2865,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadData();
     await initUI();
     
-    // Vérifier l'authentification au démarrage
-    const token = await authAPI.getToken();
-    if (token) {
-      try {
-        // Vérifier la validité du token et récupérer les infos utilisateur
-        const response = await apiRequest('/api/user/profile');
-        if (response && response.user) {
-          console.log('Utilisateur connecté:', response.user);
-          updateUIAfterLogin(response.user);
-          
-          // Synchroniser les flashcards au démarrage
-          syncFlashcardsAfterLogin();
+    // Vérifier l'authentification au démarrage (en arrière-plan pour ne pas bloquer)
+    setTimeout(async () => {
+      const token = await authAPI.getToken();
+      if (token) {
+        try {
+          // Vérifier la validité du token et récupérer les infos utilisateur
+          const response = await apiRequest('/api/user/profile');
+          if (response && response.user) {
+            console.log('Utilisateur connecté:', response.user);
+            updateUIAfterLogin(response.user);
+            
+            // Synchroniser les flashcards au démarrage
+            syncFlashcardsAfterLogin();
+          }
+        } catch (error) {
+          console.log('Token invalide, réinitialisation...');
+          // Token invalide, réinitialiser
+          await authAPI.logout();
+          resetUIAfterLogout();
         }
-      } catch (error) {
-        console.log('Token invalide, réinitialisation...');
-        // Token invalide, réinitialiser
-        await authAPI.logout();
-        resetUIAfterLogout();
       }
-    }
+    }, 0); // Exécuter après l'initialisation de l'UI
     
     // Navigation
     document.querySelectorAll('.nav-tab').forEach(tab => {
