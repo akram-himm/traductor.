@@ -988,6 +988,49 @@ async function initUI() {
   updateRecentTranslations();
   updateHistory();
   updateFlashcards();
+  
+  // S'assurer que l'interface est interactive même sans connexion
+  enableUIInteractions();
+}
+
+// Fonction pour s'assurer que l'interface reste interactive
+function enableUIInteractions() {
+  // Retirer tous les blocages potentiels
+  document.querySelectorAll('.disabled').forEach(el => {
+    if (!el.id || el.id !== 'deepSeekToggle') { // Garder DeepSeek désactivé si pas connecté
+      el.classList.remove('disabled');
+      el.style.pointerEvents = 'auto';
+      el.style.opacity = '1';
+      el.style.cursor = 'pointer';
+    }
+  });
+  
+  // S'assurer que les boutons principaux sont cliquables
+  const elementsToEnable = [
+    'addFlashcardBtn',
+    'clearHistoryBtn',
+    'clearFlashcardsBtn',
+    'importDataBtn',
+    'exportDataBtn',
+    'resetAppBtn'
+  ];
+  
+  elementsToEnable.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.disabled = false;
+      el.style.pointerEvents = 'auto';
+      el.style.opacity = '1';
+    }
+  });
+  
+  // S'assurer que les onglets sont cliquables
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    tab.style.pointerEvents = 'auto';
+    tab.style.cursor = 'pointer';
+  });
+  
+  console.log('✅ Interface activée pour utilisation hors ligne');
 }
 
 // Mettre à jour les statistiques
@@ -2104,13 +2147,22 @@ function handleOAuthLogin(provider) {
         // Récupérer le profil utilisateur
         const response = await apiRequest('/api/user/profile');
         if (response && response.user) {
+          // IMPORTANT: Nettoyer les données de l'ancien utilisateur avant de charger le nouveau
+          // Créer un backup au cas où
+          backupFlashcards();
+          
+          // Réinitialiser les flashcards pour le nouveau compte
+          flashcards = [];
+          localStorage.removeItem('flashcards');
+          chrome.storage.local.remove(['flashcards']);
+          
           // Sauvegarder les infos utilisateur
           chrome.storage.local.set({ user: response.user });
           
           // Mettre à jour l'interface
           updateUIAfterLogin(response.user);
           
-          // Charger les flashcards du serveur
+          // Charger les flashcards du serveur pour le nouveau compte
           syncFlashcardsAfterLogin();
           
           showNotification('Connexion réussie!', 'success');
@@ -2548,9 +2600,8 @@ function updateUserQuota(user) {
 function syncFlashcardsAfterLogin() {
   console.log('🔄 Synchronisation des flashcards...');
   
-  // Sauvegarder les flashcards locales avant la sync
-  const localFlashcards = [...flashcards];
-  console.log(`📚 ${localFlashcards.length} flashcards locales à merger`);
+  // Pour un changement de compte, on ne fait PAS de merge
+  // On charge uniquement les flashcards du nouveau compte depuis le serveur
   
   // Charger les flashcards depuis le backend
   flashcardsAPI.getAll()
@@ -2558,8 +2609,8 @@ function syncFlashcardsAfterLogin() {
       if (response && response.flashcards) {
         console.log(`☁️ ${response.flashcards.length} flashcards chargées du serveur`);
         
-        // Convertir les flashcards du serveur
-        const serverFlashcards = response.flashcards.map(card => ({
+        // Remplacer complètement les flashcards locales par celles du serveur
+        flashcards = response.flashcards.map(card => ({
           id: card._id || card.id,
           text: card.originalText,
           translation: card.translatedText,
@@ -2576,69 +2627,32 @@ function syncFlashcardsAfterLogin() {
           syncedWithServer: true
         }));
         
-        // Créer un map des flashcards serveur par ID pour éviter les doublons
-        const serverFlashcardsMap = new Map();
-        serverFlashcards.forEach(card => {
-          serverFlashcardsMap.set(card.id, card);
-        });
-        
-        // Merger les flashcards locales avec celles du serveur
-        const mergedFlashcards = [...serverFlashcards];
-        
-        // Ajouter les flashcards locales qui ne sont pas sur le serveur
-        localFlashcards.forEach(localCard => {
-          if (!serverFlashcardsMap.has(localCard.id)) {
-            // Cette flashcard locale n'est pas sur le serveur, on la garde
-            mergedFlashcards.push({
-              ...localCard,
-              syncedWithServer: false
-            });
-          }
-        });
-        
-        // Mettre à jour la variable globale
-        flashcards = mergedFlashcards;
-        
-        console.log(`✅ Total après merge: ${flashcards.length} flashcards`);
+        console.log(`✅ ${flashcards.length} flashcards chargées pour ce compte`);
         
         // Sauvegarder dans le storage local
         localStorage.setItem('flashcards', JSON.stringify(flashcards));
         chrome.storage.local.set({ flashcards });
         
-        // Synchroniser les flashcards locales non synchronisées vers le serveur
-        const unsyncedCards = flashcards.filter(card => !card.syncedWithServer);
-        if (unsyncedCards.length > 0 && window.currentUser) {
-          console.log(`📤 Envoi de ${unsyncedCards.length} flashcards locales vers le serveur...`);
-          unsyncedCards.forEach(card => {
-            flashcardsAPI.create({
-              originalText: card.text,
-              translatedText: card.translation,
-              sourceLanguage: card.sourceLanguage,
-              targetLanguage: card.targetLanguage,
-              context: card.context,
-              tags: card.tags,
-              folder: card.folder
-            }).then(() => {
-              card.syncedWithServer = true;
-            }).catch(err => {
-              console.error('Erreur sync card:', err);
-            });
-          });
-        }
-        
         // Mettre à jour l'interface
         updateFlashcards();
         updateStats();
       } else {
-        console.log('ℹ️ Aucune flashcard sur le serveur, conservation des flashcards locales');
-        // Ne pas écraser les flashcards locales si le serveur est vide
+        console.log('ℹ️ Aucune flashcard sur le serveur pour ce compte');
+        // Si le serveur n'a pas de flashcards, on commence avec un tableau vide
+        flashcards = [];
+        localStorage.setItem('flashcards', JSON.stringify(flashcards));
+        chrome.storage.local.set({ flashcards });
         updateFlashcards();
+        updateStats();
       }
     })
     .catch(error => {
       console.error('❌ Erreur lors du chargement des flashcards:', error);
-      showNotification('Erreur de sync, flashcards locales conservées', 'warning');
-      // En cas d'erreur, on garde les flashcards locales
+      showNotification('Erreur de chargement des flashcards', 'error');
+      // En cas d'erreur, on commence avec un tableau vide pour ce compte
+      flashcards = [];
+      updateFlashcards();
+      updateStats();
     });
 }
 
@@ -3144,8 +3158,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     if (deepSeekToggle) {
       // Initialiser l'état du toggle selon le statut de connexion/premium
-      const isLoggedIn = false; // TODO: vérifier le statut de connexion réel
-      const isPremium = false;  // TODO: vérifier le statut premium réel
+      const isLoggedIn = !!window.currentUser; // Vérifier le statut de connexion réel
+      const isPremium = window.currentUser?.isPremium || false;  // Vérifier le statut premium réel
       
       // Désactiver le toggle si non connecté ou non premium
       if (!isLoggedIn) {
@@ -3169,14 +3183,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       
       deepSeekToggle.addEventListener('click', async (e) => {
+        // Récupérer l'état actuel de connexion
+        const currentIsLoggedIn = !!window.currentUser;
+        const currentIsPremium = window.currentUser?.isPremium || false;
+        
         // Empêcher l'action si désactivé
         if (deepSeekToggle.classList.contains('disabled')) {
           e.preventDefault();
           e.stopPropagation();
           
-          if (!isLoggedIn) {
+          if (!currentIsLoggedIn) {
             showNotification('Vous devez vous connecter pour activer DeepSeek AI', 'warning');
-          } else if (!isPremium) {
+          } else if (!currentIsPremium) {
             showNotification('Vous devez souscrire à Premium pour activer DeepSeek AI', 'warning');
           }
           return;
