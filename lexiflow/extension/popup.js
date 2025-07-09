@@ -2,6 +2,8 @@
 let userSettings = {};
 let translations = [];
 let flashcards = [];
+let isAddingFlashcard = false; // Flag pour éviter les conflits lors de l'ajout
+let flashcardsBackup = []; // Backup pour éviter la perte de données
 let flashcardFolders = {
   default: { name: 'Uncategorized', icon: '📁' },
   favorites: { name: 'Favorites', icon: '⭐' },
@@ -657,6 +659,9 @@ async function createFlashcardFromHistory(original, translated, language) {
   // Vérifier les limites pour les utilisateurs gratuits
   if (!checkLimits('flashcard')) return;
   
+  // Définir le flag pour éviter les conflits
+  isAddingFlashcard = true;
+  
   const flashcard = {
     id: Date.now(),
     front: original,
@@ -685,15 +690,40 @@ async function createFlashcardFromHistory(original, translated, language) {
   }
   
   flashcards.unshift(flashcard);
+  console.log('📝 Flashcard ajoutée, total:', flashcards.length);
   
-  // Sauvegarder immédiatement dans localStorage pour éviter la perte
+  // Créer un backup immédiat
+  flashcardsBackup = [...flashcards];
+  
+  // Sauvegarder dans TOUS les stockages immédiatement et de manière synchrone
   localStorage.setItem('flashcards', JSON.stringify(flashcards));
+  chrome.storage.local.set({ flashcards }, () => {
+    console.log('✅ Flashcard ajoutée dans chrome.storage.local, total:', flashcards.length);
+  });
   
-  // Sauvegarder et synchroniser
-  await saveFlashcards();
-  
+  // Mettre à jour l'interface immédiatement
   updateFlashcards();
   updateStats();
+  
+  // Vérifier après un court délai
+  setTimeout(() => {
+    console.log('🔍 Vérification après 1s, flashcards:', flashcards.length);
+    const stored = localStorage.getItem('flashcards');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      console.log('🔍 Dans localStorage:', parsed.length);
+    }
+  }, 1000);
+  
+  // Sauvegarder et synchroniser avec le serveur en arrière-plan
+  // Cela n'affectera pas l'affichage immédiat
+  saveFlashcards().catch(error => {
+    console.error('Erreur lors de la synchronisation:', error);
+  }).finally(() => {
+    // Réinitialiser le flag après la sauvegarde
+    isAddingFlashcard = false;
+  });
+  
   showNotification('Flashcard créée avec succès!', 'success');
 }
 
@@ -835,6 +865,12 @@ function showPremiumPrompt() {
 
 // Charger les données
 async function loadData() {
+  // Ne pas recharger si on est en train d'ajouter une flashcard
+  if (isAddingFlashcard) {
+    console.log('⏸️ LoadData ignoré: ajout de flashcard en cours');
+    return Promise.resolve();
+  }
+  
   return new Promise((resolve) => {
     chrome.storage.sync.get({
       targetLanguage: 'fr',
@@ -861,19 +897,26 @@ async function loadData() {
         totalTranslations: 0
       }, (data) => {
         translations = data.translations || [];
-        flashcards = data.flashcards || [];
         
-        // Si pas de flashcards dans chrome.storage, essayer localStorage
-        if (flashcards.length === 0) {
-          const localStorageFlashcards = localStorage.getItem('flashcards');
-          if (localStorageFlashcards) {
-            try {
-              flashcards = JSON.parse(localStorageFlashcards);
-              console.log('📚 Flashcards récupérées depuis localStorage:', flashcards.length);
-            } catch (e) {
-              console.error('Erreur parsing localStorage flashcards:', e);
+        // Pour les flashcards, prioriser localStorage qui est plus à jour
+        const localStorageFlashcards = localStorage.getItem('flashcards');
+        if (localStorageFlashcards) {
+          try {
+            const localFlashcards = JSON.parse(localStorageFlashcards);
+            // Utiliser la source qui a le plus de flashcards (évite la perte de données)
+            if (localFlashcards.length >= (data.flashcards?.length || 0)) {
+              flashcards = localFlashcards;
+              console.log('📚 Flashcards chargées depuis localStorage:', flashcards.length);
+            } else {
+              flashcards = data.flashcards || [];
+              console.log('📚 Flashcards chargées depuis chrome.storage:', flashcards.length);
             }
+          } catch (e) {
+            console.error('Erreur parsing localStorage flashcards:', e);
+            flashcards = data.flashcards || [];
           }
+        } else {
+          flashcards = data.flashcards || [];
         }
         
         flashcardFolders = data.flashcardFolders || flashcardFolders;
@@ -1328,6 +1371,16 @@ function renderFolderTranslations(translations, fromLang, toLang) {
 function updateFlashcards() {
   const container = document.getElementById('flashcardsList');
   if (!container) return;
+  
+  // Détecter si les flashcards ont disparu de manière inattendue
+  if (flashcards.length === 0 && flashcardsBackup.length > 0) {
+    console.error('⚠️ ALERTE: Les flashcards ont disparu! Backup:', flashcardsBackup.length);
+    console.trace('Stack trace');
+    
+    // Essayer de restaurer depuis le backup
+    flashcards = [...flashcardsBackup];
+    localStorage.setItem('flashcards', JSON.stringify(flashcards));
+  }
   
   if (practiceMode.active) {
     displayPracticeMode();
@@ -2685,10 +2738,18 @@ function syncFlashcardsAfterLogin() {
         updateStats();
       } else {
         console.log('ℹ️ Aucune flashcard sur le serveur pour ce compte');
-        // Si le serveur n'a pas de flashcards, on commence avec un tableau vide
-        flashcards = [];
-        localStorage.setItem('flashcards', JSON.stringify(flashcards));
-        chrome.storage.local.set({ flashcards });
+        // Si le serveur n'a pas de flashcards, on garde les flashcards locales
+        // Ne PAS écraser avec un tableau vide
+        console.log('📚 Conservation des flashcards locales:', flashcards.length);
+        
+        // Synchroniser les flashcards locales avec le serveur si elles existent
+        if (flashcards.length > 0) {
+          console.log('📤 Envoi des flashcards locales vers le serveur...');
+          saveFlashcards().catch(error => {
+            console.error('Erreur lors de la synchronisation:', error);
+          });
+        }
+        
         updateFlashcards();
         updateStats();
       }
@@ -3290,9 +3351,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
     
-    // Rafraîchir périodiquement
+    // Rafraîchir périodiquement les stats uniquement
+    // Ne pas recharger loadData() car cela peut écraser les flashcards en cours d'ajout
     setInterval(async () => {
-      await loadData();
+      // await loadData(); // Commenté pour éviter l'écrasement des flashcards
       updateStats();
     }, 5000);
     
