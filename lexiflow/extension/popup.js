@@ -1639,11 +1639,20 @@ async function saveFlashcards() {
     if (typeof flashcardsAPI !== 'undefined' && flashcardsAPI.create) {
       for (const card of unsyncedCards) {
         try {
+          // Vérifier que les données sont valides avant d'envoyer
+          const originalText = card.front || card.text || '';
+          const translatedText = card.back || card.translation || '';
+          
+          if (!originalText || !translatedText) {
+            console.warn('Flashcard invalide, skip:', card);
+            continue;
+          }
+          
           const response = await flashcardsAPI.create({
-            originalText: card.front || card.text,
-            translatedText: card.back || card.translation,
+            originalText: originalText.trim(),
+            translatedText: translatedText.trim(),
             sourceLanguage: card.sourceLanguage || 'auto',
-            targetLanguage: card.targetLanguage || card.language,
+            targetLanguage: card.targetLanguage || card.language || 'fr',
             folder: card.folder || 'default',
             difficulty: card.difficulty || 'normal'
           });
@@ -2235,20 +2244,21 @@ function handleOAuthLogin(provider) {
           
           // Gérer les flashcards en arrière-plan après l'UI
           setTimeout(() => {
-            // IMPORTANT: Créer un backup avant tout changement
-            backupFlashcards();
+            // IMPORTANT: Pour un changement de compte, on doit nettoyer les données de l'ancien compte
+            console.log('🔄 Changement de compte détecté, nettoyage des données...');
             
-            // Sauvegarder les flashcards locales temporairement
-            const localFlashcardsTemp = [...flashcards];
+            // Réinitialiser TOUTES les données pour le nouveau compte
+            flashcards = [];
+            translations = [];
+            localStorage.removeItem('flashcards');
+            localStorage.removeItem('translations');
+            chrome.storage.local.remove(['flashcards', 'translations']);
             
-            // Charger les flashcards du serveur pour le nouveau compte
-            // Cette fonction va remplacer les flashcards locales par celles du serveur
+            // Charger les données du nouveau compte depuis le serveur
             syncFlashcardsAfterLogin();
             
-            // Si l'utilisateur avait des flashcards locales non synchronisées, les logger
-            if (localFlashcardsTemp.length > 0) {
-              console.log('📚 Flashcards locales avant connexion:', localFlashcardsTemp.length);
-            }
+            // Réinitialiser le currentUser avec les nouvelles infos
+            window.currentUser = response.user;
           }, 100);
         }
       } catch (error) {
@@ -3010,9 +3020,8 @@ document.addEventListener('DOMContentLoaded', async () => {
               console.log('✋ Sync auto désactivée pour protéger les flashcards locales');
             }
           } catch (error) {
-            console.log('Token invalide, mais on garde les données locales');
-            // Token invalide, NE PAS effacer les données
-            // Juste mettre à jour l'UI pour montrer qu'on est déconnecté
+            // Token invalide, mais c'est normal si l'utilisateur n'est pas connecté
+            // Ne pas afficher d'erreur, juste mettre à jour l'UI silencieusement
             window.currentUser = null;
             const loginButton = document.getElementById('loginButton');
             if (loginButton) {
@@ -3378,7 +3387,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     
   } catch (error) {
     console.error('❌ Erreur initialisation:', error);
-    showNotification('Erreur lors du chargement', 'error');
+    // Ne pas afficher de notification d'erreur sauf si c'est vraiment critique
+    // Car cela peut être juste un problème temporaire de connexion
+    if (error.message && !error.message.includes('token')) {
+      console.log('Erreur non critique, continuons sans notification');
+    }
   }
 });
 

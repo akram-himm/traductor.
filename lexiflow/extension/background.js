@@ -63,11 +63,16 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
           chrome.tabs.remove(tabId);
           
           // Notifier l'utilisateur (vérifier que l'API est disponible)
-          if (chrome.notifications) {
+          if (chrome.notifications && chrome.notifications.create) {
             chrome.notifications.create({
               type: 'basic',
+              iconUrl: chrome.runtime.getURL('popup.html'),
               title: 'Connexion réussie!',
               message: 'Vous êtes maintenant connecté à LexiFlow.'
+            }, () => {
+              if (chrome.runtime.lastError) {
+                console.log('Notification error:', chrome.runtime.lastError);
+              }
             });
           }
         });
@@ -75,11 +80,16 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         // Fermer l'onglet et afficher l'erreur
         chrome.tabs.remove(tabId);
         
-        if (chrome.notifications) {
+        if (chrome.notifications && chrome.notifications.create) {
           chrome.notifications.create({
             type: 'basic',
+            iconUrl: chrome.runtime.getURL('popup.html'),
             title: 'Erreur de connexion',
-            message: error
+            message: error || 'Une erreur est survenue'
+          }, () => {
+            if (chrome.runtime.lastError) {
+              console.log('Notification error:', chrome.runtime.lastError);
+            }
           });
         }
       }
