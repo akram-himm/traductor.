@@ -2731,11 +2731,10 @@ function updateUserQuota(user) {
 function syncFlashcardsAfterLogin() {
   console.log('🔄 Synchronisation des flashcards...');
   
-  // Pour un changement de compte, on charge les flashcards du nouveau compte
-  // MAIS on garde les flashcards locales en backup au cas où
-  
-  // Créer un backup des flashcards actuelles au cas où
-  const backupFlashcards = [...flashcards];
+  // Créer un backup des flashcards actuelles SEULEMENT si elles appartiennent
+  // à l'utilisateur actuel (pas celles d'un autre compte)
+  const currentUserId = localStorage.getItem('lastUserId');
+  const backupFlashcards = currentUserId ? [...flashcards] : [];
   
   // Vérifier que flashcardsAPI est disponible
   if (typeof flashcardsAPI === 'undefined' || !flashcardsAPI.getAll) {
@@ -2788,8 +2787,8 @@ function syncFlashcardsAfterLogin() {
       } else {
         console.log('ℹ️ Aucune flashcard sur le serveur pour ce compte');
         
-        // Si on a des flashcards locales, on les envoie au serveur
-        if (backupFlashcards.length > 0) {
+        // Si on a des flashcards locales ET que c'est le même utilisateur, on les envoie au serveur
+        if (backupFlashcards.length > 0 && currentUserId) {
           console.log('📤 Envoi des flashcards locales vers le serveur...');
           flashcards = backupFlashcards;
           
@@ -2798,7 +2797,11 @@ function syncFlashcardsAfterLogin() {
             console.error('Erreur lors de la synchronisation:', error);
           });
         } else {
-          console.log('📭 Aucune flashcard locale ou serveur');
+          console.log('📭 Aucune flashcard à synchroniser');
+          // S'assurer que flashcards est un tableau vide pour un nouveau compte
+          flashcards = [];
+          localStorage.setItem('flashcards', JSON.stringify([]));
+          chrome.storage.local.set({ flashcards: [] });
         }
         
         updateFlashcards();
@@ -3050,10 +3053,27 @@ document.addEventListener('DOMContentLoaded', async () => {
               console.log('Utilisateur connecté:', response.user);
               updateUIAfterLogin(response.user);
               
-              // NE PAS synchroniser automatiquement les flashcards au démarrage
-              // Car cela peut écraser les flashcards locales
-              // Laisser l'utilisateur décider quand synchroniser
-              console.log('✋ Sync auto désactivée pour protéger les flashcards locales');
+              // Vérifier si c'est le même utilisateur
+              const previousUserId = localStorage.getItem('lastUserId');
+              const currentUserId = response.user.id || response.user._id;
+              
+              if (!previousUserId || previousUserId === currentUserId) {
+                // Même utilisateur ou première connexion, garder les données locales
+                console.log('✅ Même utilisateur, conservation des flashcards locales');
+                localStorage.setItem('lastUserId', currentUserId);
+              } else {
+                // Utilisateur différent, charger ses flashcards depuis le serveur
+                console.log('🔄 Utilisateur différent détecté au démarrage');
+                flashcards = [];
+                translations = [];
+                localStorage.removeItem('flashcards');
+                localStorage.removeItem('translations');
+                chrome.storage.local.remove(['flashcards', 'translations']);
+                localStorage.setItem('lastUserId', currentUserId);
+                
+                // Charger les flashcards du nouveau compte
+                syncFlashcardsAfterLogin();
+              }
             }
           } catch (error) {
             // Token invalide, mais c'est normal si l'utilisateur n'est pas connecté
@@ -3128,8 +3148,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Bouton de connexion - configuration initiale
     const loginButton = document.getElementById('loginButton');
     if (loginButton) {
+      // Vérifier si l'utilisateur est déjà connecté
+      const isLoggedIn = !!window.currentUser;
       // Ne configurer les événements que si l'utilisateur n'est pas connecté
-      if (!token) {
+      if (!isLoggedIn) {
         // Effets hover
         loginButton.addEventListener('mouseenter', () => {
           loginButton.style.background = 'rgba(255,255,255,0.25)';
