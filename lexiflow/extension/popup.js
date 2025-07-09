@@ -2130,6 +2130,16 @@ function showLoginWindow() {
       // Ensuite afficher la notification et mettre à jour l'UI
       showNotification('Connexion réussie!', 'success');
       updateUIAfterLogin(response.user);
+      
+      // IMPORTANT: Nettoyer les données locales avant de charger celles du nouveau compte
+      console.log('🔄 Connexion à un compte, nettoyage des données locales...');
+      flashcards = [];
+      translations = [];
+      localStorage.removeItem('flashcards');
+      localStorage.removeItem('translations');
+      chrome.storage.local.remove(['flashcards', 'translations']);
+      
+      // Charger les données du compte
       syncFlashcardsAfterLogin();
       
     } catch (error) {
@@ -2586,9 +2596,12 @@ function resetUIAfterLogout() {
   localStorage.removeItem('translations');
   chrome.storage.local.remove(['translations']);
   
-  // DO NOT clear flashcards - they belong to the user
-  // Keep flashcards in local storage for non-authenticated usage
-  console.log('📚 Keeping flashcards in local storage:', flashcards.length, 'cards');
+  // IMPORTANT: Pour la cohérence entre comptes, on doit aussi nettoyer les flashcards
+  // Sinon les flashcards d'un compte apparaissent sur l'autre
+  flashcards = [];
+  localStorage.removeItem('flashcards');
+  chrome.storage.local.remove(['flashcards']);
+  console.log('🧹 Flashcards nettoyées pour permettre le changement de compte');
   
   // Clear folder directions
   localStorage.removeItem('folderDirections');
@@ -2753,17 +2766,13 @@ function syncFlashcardsAfterLogin() {
         updateStats();
       } else {
         console.log('ℹ️ Aucune flashcard sur le serveur pour ce compte');
-        // Si le serveur n'a pas de flashcards, on garde les flashcards locales
-        // Ne PAS écraser avec un tableau vide
-        console.log('📚 Conservation des flashcards locales:', flashcards.length);
+        // IMPORTANT: Pour un nouveau compte ou un compte sans flashcards,
+        // on doit effacer les flashcards locales pour éviter le mélange entre comptes
+        flashcards = [];
+        localStorage.setItem('flashcards', JSON.stringify([]));
+        chrome.storage.local.set({ flashcards: [] });
         
-        // Synchroniser les flashcards locales avec le serveur si elles existent
-        if (flashcards.length > 0) {
-          console.log('📤 Envoi des flashcards locales vers le serveur...');
-          saveFlashcards().catch(error => {
-            console.error('Erreur lors de la synchronisation:', error);
-          });
-        }
+        console.log('🧹 Flashcards locales effacées pour ce nouveau compte');
         
         updateFlashcards();
         updateStats();
