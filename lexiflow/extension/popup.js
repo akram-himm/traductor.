@@ -2118,9 +2118,15 @@ function handleOAuthLogin(provider) {
       } catch (error) {
         console.error('Erreur profil:', error);
         showNotification('Erreur lors de la récupération du profil', 'error');
-        // Réinitialiser l'UI
+        // Ne PAS appeler resetUIAfterLogout() ici car cela efface les flashcards
+        // Juste déconnecter l'utilisateur sans toucher aux données locales
         await authAPI.logout();
-        resetUIAfterLogout();
+        // Réinitialiser seulement le bouton de connexion
+        const loginButton = document.getElementById('loginButton');
+        if (loginButton) {
+          loginButton.innerHTML = '<span style="font-size: 14px;">🔒</span><span>Se connecter</span>';
+          loginButton.onclick = () => showLoginWindow();
+        }
       }
     });
   };
@@ -2428,16 +2434,15 @@ function showUserMenu(user) {
 function resetUIAfterLogout() {
   console.log('🚪 Resetting UI after logout...');
   
-  // 1. Clear all local data
-  // Clear translations
+  // 1. Clear only authentication-related data, NOT user content
+  // Clear translations (keep this as it's language preference)
   translations = [];
   localStorage.removeItem('translations');
   chrome.storage.local.remove(['translations']);
   
-  // Clear flashcards
-  flashcards = [];
-  localStorage.removeItem('flashcards');
-  chrome.storage.local.remove(['flashcards']);
+  // DO NOT clear flashcards - they belong to the user
+  // Keep flashcards in local storage for non-authenticated usage
+  console.log('📚 Keeping flashcards in local storage:', flashcards.length, 'cards');
   
   // Clear folder directions
   localStorage.removeItem('folderDirections');
@@ -2543,14 +2548,18 @@ function updateUserQuota(user) {
 function syncFlashcardsAfterLogin() {
   console.log('🔄 Synchronisation des flashcards...');
   
+  // Sauvegarder les flashcards locales avant la sync
+  const localFlashcards = [...flashcards];
+  console.log(`📚 ${localFlashcards.length} flashcards locales à merger`);
+  
   // Charger les flashcards depuis le backend
   flashcardsAPI.getAll()
     .then(response => {
       if (response && response.flashcards) {
-        console.log(`✅ ${response.flashcards.length} flashcards chargées du serveur`);
+        console.log(`☁️ ${response.flashcards.length} flashcards chargées du serveur`);
         
-        // Convertir et stocker les flashcards dans la variable globale
-        flashcards = response.flashcards.map(card => ({
+        // Convertir les flashcards du serveur
+        const serverFlashcards = response.flashcards.map(card => ({
           id: card._id || card.id,
           text: card.originalText,
           translation: card.translatedText,
@@ -2563,25 +2572,73 @@ function syncFlashcardsAfterLogin() {
           createdAt: card.createdAt || new Date().toISOString(),
           isFavorite: card.tags?.includes('favorite') || false,
           reviewCount: card.reviewCount || 0,
-          lastReviewed: card.lastReviewed || null
+          lastReviewed: card.lastReviewed || null,
+          syncedWithServer: true
         }));
+        
+        // Créer un map des flashcards serveur par ID pour éviter les doublons
+        const serverFlashcardsMap = new Map();
+        serverFlashcards.forEach(card => {
+          serverFlashcardsMap.set(card.id, card);
+        });
+        
+        // Merger les flashcards locales avec celles du serveur
+        const mergedFlashcards = [...serverFlashcards];
+        
+        // Ajouter les flashcards locales qui ne sont pas sur le serveur
+        localFlashcards.forEach(localCard => {
+          if (!serverFlashcardsMap.has(localCard.id)) {
+            // Cette flashcard locale n'est pas sur le serveur, on la garde
+            mergedFlashcards.push({
+              ...localCard,
+              syncedWithServer: false
+            });
+          }
+        });
+        
+        // Mettre à jour la variable globale
+        flashcards = mergedFlashcards;
+        
+        console.log(`✅ Total après merge: ${flashcards.length} flashcards`);
         
         // Sauvegarder dans le storage local
         localStorage.setItem('flashcards', JSON.stringify(flashcards));
         chrome.storage.local.set({ flashcards });
         
+        // Synchroniser les flashcards locales non synchronisées vers le serveur
+        const unsyncedCards = flashcards.filter(card => !card.syncedWithServer);
+        if (unsyncedCards.length > 0 && window.currentUser) {
+          console.log(`📤 Envoi de ${unsyncedCards.length} flashcards locales vers le serveur...`);
+          unsyncedCards.forEach(card => {
+            flashcardsAPI.create({
+              originalText: card.text,
+              translatedText: card.translation,
+              sourceLanguage: card.sourceLanguage,
+              targetLanguage: card.targetLanguage,
+              context: card.context,
+              tags: card.tags,
+              folder: card.folder
+            }).then(() => {
+              card.syncedWithServer = true;
+            }).catch(err => {
+              console.error('Erreur sync card:', err);
+            });
+          });
+        }
+        
         // Mettre à jour l'interface
         updateFlashcards();
         updateStats();
       } else {
-        console.log('ℹ️ Aucune flashcard sur le serveur');
-        flashcards = [];
+        console.log('ℹ️ Aucune flashcard sur le serveur, conservation des flashcards locales');
+        // Ne pas écraser les flashcards locales si le serveur est vide
         updateFlashcards();
       }
     })
     .catch(error => {
       console.error('❌ Erreur lors du chargement des flashcards:', error);
-      showNotification('Erreur lors du chargement des flashcards', 'error');
+      showNotification('Erreur de sync, flashcards locales conservées', 'warning');
+      // En cas d'erreur, on garde les flashcards locales
     });
 }
 
@@ -2597,15 +2654,56 @@ function clearHistory() {
   });
 }
 
+// Fonction pour créer un backup des flashcards
+function backupFlashcards() {
+  const backup = {
+    flashcards: [...flashcards],
+    timestamp: new Date().toISOString(),
+    version: '1.0'
+  };
+  
+  // Stocker le backup dans chrome.storage.local avec une clé différente
+  chrome.storage.local.set({ flashcardsBackup: backup }, () => {
+    console.log(`💾 Backup créé: ${flashcards.length} flashcards sauvegardées`);
+  });
+  
+  return backup;
+}
+
+// Fonction pour restaurer les flashcards depuis le backup
+function restoreFlashcardsFromBackup() {
+  chrome.storage.local.get(['flashcardsBackup'], (result) => {
+    if (result.flashcardsBackup && result.flashcardsBackup.flashcards) {
+      const backup = result.flashcardsBackup;
+      flashcards = backup.flashcards;
+      
+      // Sauvegarder dans le storage
+      localStorage.setItem('flashcards', JSON.stringify(flashcards));
+      chrome.storage.local.set({ flashcards });
+      
+      // Mettre à jour l'interface
+      updateFlashcards();
+      updateStats();
+      
+      showNotification(`${flashcards.length} flashcards restaurées depuis le backup`, 'success');
+    } else {
+      showNotification('Aucun backup trouvé', 'warning');
+    }
+  });
+}
+
 // Effacer toutes les flashcards
 function clearFlashcards() {
   if (!confirm('Effacer toutes les flashcards ?')) return;
+  
+  // Créer un backup avant de supprimer
+  backupFlashcards();
   
   flashcards = [];
   chrome.storage.local.set({ flashcards }, () => {
     updateFlashcards();
     updateStats();
-    showNotification('Flashcards effacées', 'info');
+    showNotification('Flashcards effacées (backup créé)', 'info');
   });
 }
 
@@ -2665,6 +2763,20 @@ function resetApp() {
   if (!confirm('Are you really sure? This action is irreversible!')) {
     return;
   }
+  
+  // Créer un backup complet avant de réinitialiser
+  const fullBackup = {
+    flashcards: [...flashcards],
+    translations: [...translations],
+    flashcardFolders: {...flashcardFolders},
+    userSettings: {...userSettings},
+    timestamp: new Date().toISOString(),
+    version: '1.0'
+  };
+  
+  chrome.storage.local.set({ fullBackup }, () => {
+    console.log('💾 Backup complet créé avant reset');
+  });
   
   // Réinitialiser toutes les données
   translations = [];

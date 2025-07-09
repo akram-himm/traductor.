@@ -93,11 +93,9 @@ async function syncLocalFlashcardsToBackend() {
       console.error('❌ Erreurs de synchronisation:', errors);
     }
 
-    // Si tout est synchronisé, on peut vider le localStorage
-    if (syncedCount === localFlashcards.length) {
-      localStorage.removeItem('flashcards');
-      console.log('✅ Flashcards locales supprimées après synchronisation réussie');
-    }
+    // Ne PAS supprimer les flashcards locales après sync
+    // Les garder comme backup local au cas où
+    console.log('📚 Flashcards locales conservées comme backup');
 
     return { 
       success: true, 
