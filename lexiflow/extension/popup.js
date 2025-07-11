@@ -657,29 +657,20 @@ function copyTranslation(text) {
 }
 
 async function createFlashcardFromHistory(original, translated, language) {
+  // Vérifier si l'utilisateur est connecté
+  const token = await authAPI.getToken();
+  if (!token) {
+    showNotification('Veuillez vous connecter pour créer des flashcards', 'warning');
+    return;
+  }
+  
   // Vérifier les limites pour les utilisateurs gratuits
   if (!checkLimits('flashcard')) return;
   
   // Définir le flag pour éviter les conflits
   isAddingFlashcard = true;
   
-  const flashcard = {
-    id: Date.now(),
-    front: original,
-    back: translated,
-    text: original, // Pour la compatibilité
-    translation: translated, // Pour la compatibilité
-    sourceLanguage: 'auto',
-    targetLanguage: language,
-    language: language,
-    created: new Date().toISOString(),
-    folder: 'default',
-    reviews: 0,
-    lastReview: null,
-    difficulty: 'normal'
-  };
-  
-  // Vérifier si elle existe déjà
+  // Vérifier si elle existe déjà côté client
   const exists = flashcards.some(f => 
     (f.front?.toLowerCase() === original.toLowerCase() || f.text?.toLowerCase() === original.toLowerCase()) && 
     (f.back?.toLowerCase() === translated.toLowerCase() || f.translation?.toLowerCase() === translated.toLowerCase())
@@ -687,45 +678,64 @@ async function createFlashcardFromHistory(original, translated, language) {
   
   if (exists) {
     showNotification('Cette flashcard existe déjà!', 'warning');
+    isAddingFlashcard = false;
     return;
   }
   
-  flashcards.unshift(flashcard);
-  console.log('📝 Flashcard ajoutée, total:', flashcards.length);
-  
-  // Créer un backup immédiat
-  flashcardsBackup = [...flashcards];
-  
-  // Sauvegarder dans TOUS les stockages immédiatement et de manière synchrone
-  localStorage.setItem('flashcards', JSON.stringify(flashcards));
-  chrome.storage.local.set({ flashcards }, () => {
-    console.log('✅ Flashcard ajoutée dans chrome.storage.local, total:', flashcards.length);
-  });
-  
-  // Mettre à jour l'interface immédiatement
-  updateFlashcards();
-  updateStats();
-  
-  // Vérifier après un court délai
-  setTimeout(() => {
-    console.log('🔍 Vérification après 1s, flashcards:', flashcards.length);
-    const stored = localStorage.getItem('flashcards');
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      console.log('🔍 Dans localStorage:', parsed.length);
+  try {
+    // Envoyer directement au serveur
+    console.log('📤 Envoi de la flashcard au serveur...');
+    const response = await flashcardsAPI.create({
+      originalText: original,
+      translatedText: translated,
+      sourceLanguage: 'auto',
+      targetLanguage: language,
+      folder: 'default',
+      difficulty: 'normal'
+    });
+    
+    if (response && response.flashcard) {
+      // Ajouter la flashcard avec l'ID du serveur
+      const flashcard = {
+        id: response.flashcard._id || response.flashcard.id,
+        front: original,
+        back: translated,
+        text: original,
+        translation: translated,
+        sourceLanguage: 'auto',
+        targetLanguage: language,
+        language: language,
+        created: response.flashcard.createdAt || new Date().toISOString(),
+        folder: 'default',
+        reviews: 0,
+        lastReview: null,
+        difficulty: 'normal',
+        synced: true,
+        syncedWithServer: true,
+        serverId: response.flashcard._id || response.flashcard.id
+      };
+      
+      // Ajouter localement pour l'affichage
+      flashcards.unshift(flashcard);
+      console.log('✅ Flashcard ajoutée, total:', flashcards.length);
+      
+      // Sauvegarder localement pour l'utilisation hors ligne
+      localStorage.setItem('flashcards', JSON.stringify(flashcards));
+      chrome.storage.local.set({ flashcards });
+      
+      // Mettre à jour l'interface
+      updateFlashcards();
+      updateStats();
+      
+      showNotification('Flashcard créée avec succès!', 'success');
     }
-  }, 1000);
-  
-  // Sauvegarder et synchroniser avec le serveur en arrière-plan
-  // Cela n'affectera pas l'affichage immédiat
-  saveFlashcards().catch(error => {
-    console.error('Erreur lors de la synchronisation:', error);
-  }).finally(() => {
-    // Réinitialiser le flag après la sauvegarde
+  } catch (error) {
+    console.error('❌ Erreur lors de la création:', error);
+    showNotification('Erreur lors de la création de la flashcard', 'error');
+  } finally {
+    // Réinitialiser le flag
     isAddingFlashcard = false;
-  });
-  
-  showNotification('Flashcard créée avec succès!', 'success');
+  }
 }
 
 function deleteTranslation(id) {
@@ -2273,28 +2283,24 @@ function handleOAuthLogin(provider) {
           showNotification('Connexion réussie!', 'success');
           
           // Gérer les flashcards en arrière-plan après l'UI
-          setTimeout(() => {
-            // Vérifier si c'est le même utilisateur ou un nouveau
-            const previousUserId = localStorage.getItem('lastUserId') || localStorage.getItem('lastDisconnectedUserId');
+          setTimeout(async () => {
             const currentUserId = response.user.id || response.user._id;
-            
-            if (previousUserId && previousUserId !== currentUserId) {
-              // C'est un utilisateur différent, nettoyer les données
-              console.log('🔄 Changement d\'utilisateur détecté, nettoyage des données...');
-              flashcards = [];
-              translations = [];
-              localStorage.removeItem('flashcards');
-              localStorage.removeItem('translations');
-              chrome.storage.local.remove(['flashcards', 'translations']);
-            } else {
-              console.log('✅ Même utilisateur, conservation des données locales');
-            }
             
             // Sauvegarder l'ID de l'utilisateur actuel
             localStorage.setItem('lastUserId', currentUserId);
             
-            // Charger/synchroniser les données du compte
-            syncFlashcardsAfterLogin();
+            // Nettoyer toutes les données locales pour partir sur une base propre
+            console.log('🧽 Nettoyage des données locales...');
+            flashcards = [];
+            translations = [];
+            localStorage.removeItem('flashcards');
+            localStorage.removeItem('translations');
+            localStorage.removeItem('lastDisconnectedUserId');
+            chrome.storage.local.remove(['flashcards', 'translations']);
+            
+            // Charger les données du compte depuis le serveur
+            console.log(`👤 Chargement des données pour l'utilisateur: ${currentUserId}`);
+            await syncFlashcardsAfterLogin();
             
             // Réinitialiser le currentUser avec les nouvelles infos
             window.currentUser = response.user;
@@ -2632,10 +2638,11 @@ function resetUIAfterLogout() {
   localStorage.removeItem('translations');
   chrome.storage.local.remove(['translations']);
   
-  // NE PAS nettoyer les flashcards ici pour permettre à l'utilisateur de les retrouver
-  // lors de sa prochaine connexion. On nettoiera seulement si c'est un autre utilisateur
-  // qui se connecte.
-  console.log('📚 Conservation des flashcards locales après déconnexion');
+  // Nettoyer les flashcards car elles appartiennent au compte connecté
+  flashcards = [];
+  localStorage.removeItem('flashcards');
+  chrome.storage.local.remove(['flashcards']);
+  console.log('🧽 Flashcards nettoyées après déconnexion');
   
   // Clear folder directions
   localStorage.removeItem('folderDirections');
@@ -2744,13 +2751,13 @@ function updateUserQuota(user) {
 }
 
 // Fonction pour synchroniser les flashcards après connexion
-function syncFlashcardsAfterLogin() {
-  console.log('🔄 Synchronisation des flashcards...');
+async function syncFlashcardsAfterLogin() {
+  console.log('🔄 Chargement des flashcards du compte...');
   
-  // Créer un backup des flashcards actuelles SEULEMENT si elles appartiennent
-  // à l'utilisateur actuel (pas celles d'un autre compte)
-  const currentUserId = localStorage.getItem('lastUserId');
-  const backupFlashcards = currentUserId ? [...flashcards] : [];
+  // IMPORTANT: Nettoyer d'abord les données locales pour partir sur une base propre
+  flashcards = [];
+  localStorage.removeItem('flashcards');
+  chrome.storage.local.remove(['flashcards']);
   
   // Vérifier que flashcardsAPI est disponible
   if (typeof flashcardsAPI === 'undefined' || !flashcardsAPI.getAll) {
@@ -2760,119 +2767,65 @@ function syncFlashcardsAfterLogin() {
     return;
   }
   
-  // Charger les flashcards depuis le backend
-  flashcardsAPI.getAll()
-    .then(response => {
-      if (response && response.flashcards && Array.isArray(response.flashcards)) {
-        console.log(`☁️ ${response.flashcards.length} flashcards chargées du serveur`);
-        
-        // Convertir les flashcards du serveur au bon format
-        flashcards = response.flashcards.map(card => ({
-          id: card._id || card.id || Date.now() + Math.random(),
-          // Support des deux formats (front/back et text/translation)
-          front: card.originalText || card.front,
-          back: card.translatedText || card.back,
-          text: card.originalText || card.text,
-          translation: card.translatedText || card.translation,
-          sourceLanguage: card.sourceLanguage || 'auto',
-          targetLanguage: card.targetLanguage || card.language || 'fr',
-          language: card.targetLanguage || card.language || 'fr',
-          context: card.context || '',
-          difficulty: card.difficulty || 'medium',
-          tags: card.tags || [],
-          folder: card.folder || 'default',
-          created: card.createdAt || card.created || new Date().toISOString(),
-          createdAt: card.createdAt || card.created || new Date().toISOString(),
-          isFavorite: card.tags?.includes('favorite') || false,
-          reviewCount: card.reviewCount || 0,
-          lastReviewed: card.lastReviewed || null,
-          synced: true,
-          syncedWithServer: true,
-          serverId: card._id || card.id
-        }));
-        
-        console.log(`✅ ${flashcards.length} flashcards chargées pour ce compte`);
-        
-        // Si on avait des flashcards locales ET qu'elles appartiennent au même utilisateur,
-        // on doit les fusionner plutôt que de les écraser
-        if (backupFlashcards.length > 0 && currentUserId) {
-          console.log('🔀 Fusion des flashcards locales avec celles du serveur');
-          // Créer un set d'IDs serveur pour éviter les doublons
-          const serverIds = new Set(flashcards.map(f => f.serverId).filter(id => id));
-          
-          // Ajouter les flashcards locales qui ne sont pas sur le serveur
-          const localOnlyCards = backupFlashcards.filter(card => 
-            !card.serverId || !serverIds.has(card.serverId)
-          );
-          
-          if (localOnlyCards.length > 0) {
-            console.log(`➕ ${localOnlyCards.length} flashcards locales à synchroniser`);
-            flashcards = [...flashcards, ...localOnlyCards];
-            
-            // Synchroniser les nouvelles cartes avec le serveur
-            saveFlashcards().catch(err => {
-              console.error('Erreur sync des nouvelles cartes:', err);
-            });
-          }
-        }
-        
-        // Sauvegarder dans TOUS les stockages
-        localStorage.setItem('flashcards', JSON.stringify(flashcards));
-        chrome.storage.local.set({ flashcards });
-        
-        // Mettre à jour l'interface
-        updateFlashcards();
-        updateStats();
-      } else {
-        console.log('ℹ️ Aucune flashcard sur le serveur pour ce compte');
-        
-        // Si on a des flashcards locales ET que c'est le même utilisateur, on les envoie au serveur
-        if (backupFlashcards.length > 0 && currentUserId) {
-          console.log('📤 Envoi des flashcards locales vers le serveur...');
-          flashcards = backupFlashcards;
-          
-          // Synchroniser les flashcards locales avec le serveur
-          saveFlashcards().catch(error => {
-            console.error('Erreur lors de la synchronisation:', error);
-          });
-        } else {
-          console.log('📭 Aucune flashcard à synchroniser');
-          // S'assurer que flashcards est un tableau vide pour un nouveau compte
-          flashcards = [];
-          localStorage.setItem('flashcards', JSON.stringify([]));
-          chrome.storage.local.set({ flashcards: [] });
-        }
-        
-        updateFlashcards();
-        updateStats();
-      }
-    })
-    .catch(error => {
-      console.error('❌ Erreur lors du chargement des flashcards:', error);
-      showNotification('Erreur de chargement, utilisation des données locales', 'warning');
+  // Charger les flashcards UNIQUEMENT depuis le backend
+  try {
+    const response = await flashcardsAPI.getAll();
+    
+    if (response && response.flashcards && Array.isArray(response.flashcards)) {
+      console.log(`☁️ ${response.flashcards.length} flashcards chargées du serveur`);
       
-      // En cas d'erreur, restaurer le backup si on avait des flashcards
-      if (backupFlashcards.length > 0) {
-        flashcards = backupFlashcards;
-        console.log('📚 Restauration du backup:', flashcards.length, 'flashcards');
-      } else {
-        // Sinon, essayer de charger depuis le localStorage
-        const stored = localStorage.getItem('flashcards');
-        if (stored) {
-          try {
-            flashcards = JSON.parse(stored);
-            console.log('📚 Chargé depuis localStorage:', flashcards.length, 'flashcards');
-          } catch (e) {
-            flashcards = [];
-          }
-        } else {
-          flashcards = [];
-        }
-      }
+      // Convertir les flashcards du serveur au bon format
+      flashcards = response.flashcards.map(card => ({
+        id: card._id || card.id || Date.now() + Math.random(),
+        // Support des deux formats (front/back et text/translation)
+        front: card.originalText || card.front,
+        back: card.translatedText || card.back,
+        text: card.originalText || card.text,
+        translation: card.translatedText || card.translation,
+        sourceLanguage: card.sourceLanguage || 'auto',
+        targetLanguage: card.targetLanguage || card.language || 'fr',
+        language: card.targetLanguage || card.language || 'fr',
+        context: card.context || '',
+        difficulty: card.difficulty || 'medium',
+        tags: card.tags || [],
+        folder: card.folder || 'default',
+        created: card.createdAt || card.created || new Date().toISOString(),
+        createdAt: card.createdAt || card.created || new Date().toISOString(),
+        isFavorite: card.tags?.includes('favorite') || false,
+        reviewCount: card.reviewCount || 0,
+        lastReviewed: card.lastReviewed || null,
+        synced: true,
+        syncedWithServer: true,
+        serverId: card._id || card.id
+      }));
       
-      updateFlashcards();
-      updateStats();
-    });
+      console.log(`✅ ${flashcards.length} flashcards chargées pour ce compte`);
+      
+      // Sauvegarder localement pour l'utilisation hors ligne
+      localStorage.setItem('flashcards', JSON.stringify(flashcards));
+      chrome.storage.local.set({ flashcards });
+      
+    } else {
+      console.log('ℹ️ Aucune flashcard sur le serveur pour ce compte');
+      // Compte vide, pas de flashcards
+      flashcards = [];
+      localStorage.setItem('flashcards', JSON.stringify([]));
+      chrome.storage.local.set({ flashcards: [] });
+    }
+    
+    // Mettre à jour l'interface
+    updateFlashcards();
+    updateStats();
+    
+  } catch (error) {
+    console.error('❌ Erreur lors du chargement des flashcards:', error);
+    showNotification('Erreur de chargement des flashcards', 'error');
+    
+    // En cas d'erreur, tableau vide
+    flashcards = [];
+    updateFlashcards();
+    updateStats();
+  }
 }
 
 // Effacer tout l'historique
