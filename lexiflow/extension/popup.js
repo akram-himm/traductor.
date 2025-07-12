@@ -364,7 +364,8 @@ function swapFlashcardLanguages(key, currentDirection) {
 function flipCard(cardId) {
   console.log('flipCard appelé avec cardId:', cardId);
   
-  const card = flashcards.find(c => c.id === parseInt(cardId));
+  // Ne pas parser en int car les IDs sont maintenant des UUIDs
+  const card = flashcards.find(c => c.id === cardId || c.id === parseInt(cardId));
   if (!card) {
     console.error('Carte non trouvée:', cardId);
     return;
@@ -1071,9 +1072,19 @@ function enableUIInteractions() {
     loginButton.style.pointerEvents = 'auto';
     loginButton.style.opacity = '1';
     loginButton.style.cursor = 'pointer';
-    // S'assurer que l'onclick est bien défini
+    
+    // Vérifier si l'utilisateur est connecté avant de définir le gestionnaire
     if (!loginButton.onclick) {
-      loginButton.onclick = () => showLoginWindow();
+      // Si window.currentUser existe, afficher le menu utilisateur
+      if (window.currentUser) {
+        loginButton.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          showUserMenu(window.currentUser);
+        };
+      } else {
+        loginButton.onclick = () => showLoginWindow();
+      }
     }
   }
   
@@ -1544,7 +1555,7 @@ function updateFlashcards() {
           e.preventDefault();
           const cardId = flashcard.dataset.id;
           console.log('Clic sur flashcard détecté, id:', cardId);
-          flipCard(parseInt(cardId));
+          flipCard(cardId);
           return;
         }
         
@@ -1598,6 +1609,12 @@ function updateFlashcards() {
 
 // Rendre les flashcards pour un groupe de langues
 function renderFlashcards(cards, fromLang, toLang) {
+  // Vérifier que cards existe et est un tableau
+  if (!cards || !Array.isArray(cards)) {
+    console.warn('renderFlashcards: cards is undefined or not an array');
+    return '';
+  }
+  
   // Afficher toutes les cartes du groupe, peu importe la direction
   return cards.slice(0, 20).map(card => {
     // Déterminer si c'est une carte inversée
@@ -2608,7 +2625,7 @@ function updateUIAfterLogin(user) {
       if (userData.flashcards && userData.flashcards.length > 0) {
         flashcards = userData.flashcards;
         console.log(`${flashcards.length} flashcards restaurées`);
-        renderFlashcards();
+        updateFlashcards();
       }
       
       // Restaurer les traductions
@@ -3421,10 +3438,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           loginButton.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
         });
         
-        loginButton.addEventListener('click', () => {
-          // Ouvrir la fenêtre de login
-          showLoginWindow();
-        });
+        // Ne pas ajouter un nouveau listener si onclick est déjà défini
+        if (!loginButton.onclick) {
+          loginButton.addEventListener('click', () => {
+            // Ouvrir la fenêtre de login
+            showLoginWindow();
+          });
+        }
       }
     }
     
@@ -3720,7 +3740,7 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
       // Rafraîchir l'affichage si on est sur l'onglet flashcards
       const activeTab = document.querySelector('.tab-content.active');
       if (activeTab && activeTab.id === 'flashcards') {
-        renderFlashcards();
+        updateFlashcards();
       }
       // Mettre à jour les stats
       updateStats();
