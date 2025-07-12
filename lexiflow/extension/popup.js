@@ -5,6 +5,15 @@ let flashcards = [];
 let isAddingFlashcard = false; // Flag pour éviter les conflits lors de l'ajout
 let flashcardsBackup = []; // Backup pour éviter la perte de données
 let lastAuthCheck = 0; // Pour éviter de vérifier l'auth trop souvent
+
+// Générateur d'UUID simple pour les flashcards
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 let flashcardFolders = {
   default: { name: 'Uncategorized', icon: '📁' },
   favorites: { name: 'Favorites', icon: '⭐' },
@@ -695,9 +704,9 @@ async function createFlashcardFromHistory(original, translated, language) {
     });
     
     if (response && response.flashcard) {
-      // Ajouter la flashcard avec l'ID du serveur
+      // Ajouter la flashcard avec un UUID unique
       const flashcard = {
-        id: response.flashcard._id || response.flashcard.id,
+        id: generateUUID(), // UUID unique pour identifier la flashcard
         front: original,
         back: translated,
         text: original,
@@ -706,6 +715,7 @@ async function createFlashcardFromHistory(original, translated, language) {
         targetLanguage: language,
         language: language,
         created: response.flashcard.createdAt || new Date().toISOString(),
+        lastModified: new Date().toISOString(), // Pour la fusion
         folder: 'default',
         reviews: 0,
         lastReview: null,
@@ -2166,8 +2176,7 @@ function showLoginWindow() {
       // Sauvegarder l'ID de l'utilisateur actuel
       localStorage.setItem('lastUserId', currentUserId);
       
-      // Charger/synchroniser les données du compte
-      syncFlashcardsAfterLogin();
+      // NE PAS appeler syncFlashcardsAfterLogin ici - updateUIAfterLogin s'en charge
       
     } catch (error) {
       showNotification(error.message || 'Erreur de connexion', 'error');
@@ -2406,9 +2415,8 @@ function handleOAuthLogin(provider) {
             localStorage.removeItem('lastDisconnectedUserId');
             chrome.storage.local.remove(['flashcards', 'translations']);
             
-            // Charger les données du compte depuis le serveur
-            console.log(`👤 Chargement des données pour l'utilisateur: ${currentUserId}`);
-            await syncFlashcardsAfterLogin();
+            // NE PAS appeler syncFlashcardsAfterLogin ici - updateUIAfterLogin s'en charge
+            console.log(`👤 updateUIAfterLogin va gérer la synchronisation`);
             
             // Réinitialiser le currentUser avec les nouvelles infos
             window.currentUser = response.user;
@@ -2543,8 +2551,7 @@ function showRegisterWindow() {
       // Mettre à jour l'interface utilisateur
       updateUIAfterLogin(response.user);
       
-      // Synchroniser les flashcards locales
-      syncFlashcardsAfterLogin();
+      // NE PAS appeler syncFlashcardsAfterLogin ici - updateUIAfterLogin s'en charge
       
     } catch (error) {
       showNotification(error.message || 'Erreur lors de la création du compte', 'error');
@@ -2585,7 +2592,7 @@ function updateUIAfterLogin(user) {
   const userId = user.id || user._id;
   const userDataKey = `userData_${userId}`;
   
-  chrome.storage.local.get([userDataKey], (result) => {
+  chrome.storage.local.get([userDataKey], async (result) => {
     if (result[userDataKey]) {
       console.log(`Restauration des données pour l'utilisateur ${userId}`);
       const userData = result[userDataKey];
@@ -2613,6 +2620,15 @@ function updateUIAfterLogin(user) {
         }
         chrome.storage.sync.set({ targetLanguage });
       }
+      
+      // IMPORTANT: Synchroniser APRÈS la restauration
+      console.log('Lancement de la synchronisation avec fusion...');
+      await syncFlashcardsAfterLogin(true); // true = mode fusion
+      
+    } else {
+      console.log('Aucune donnée locale trouvée, synchronisation initiale...');
+      // Pas de données locales, charger depuis le serveur
+      await syncFlashcardsAfterLogin(false); // false = charger depuis serveur
     }
   });
   
@@ -2913,13 +2929,18 @@ function updateUserQuota(user) {
 }
 
 // Fonction pour synchroniser les flashcards après connexion
-async function syncFlashcardsAfterLogin() {
-  console.log('🔄 Chargement des flashcards du compte...');
+async function syncFlashcardsAfterLogin(mergeMode = false) {
+  console.log('🔄 Synchronisation des flashcards...', mergeMode ? 'Mode fusion' : 'Mode chargement');
   
-  // IMPORTANT: Nettoyer d'abord les données locales pour partir sur une base propre
-  flashcards = [];
-  localStorage.removeItem('flashcards');
-  chrome.storage.local.remove(['flashcards']);
+  // Si on est en mode fusion, on garde les flashcards locales
+  let localFlashcards = mergeMode ? [...flashcards] : [];
+  
+  // Si on n'est pas en mode fusion, on nettoie
+  if (!mergeMode) {
+    flashcards = [];
+    localStorage.removeItem('flashcards');
+    chrome.storage.local.remove(['flashcards']);
+  }
   
   // Vérifier que flashcardsAPI est disponible
   if (typeof flashcardsAPI === 'undefined' || !flashcardsAPI.getAll) {
@@ -2934,12 +2955,11 @@ async function syncFlashcardsAfterLogin() {
     const response = await flashcardsAPI.getAll();
     
     if (response && response.flashcards && Array.isArray(response.flashcards)) {
-      console.log(`☁️ ${response.flashcards.length} flashcards chargées du serveur`);
+      console.log(`☁️ ${response.flashcards.length} flashcards du serveur`);
       
       // Convertir les flashcards du serveur au bon format
-      flashcards = response.flashcards.map(card => ({
-        id: card._id || card.id || Date.now() + Math.random(),
-        // Support des deux formats (front/back et text/translation)
+      const serverFlashcards = response.flashcards.map(card => ({
+        id: card.id || generateUUID(), // Utiliser l'ID existant ou générer un nouveau
         front: card.originalText || card.front,
         back: card.translatedText || card.back,
         text: card.originalText || card.text,
@@ -2952,6 +2972,7 @@ async function syncFlashcardsAfterLogin() {
         tags: card.tags || [],
         folder: card.folder || 'default',
         created: card.createdAt || card.created || new Date().toISOString(),
+        lastModified: card.lastModified || card.updatedAt || new Date().toISOString(),
         createdAt: card.createdAt || card.created || new Date().toISOString(),
         isFavorite: card.tags?.includes('favorite') || false,
         reviewCount: card.reviewCount || 0,
@@ -2961,18 +2982,50 @@ async function syncFlashcardsAfterLogin() {
         serverId: card._id || card.id
       }));
       
-      console.log(`✅ ${flashcards.length} flashcards chargées pour ce compte`);
+      if (mergeMode) {
+        // FUSION : Utiliser un Map pour éviter les doublons par ID
+        const flashcardMap = new Map();
+        
+        // Ajouter d'abord les flashcards locales
+        localFlashcards.forEach(card => {
+          flashcardMap.set(card.id, card);
+        });
+        
+        // Ajouter/Mettre à jour avec les flashcards du serveur
+        serverFlashcards.forEach(card => {
+          const existingCard = flashcardMap.get(card.id);
+          if (!existingCard || new Date(card.lastModified) > new Date(existingCard.lastModified)) {
+            // Nouvelle carte ou carte serveur plus récente
+            flashcardMap.set(card.id, card);
+          }
+        });
+        
+        flashcards = Array.from(flashcardMap.values());
+        console.log(`✅ Fusion terminée: ${flashcards.length} flashcards au total`);
+        
+      } else {
+        // Mode chargement simple
+        flashcards = serverFlashcards;
+        console.log(`✅ ${flashcards.length} flashcards chargées du serveur`);
+      }
       
-      // Sauvegarder localement pour l'utilisation hors ligne
+      // Sauvegarder localement
       localStorage.setItem('flashcards', JSON.stringify(flashcards));
       chrome.storage.local.set({ flashcards });
       
     } else {
-      console.log('ℹ️ Aucune flashcard sur le serveur pour ce compte');
-      // Compte vide, pas de flashcards
-      flashcards = [];
-      localStorage.setItem('flashcards', JSON.stringify([]));
-      chrome.storage.local.set({ flashcards: [] });
+      console.log('ℹ️ Aucune flashcard sur le serveur');
+      
+      if (mergeMode) {
+        // Garder les flashcards locales
+        flashcards = localFlashcards;
+        console.log(`📱 Conservation de ${flashcards.length} flashcards locales`);
+      } else {
+        // Compte vide
+        flashcards = [];
+        localStorage.setItem('flashcards', JSON.stringify([]));
+        chrome.storage.local.set({ flashcards: [] });
+      }
     }
     
     // Mettre à jour l'interface
@@ -3232,8 +3285,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 chrome.storage.local.remove(['flashcards', 'translations']);
                 localStorage.setItem('lastUserId', currentUserId);
                 
-                // Charger les flashcards du nouveau compte
-                syncFlashcardsAfterLogin();
+                // NE PAS appeler syncFlashcardsAfterLogin ici - updateUIAfterLogin s'en charge
               }
             }
           } catch (error) {
@@ -3626,7 +3678,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const response = await apiRequest('/api/user/profile');
         if (response && response.user) {
           updateUIAfterLogin(response.user);
-          syncFlashcardsAfterLogin();
+          // NE PAS appeler syncFlashcardsAfterLogin ici - updateUIAfterLogin s'en charge
           showNotification('Connexion réussie!', 'success');
         }
       } catch (error) {
