@@ -2529,6 +2529,9 @@ function showRegisterWindow() {
 function updateUIAfterLogin(user) {
   if (!user) return;
   
+  // Sauvegarder l'utilisateur courant
+  window.currentUser = user;
+  
   // Mettre à jour le bouton de connexion
   const loginButton = document.getElementById('loginButton');
   if (loginButton) {
