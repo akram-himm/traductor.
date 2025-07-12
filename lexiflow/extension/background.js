@@ -60,14 +60,24 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       if (token) {
         // Sauvegarder le token
         chrome.storage.local.set({ authToken: token }, () => {
+          console.log('Token sauvegardé dans chrome.storage');
+          
           // Fermer l'onglet OAuth
           chrome.tabs.remove(tabId);
+          
+          // Notifier toutes les vues de l'extension
+          chrome.runtime.sendMessage({
+            type: 'oauth-success',
+            token: token
+          }).catch(() => {
+            // Ignorer l'erreur si aucune vue n'écoute
+          });
           
           // Notifier l'utilisateur (vérifier que l'API est disponible)
           if (chrome.notifications && chrome.notifications.create) {
             chrome.notifications.create({
               type: 'basic',
-              iconUrl: chrome.runtime.getURL('popup.html'),
+              iconUrl: chrome.runtime.getURL('icon-128.png'),
               title: 'Connexion réussie!',
               message: 'Vous êtes maintenant connecté à LexiFlow.'
             }, () => {
