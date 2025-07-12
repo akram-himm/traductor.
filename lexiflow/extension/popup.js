@@ -2248,32 +2248,21 @@ function handleOAuthLogin(provider) {
     `;
   }
   
-  // Forcer d'abord la déconnexion de Google avant d'ouvrir le flux OAuth
-  const googleLogoutFrame = document.createElement('iframe');
-  googleLogoutFrame.style.display = 'none';
-  googleLogoutFrame.src = 'https://accounts.google.com/Logout';
-  document.body.appendChild(googleLogoutFrame);
+  // Utiliser directement l'URL du backend avec prompt pour forcer la sélection
+  // Ajouter un timestamp pour éviter le cache et forcer une nouvelle authentification
+  const timestamp = Date.now();
+  // Ajouter max_age=0 pour forcer la re-authentification
+  const authUrl = `${API_CONFIG.BASE_URL}/api/auth/${provider}?prompt=select_account&max_age=0&t=${timestamp}`;
   
-  // Attendre un peu pour la déconnexion puis lancer OAuth
-  setTimeout(() => {
-    // Retirer l'iframe de déconnexion
-    if (googleLogoutFrame.parentNode) {
-      googleLogoutFrame.parentNode.removeChild(googleLogoutFrame);
-    }
-    
-    // Utiliser directement l'URL du backend avec prompt pour forcer la sélection
-    // Ajouter un timestamp pour éviter le cache et forcer une nouvelle authentification
-    const timestamp = Date.now();
-    // Ajouter max_age=0 pour forcer la re-authentification
-    const authUrl = `${API_CONFIG.BASE_URL}/api/auth/${provider}?prompt=select_account&max_age=0&t=${timestamp}`;
-    
-    // Continuer avec le flux OAuth normal
-    proceedWithOAuth(authUrl, handleSuccessfulAuth, handleAuthError, googleButton);
-  }, 1000);
+  // Log pour debug
+  console.log('OAuth URL:', authUrl);
+  
+  // Continuer avec le flux OAuth normal
+  proceedWithOAuth(authUrl, handleSuccessfulAuth, handleAuthError, googleButton, loginModal);
 }
 
 // Fonction pour gérer le flux OAuth
-function proceedWithOAuth(authUrl, handleSuccessfulAuth, handleAuthError, googleButton) {
+function proceedWithOAuth(authUrl, handleSuccessfulAuth, handleAuthError, googleButton, loginModal) {
   // Ouvrir OAuth dans un popup au lieu d'un nouvel onglet
   console.log('OAuth: Ouverture dans un popup pour:', authUrl);
   
@@ -2300,28 +2289,54 @@ function proceedWithOAuth(authUrl, handleSuccessfulAuth, handleAuthError, google
       });
       showNotification('Connexion en cours dans le nouvel onglet...', 'info');
     } else {
+      // Timeout pour éviter que le bouton reste bloqué indéfiniment
+      let authCompleted = false;
+      
+      setTimeout(() => {
+        if (!authCompleted) {
+          console.log('OAuth timeout - réactivation du bouton');
+          clearInterval(checkInterval);
+          if (googleButton) {
+            googleButton.disabled = false;
+            googleButton.innerHTML = `
+              <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+              Continuer avec Google
+            `;
+          }
+          showNotification('La connexion a pris trop de temps. Veuillez réessayer.', 'warning');
+        }
+      }, 30000); // 30 secondes timeout
+      
       // Vérifier périodiquement si la fenêtre est fermée et si on a reçu un token
       const checkInterval = setInterval(() => {
-        if (oauthWindow.closed) {
-          clearInterval(checkInterval);
-          console.log('Fenêtre OAuth fermée');
-          
-          // Vérifier si on a reçu un token dans le storage
-          chrome.storage.local.get(['authToken'], (result) => {
-            if (result.authToken) {
-              console.log('Token trouvé dans le storage après fermeture');
-              handleSuccessfulAuth(result.authToken);
-            } else {
-              // Réactiver le bouton si pas de token
-              if (googleButton) {
-                googleButton.disabled = false;
-                googleButton.innerHTML = `
-                  <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-                  Continuer avec Google
-                `;
+        try {
+          if (oauthWindow.closed) {
+            clearInterval(checkInterval);
+            console.log('Fenêtre OAuth fermée');
+            
+            // Vérifier si on a reçu un token dans le storage
+            chrome.storage.local.get(['authToken'], (result) => {
+              if (result.authToken && !authCompleted) {
+                console.log('Token trouvé dans le storage après fermeture');
+                authCompleted = true;
+                handleSuccessfulAuth(result.authToken);
+              } else if (!authCompleted) {
+                // Réactiver le bouton si pas de token
+                console.log('Pas de token trouvé, réactivation du bouton');
+                if (googleButton) {
+                  googleButton.disabled = false;
+                  googleButton.innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                    Continuer avec Google
+                  `;
+                }
+                showNotification('Connexion annulée', 'info');
               }
-            }
-          });
+            });
+          }
+        } catch (error) {
+          console.error('Erreur dans checkInterval:', error);
+          clearInterval(checkInterval);
         }
       }, 1000);
       
@@ -2330,11 +2345,13 @@ function proceedWithOAuth(authUrl, handleSuccessfulAuth, handleAuthError, google
         if (event.origin !== API_CONFIG.BASE_URL) return;
         
         if (event.data.type === 'oauth-success' && event.data.token) {
+          authCompleted = true;
           clearInterval(checkInterval);
           oauthWindow.close();
           window.removeEventListener('message', handleOAuthMessage);
           handleSuccessfulAuth(event.data.token);
         } else if (event.data.type === 'oauth-error') {
+          authCompleted = true;
           clearInterval(checkInterval);
           oauthWindow.close();
           window.removeEventListener('message', handleOAuthMessage);
