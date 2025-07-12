@@ -127,19 +127,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     chrome.storage.local.get(['authToken'], async (result) => {
       if (result.authToken && request.flashcard) {
         try {
+          // Adapter le format pour le backend qui attend front/back
+          const flashcardData = {
+            front: request.flashcard.originalText,
+            back: request.flashcard.translatedText,
+            category: request.flashcard.folder || 'default',
+            difficulty: request.flashcard.difficulty === 'normal' ? 1 : 
+                       request.flashcard.difficulty === 'hard' ? 3 : 0
+          };
+          
           const response = await fetch('https://my-backend-api-cng7.onrender.com/api/flashcards', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${result.authToken}`
             },
-            body: JSON.stringify(request.flashcard)
+            body: JSON.stringify(flashcardData)
           });
           
           if (response.ok) {
             console.log('✅ Flashcard synchronisée avec le serveur');
           } else {
-            console.error('❌ Erreur lors de la synchronisation');
+            const error = await response.text();
+            console.error('❌ Erreur lors de la synchronisation:', error);
           }
         } catch (error) {
           console.error('❌ Erreur réseau:', error);

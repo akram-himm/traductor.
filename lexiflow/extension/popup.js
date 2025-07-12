@@ -3278,17 +3278,6 @@ function debugClickability() {
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🚀 DOMContentLoaded fired');
   
-  // Test basique : ajouter un événement de clic simple sur le bouton de connexion
-  const testButton = document.getElementById('loginButton');
-  if (testButton) {
-    console.log('✅ Login button found, adding test click handler');
-    testButton.addEventListener('click', () => {
-      console.log('🎯 TEST CLICK: Login button clicked!');
-      alert('Button clicked! If you see this, clicks are working.');
-    });
-  } else {
-    console.error('❌ Login button not found!');
-  }
   
   try {
     await loadData();
@@ -3439,15 +3428,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
     
-    // Test de clic global pour déboguer
-    document.addEventListener('click', (e) => {
-      console.log('🖱️ Click detected on:', e.target, {
-        tagName: e.target.tagName,
-        id: e.target.id,
-        className: e.target.className,
-        parent: e.target.parentElement
-      });
-    }, true);
     
     // Actions globales
     document.addEventListener('click', (e) => {
@@ -3726,6 +3706,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Car cela peut être juste un problème temporaire de connexion
     if (error.message && !error.message.includes('token')) {
       console.log('Erreur non critique, continuons sans notification');
+    }
+  }
+});
+
+// Écouter les changements dans chrome.storage pour mettre à jour l'UI
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (namespace === 'local' && changes.flashcards) {
+    console.log('📌 Flashcards mises à jour dans storage');
+    if (changes.flashcards.newValue) {
+      flashcards = changes.flashcards.newValue;
+      console.log(`🔄 Mise à jour: ${flashcards.length} flashcards`);
+      // Rafraîchir l'affichage si on est sur l'onglet flashcards
+      const activeTab = document.querySelector('.tab-content.active');
+      if (activeTab && activeTab.id === 'flashcards') {
+        renderFlashcards();
+      }
+      // Mettre à jour les stats
+      updateStats();
     }
   }
 });
