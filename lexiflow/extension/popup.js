@@ -6,6 +6,7 @@ let isAddingFlashcard = false; // Flag pour éviter les conflits lors de l'ajout
 let flashcardsBackup = []; // Backup pour éviter la perte de données
 let lastAuthCheck = 0; // Pour éviter de vérifier l'auth trop souvent
 let oauthTimeoutId = null; // Pour stocker le timeout OAuth
+let isFlippingCard = false; // Pour éviter le rafraîchissement lors du flip
 
 // Générateur d'UUID simple pour les flashcards
 function generateUUID() {
@@ -395,7 +396,12 @@ function flipCard(cardId) {
     // Mettre à jour les statistiques de révision
     card.reviews = (card.reviews || 0) + 1;
     card.lastReview = new Date().toISOString();
+    
+    // Marquer qu'on est en train de flip une carte
+    isFlippingCard = true;
     saveFlashcards();
+    // Réinitialiser le flag après un court délai
+    setTimeout(() => { isFlippingCard = false; }, 100);
   }
 }
 
@@ -3766,10 +3772,14 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     if (changes.flashcards.newValue) {
       flashcards = changes.flashcards.newValue;
       console.log(`🔄 Mise à jour: ${flashcards.length} flashcards`);
-      // Rafraîchir l'affichage si on est sur l'onglet flashcards
-      const activeTab = document.querySelector('.tab-content.active');
-      if (activeTab && activeTab.id === 'flashcards') {
-        updateFlashcards();
+      
+      // Ne pas rafraîchir si on est juste en train de flip une carte
+      if (!isFlippingCard) {
+        // Rafraîchir l'affichage si on est sur l'onglet flashcards
+        const activeTab = document.querySelector('.tab-content.active');
+        if (activeTab && activeTab.id === 'flashcards') {
+          updateFlashcards();
+        }
       }
       // Mettre à jour les stats
       updateStats();
