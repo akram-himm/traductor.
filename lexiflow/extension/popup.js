@@ -3254,11 +3254,45 @@ function switchTab(tabName) {
   if (tabName === 'flashcards') updateFlashcards();
 }
 
+// Fonction pour vérifier si les éléments sont cliquables
+function debugClickability() {
+  console.log('🔍 Vérification de la cliquabilité des éléments...');
+  
+  // Vérifier le bouton de connexion
+  const loginButton = document.getElementById('loginButton');
+  if (loginButton) {
+    console.log('Login button:', {
+      exists: true,
+      onclick: loginButton.onclick ? 'defined' : 'undefined',
+      disabled: loginButton.disabled,
+      style: loginButton.style.cssText
+    });
+  }
+  
+  // Vérifier tous les boutons
+  const allButtons = document.querySelectorAll('button');
+  console.log(`Total buttons found: ${allButtons.length}`);
+  
+  // Vérifier s'il y a des éléments qui bloquent
+  const allElements = document.querySelectorAll('*');
+  allElements.forEach(el => {
+    const zIndex = window.getComputedStyle(el).zIndex;
+    if (zIndex && zIndex !== 'auto' && parseInt(zIndex) > 1000) {
+      console.warn('Element with high z-index:', el, zIndex);
+    }
+  });
+}
+
 // Event listeners principaux
 document.addEventListener('DOMContentLoaded', async () => {
+  console.log('🚀 DOMContentLoaded fired');
+  
   try {
     await loadData();
     await initUI();
+    
+    // Déboguer après un court délai
+    setTimeout(debugClickability, 1000);
     
     // Debug: Vérifier les flashcards au démarrage
     console.log('🚀 Démarrage - Flashcards chargées:', flashcards.length);
@@ -3401,6 +3435,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
       }
     }
+    
+    // Test de clic global pour déboguer
+    document.addEventListener('click', (e) => {
+      console.log('🖱️ Click detected on:', e.target, {
+        tagName: e.target.tagName,
+        id: e.target.id,
+        className: e.target.className,
+        parent: e.target.parentElement
+      });
+    }, true);
     
     // Actions globales
     document.addEventListener('click', (e) => {
