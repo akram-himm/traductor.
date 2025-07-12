@@ -1535,8 +1535,8 @@ function updateFlashcards() {
     // Event listeners pour ouvrir/fermer les dossiers
     container.querySelectorAll('.flashcard-language-folder .folder-header').forEach(header => {
       header.addEventListener('click', (e) => {
-        // Ne pas déclencher si on clique sur un bouton
-        if (e.target.closest('button')) return;
+        // Ne pas déclencher si on clique sur un bouton ou une flashcard
+        if (e.target.closest('button') || e.target.closest('.flashcard')) return;
         
         const folder = header.closest('.flashcard-language-folder');
         const key = folder.dataset.key;
