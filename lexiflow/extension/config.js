@@ -3,6 +3,21 @@ const API_CONFIG = {
   // URL du backend - Utiliser Render ou localhost
   BASE_URL: 'https://my-backend-api-cng7.onrender.com', // Backend sur Render
   
+  // Fonction pour réveiller le serveur
+  wakeUpServer: async function() {
+    try {
+      const response = await fetch(this.BASE_URL + '/api/auth/verify', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      console.log('🚀 Serveur réveillé:', response.ok);
+      return response.ok;
+    } catch (error) {
+      console.log('⏳ Réveil du serveur en cours...');
+      return false;
+    }
+  },
+  
   // Endpoints
   ENDPOINTS: {
     // Auth

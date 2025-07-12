@@ -2366,6 +2366,16 @@ function handleOAuthLogin(provider) {
   const timestamp = Date.now();
   const authUrl = `${API_CONFIG.BASE_URL}/api/auth/${provider}?prompt=select_account&max_age=0&t=${timestamp}`;
   
+  // Afficher un message de chargement
+  if (googleButton) {
+    googleButton.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 16px; height: 16px; border: 2px solid #f3f3f3; border-top: 2px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        <span>Connexion en cours...</span>
+      </div>
+    `;
+  }
+  
   // Ouvrir dans une fenêtre popup
   chrome.windows.create({
     url: authUrl,
@@ -3330,6 +3340,12 @@ function debugClickability() {
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🚀 DOMContentLoaded fired');
   
+  // Réveiller le serveur dès le chargement
+  if (API_CONFIG && API_CONFIG.wakeUpServer) {
+    API_CONFIG.wakeUpServer().catch(() => {
+      console.log('⏰ Tentative de réveil du serveur...');
+    });
+  }
   
   try {
     await loadData();
