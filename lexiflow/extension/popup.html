@@ -88,8 +88,9 @@
             text-align: center;
             color: white;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
             flex-shrink: 0;
+            z-index: 100;
         }
         
         .header::before {
@@ -1225,7 +1226,8 @@
 <body>
     <div class="header">
         <div class="header-content">
-            <div style="position: absolute; top: 10px; right: 10px; z-index: 10; display: flex; align-items: center; gap: 10px;">
+            <div style="position: absolute; top: 10px; right: 10px; z-index: 10;">
+                <div style="display: flex; align-items: center; gap: 10px; position: relative;">
                 <!-- Quota indicator -->
                 <div id="quotaIndicator" style="
                     display: none;
@@ -1265,14 +1267,14 @@
                 <div id="userMenu" style="
                     display: none;
                     position: absolute;
-                    top: 100%;
+                    top: 45px;
                     right: 0;
-                    margin-top: 8px;
                     background: white;
                     border-radius: 12px;
                     box-shadow: 0 10px 25px rgba(0,0,0,0.15);
                     min-width: 200px;
-                    overflow: hidden;
+                    max-height: 300px;
+                    overflow: visible;
                     z-index: 1000;
                 ">
                     <div style="padding: 16px; border-bottom: 1px solid #e5e7eb;">
@@ -1317,6 +1319,7 @@
                             <span>Déconnexion</span>
                         </button>
                     </div>
+                </div>
                 </div>
             </div>
             <div class="logo">🌐</div>
