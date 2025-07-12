@@ -183,9 +183,19 @@ const flashcardsAPI = {
   },
   
   async create(flashcardData) {
+    // Adapter le format pour le backend qui attend front/back
+    const adaptedData = {
+      front: flashcardData.originalText || flashcardData.front,
+      back: flashcardData.translatedText || flashcardData.back,
+      category: flashcardData.folder || flashcardData.category || 'General',
+      difficulty: flashcardData.difficulty === 'normal' ? 0 : 
+                 flashcardData.difficulty === 'hard' ? 3 : 
+                 flashcardData.difficulty === 'medium' ? 1 : 0
+    };
+    
     return await apiRequest(API_CONFIG.ENDPOINTS.FLASHCARDS, {
       method: 'POST',
-      body: JSON.stringify(flashcardData)
+      body: JSON.stringify(adaptedData)
     });
   },
   

@@ -77,7 +77,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
           if (chrome.notifications && chrome.notifications.create) {
             chrome.notifications.create({
               type: 'basic',
-              iconUrl: chrome.runtime.getURL('icon-128.png'),
+              iconUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
               title: 'Connexion réussie!',
               message: 'Vous êtes maintenant connecté à LexiFlow.'
             }, () => {
@@ -94,7 +94,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         if (chrome.notifications && chrome.notifications.create) {
           chrome.notifications.create({
             type: 'basic',
-            iconUrl: chrome.runtime.getURL('popup.html'),
+            iconUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
             title: 'Erreur de connexion',
             message: error || 'Une erreur est survenue'
           }, () => {

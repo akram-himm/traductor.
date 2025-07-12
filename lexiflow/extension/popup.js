@@ -5,6 +5,7 @@ let flashcards = [];
 let isAddingFlashcard = false; // Flag pour éviter les conflits lors de l'ajout
 let flashcardsBackup = []; // Backup pour éviter la perte de données
 let lastAuthCheck = 0; // Pour éviter de vérifier l'auth trop souvent
+let oauthTimeoutId = null; // Pour stocker le timeout OAuth
 
 // Générateur d'UUID simple pour les flashcards
 function generateUUID() {
@@ -2343,7 +2344,7 @@ function handleOAuthLogin(provider) {
   }
   
   // Timeout pour réactiver le bouton en cas d'échec
-  const timeoutId = setTimeout(() => {
+  oauthTimeoutId = setTimeout(() => {
     console.error('Timeout OAuth - La connexion prend trop de temps');
     if (googleButton) {
       googleButton.disabled = false;
@@ -2369,7 +2370,10 @@ function handleOAuthLogin(provider) {
     top: Math.round((screen.height - 700) / 2)
   }, (window) => {
     if (chrome.runtime.lastError) {
-      clearTimeout(timeoutId);
+      if (oauthTimeoutId) {
+        clearTimeout(oauthTimeoutId);
+        oauthTimeoutId = null;
+      }
       console.error('Erreur chrome.windows.create:', chrome.runtime.lastError);
       showNotification('Impossible d\'ouvrir la page de connexion', 'error');
       
@@ -2395,7 +2399,10 @@ function handleOAuthLogin(provider) {
   // Fonction pour gérer la connexion réussie
   const handleSuccessfulAuth = async (token) => {
     // Annuler le timeout
-    clearTimeout(timeoutId);
+    if (oauthTimeoutId) {
+      clearTimeout(oauthTimeoutId);
+      oauthTimeoutId = null;
+    }
     
     if (!token) {
       showNotification('Erreur: Token manquant', 'error');
@@ -2465,7 +2472,10 @@ function handleOAuthLogin(provider) {
   // Fonction pour gérer les erreurs
   const handleAuthError = (error) => {
     // Annuler le timeout
-    clearTimeout(timeoutId);
+    if (oauthTimeoutId) {
+      clearTimeout(oauthTimeoutId);
+      oauthTimeoutId = null;
+    }
     
     console.error('Erreur OAuth:', error);
     showNotification(`Erreur de connexion: ${error}`, 'error');
@@ -2743,6 +2753,25 @@ function showUserMenu(user) {
   // Gérer les boutons du menu
   const switchAccountBtn = document.getElementById('switchAccountBtn');
   const logoutBtn = document.getElementById('logoutBtn');
+  
+  // Ajouter les effets hover aux boutons
+  if (switchAccountBtn) {
+    switchAccountBtn.addEventListener('mouseenter', () => {
+      switchAccountBtn.style.background = '#f3f4f6';
+    });
+    switchAccountBtn.addEventListener('mouseleave', () => {
+      switchAccountBtn.style.background = 'none';
+    });
+  }
+  
+  if (logoutBtn) {
+    logoutBtn.addEventListener('mouseenter', () => {
+      logoutBtn.style.background = '#fee2e2';
+    });
+    logoutBtn.addEventListener('mouseleave', () => {
+      logoutBtn.style.background = 'none';
+    });
+  }
   
   // Gérer le changement de compte
   if (switchAccountBtn) {
@@ -3752,6 +3781,12 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'oauth-success' && message.token) {
     console.log('Message OAuth reçu avec token');
+    
+    // Annuler le timeout OAuth s'il existe
+    if (oauthTimeoutId) {
+      clearTimeout(oauthTimeoutId);
+      oauthTimeoutId = null;
+    }
     
     // Sauvegarder le token
     chrome.storage.local.set({ authToken: message.token }, async () => {
