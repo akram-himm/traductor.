@@ -2732,64 +2732,39 @@ function showUserMenu(user) {
     switchAccountBtn.onclick = async () => {
       // Sauvegarder les données de l'utilisateur actuel avant de se déconnecter
       const currentUser = await authAPI.getCurrentUser();
-    if (currentUser && currentUser.id) {
-      const userId = currentUser.id;
+      if (currentUser && currentUser.id) {
+        const userId = currentUser.id;
+        
+        // Sauvegarder les flashcards et traductions par utilisateur
+        const userDataKey = `userData_${userId}`;
+        const userData = {
+          flashcards: flashcards,
+          translations: translations,
+          targetLanguage: targetLanguage,
+          lastSaved: new Date().toISOString()
+        };
+        
+        // Sauvegarder dans chrome.storage.local
+        chrome.storage.local.set({ [userDataKey]: userData }, () => {
+          console.log(`Données sauvegardées pour l'utilisateur ${userId}`);
+        });
+      }
       
-      // Sauvegarder les flashcards et traductions par utilisateur
-      const userDataKey = `userData_${userId}`;
-      const userData = {
-        flashcards: flashcards,
-        translations: translations,
-        targetLanguage: targetLanguage,
-        lastSaved: new Date().toISOString()
-      };
+      // Se déconnecter
+      await authAPI.logout();
+      menu.style.display = 'none';
       
-      // Sauvegarder dans chrome.storage.local
-      chrome.storage.local.set({ [userDataKey]: userData }, () => {
-        console.log(`Données sauvegardées pour l'utilisateur ${userId}`);
-      });
-    }
-    
-    // Se déconnecter
-    await authAPI.logout();
-    menu.remove();
-    
-    // NE PAS nettoyer toutes les données, juste réinitialiser les variables actuelles
-    flashcards = [];
-    translations = [];
-    
-    // Réinitialiser l'UI
-    resetUIAfterLogout();
-    
-    // Ouvrir directement la fenêtre de connexion Google
-    setTimeout(() => {
-      handleOAuthLogin('google');
-    }, 500);
-  });
-  
-  // Gérer la déconnexion
-  document.getElementById('logoutBtn').addEventListener('click', async () => {
-    // Sauvegarder les données de l'utilisateur avant la déconnexion
-    const currentUser = await authAPI.getCurrentUser();
-    if (currentUser) {
-      const userId = currentUser.id || currentUser._id;
+      // NE PAS nettoyer toutes les données, juste réinitialiser les variables actuelles
+      flashcards = [];
+      translations = [];
       
-      // Sauvegarder les données par utilisateur
-      const userDataKey = `userData_${userId}`;
-      const userData = {
-        flashcards: flashcards,
-        translations: translations,
-        targetLanguage: targetLanguage,
-        lastSaved: new Date().toISOString()
-      };
+      // Réinitialiser l'UI
+      resetUIAfterLogout();
       
-      chrome.storage.local.set({ [userDataKey]: userData }, () => {
-        console.log(`Données sauvegardées pour l'utilisateur ${userId} avant déconnexion`);
-      });
-    }
-    
-      // Ouvrir la page OAuth avec prompt=select_account
-      handleOAuthLogin('google');
+      // Ouvrir directement la fenêtre de connexion Google
+      setTimeout(() => {
+        handleOAuthLogin('google');
+      }, 500);
     };
   }
   
@@ -3254,6 +3229,15 @@ function switchTab(tabName) {
   if (tabName === 'flashcards') updateFlashcards();
 }
 
+// Gestionnaire d'erreurs global
+window.addEventListener('error', (e) => {
+  console.error('❌ Global error:', e.message, e.filename, e.lineno, e.colno);
+});
+
+window.addEventListener('unhandledrejection', (e) => {
+  console.error('❌ Unhandled promise rejection:', e.reason);
+});
+
 // Fonction pour vérifier si les éléments sont cliquables
 function debugClickability() {
   console.log('🔍 Vérification de la cliquabilité des éléments...');
@@ -3273,6 +3257,13 @@ function debugClickability() {
   const allButtons = document.querySelectorAll('button');
   console.log(`Total buttons found: ${allButtons.length}`);
   
+  // Vérifier les onglets
+  const navTabs = document.querySelectorAll('.nav-tab');
+  console.log(`Nav tabs found: ${navTabs.length}`);
+  navTabs.forEach(tab => {
+    console.log('Tab:', tab.textContent.trim(), 'has onclick:', !!tab.onclick);
+  });
+  
   // Vérifier s'il y a des éléments qui bloquent
   const allElements = document.querySelectorAll('*');
   allElements.forEach(el => {
@@ -3286,6 +3277,18 @@ function debugClickability() {
 // Event listeners principaux
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🚀 DOMContentLoaded fired');
+  
+  // Test basique : ajouter un événement de clic simple sur le bouton de connexion
+  const testButton = document.getElementById('loginButton');
+  if (testButton) {
+    console.log('✅ Login button found, adding test click handler');
+    testButton.addEventListener('click', () => {
+      console.log('🎯 TEST CLICK: Login button clicked!');
+      alert('Button clicked! If you see this, clicks are working.');
+    });
+  } else {
+    console.error('❌ Login button not found!');
+  }
   
   try {
     await loadData();
