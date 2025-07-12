@@ -49,7 +49,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.url) {
     // Vérifier si c'est notre URL de callback OAuth
     if (tab.url.includes('my-backend-api-cng7.onrender.com/oauth-success.html') ||
-        tab.url.includes('my-backend-api-cng7.onrender.com/oauth-error.html')) {
+        tab.url.includes('my-backend-api-cng7.onrender.com/oauth-error.html') ||
+        tab.url.includes('my-backend-api-cng7.onrender.com/oauth-intermediate.html')) {
       
       // Extraire le token de l'URL
       const url = new URL(tab.url);
