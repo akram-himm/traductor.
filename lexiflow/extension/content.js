@@ -19,6 +19,15 @@ let translationTimeout = null;
 let lastTranslation = null;
 let languageMenuOpen = false;
 
+// Générateur d'UUID pour les flashcards
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 // Charger les paramètres au démarrage
 loadSettings();
 
@@ -666,16 +675,23 @@ function createFlashcard(front, back, language) {
   try {
     console.log('💾 Creating flashcard:', { front, back, language, autoSave: userSettings.autoSaveToFlashcards });
     
+    // Créer la flashcard avec le format cohérent avec popup.js
     const flashcard = {
-      id: Date.now(),
+      id: generateUUID(), // Utiliser UUID au lieu de Date.now()
       front: front.substring(0, 100),
       back: back.substring(0, 100),
-      language,
+      text: front.substring(0, 100), // Champs attendus par popup.js
+      translation: back.substring(0, 100),
+      sourceLanguage: 'auto',
+      targetLanguage: language,
+      language: language, // Garder pour compatibilité
       created: new Date().toISOString(),
+      lastModified: new Date().toISOString(), // Pour la fusion
       folder: 'default',
       reviews: 0,
       lastReview: null,
-      difficulty: 'normal'
+      difficulty: 'normal',
+      synced: false // Marquer comme non synchronisé
     };
     
     chrome.storage.local.get({ flashcards: [], authToken: null }, (data) => {
@@ -687,16 +703,7 @@ function createFlashcard(front, back, language) {
       );
       
       if (!exists) {
-        // Ajouter en utilisant le format correct (compatible avec popup.js)
-        const newFlashcard = {
-          ...flashcard,
-          text: front,  // Ajouter les champs attendus par popup.js
-          translation: back,
-          sourceLanguage: 'auto',
-          targetLanguage: language
-        };
-        
-        flashcards.unshift(newFlashcard); // Ajouter au début comme dans popup.js
+        flashcards.unshift(flashcard); // Ajouter au début comme dans popup.js
         chrome.storage.local.set({ flashcards }, () => {
           console.log('✅ Flashcard saved locally');
           
