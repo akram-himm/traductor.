@@ -1,5 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const passport = require('passport');
 const User = require('../models/User');
 const router = express.Router();
 
@@ -100,6 +101,61 @@ router.post('/login', async (req, res) => {
     console.error('Error in /login route:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
+});
+
+// Route OAuth Google - Initier la connexion
+router.get('/google', (req, res, next) => {
+  // Extraire les paramètres de l'URL
+  const prompt = req.query.prompt || 'consent';
+  const maxAge = req.query.max_age;
+  
+  // Options pour Passport
+  const authOptions = {
+    scope: ['profile', 'email'],
+    prompt: prompt
+  };
+  
+  // Ajouter max_age si fourni
+  if (maxAge !== undefined) {
+    authOptions.maxAge = maxAge;
+  }
+  
+  // Log pour debug
+  console.log('OAuth options:', authOptions);
+  
+  passport.authenticate('google', authOptions)(req, res, next);
+});
+
+// Route OAuth Google - Callback
+router.get('/google/callback', 
+  passport.authenticate('google', { session: false }),
+  (req, res) => {
+    try {
+      // Générer le token JWT
+      const token = jwt.sign(
+        { 
+          id: req.user.id, 
+          email: req.user.email,
+          googleId: req.user.googleId 
+        },
+        process.env.JWT_SECRET || 'your-secret-key',
+        { expiresIn: '30d' }
+      );
+
+      // Rediriger vers la page de succès avec le token
+      res.redirect(`${process.env.FRONTEND_URL || 'https://my-backend-api-cng7.onrender.com'}/oauth-success.html?token=${token}`);
+    } catch (error) {
+      console.error('Erreur OAuth callback:', error);
+      res.redirect(`${process.env.FRONTEND_URL || 'https://my-backend-api-cng7.onrender.com'}/oauth-error.html?error=Authentication%20failed`);
+    }
+  }
+);
+
+// Route de déconnexion
+router.post('/logout', (req, res) => {
+  // En mode JWT, on n'a pas vraiment besoin de faire quelque chose côté serveur
+  // Le client doit simplement supprimer le token
+  res.json({ message: 'Déconnexion réussie' });
 });
 
 module.exports = router;

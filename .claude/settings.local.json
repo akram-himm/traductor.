@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(node:*)",
+      "Bash(claude update)",
+      "Bash(sudo:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(chrome:*)",
+      "Bash(mv:*)",
+      "Bash(mkdir:*)",
+      "Bash(rm:*)",
+      "Bash(git clone:*)",
+      "Bash(git add:*)",
+      "Bash(cat:*)",
+      "Bash(git rm:*)",
+      "Bash(chmod:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(curl:*)",
+      "Bash(npm ls:*)",
+      "Bash(cd /home/akram/Bureau/traductor/lexiflow/backend)",
+      "Bash(node -e \"console.log(''Current directory:'', process.cwd()); console.log(''NODE_ENV:'', process.env.NODE_ENV);\")",
+      "Bash(npm start:*)",
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(export TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjAwZTM2YzAxLWJhMGQtNDgzNy1iNTUwLWUyODc3YjkzNTljZCIsImlhdCI6MTc1MTk5MDY3OSwiZXhwIjoxNzU0NTgyNjc5fQ.r2VymSAM2k2yBxU54WpRKqgpjmYKE2Ffo2Q_zDu2Fjg\")",
+      "Bash(./test-auth.sh:*)",
+      "Bash(./create_env.sh)",
+      "Bash(sed:*)",
+      "Bash(cp:*)",
+      "Bash(awk:*)",
+      "Bash(npx acorn:*)",
+      "Bash(./commit-backend-changes.sh:*)",
+      "Bash(touch:*)"
+    ],
+    "deny": []
+  }
+}
