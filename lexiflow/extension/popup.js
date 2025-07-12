@@ -2342,11 +2342,18 @@ function handleOAuthLogin(provider) {
   const timestamp = Date.now();
   const authUrl = `${API_CONFIG.BASE_URL}/api/auth/${provider}?prompt=select_account&max_age=0&t=${timestamp}`;
   
-  // Ouvrir dans un nouvel onglet
-  chrome.tabs.create({ url: authUrl }, (tab) => {
+  // Ouvrir dans une fenêtre popup
+  chrome.windows.create({
+    url: authUrl,
+    type: 'popup',
+    width: 500,
+    height: 700,
+    left: Math.round((screen.width - 500) / 2),
+    top: Math.round((screen.height - 700) / 2)
+  }, (window) => {
     if (chrome.runtime.lastError) {
       clearTimeout(timeoutId);
-      console.error('Erreur chrome.tabs.create:', chrome.runtime.lastError);
+      console.error('Erreur chrome.windows.create:', chrome.runtime.lastError);
       showNotification('Impossible d\'ouvrir la page de connexion', 'error');
       
       // Réactiver le bouton
@@ -2360,7 +2367,7 @@ function handleOAuthLogin(provider) {
       return;
     }
     
-    console.log('Onglet OAuth ouvert:', tab.id);
+    console.log('Fenêtre OAuth ouverte:', window.id);
     
     // Fermer le modal si tout va bien
     if (loginModal) {
@@ -2406,14 +2413,14 @@ function handleOAuthLogin(provider) {
             // Sauvegarder l'ID de l'utilisateur actuel
             localStorage.setItem('lastUserId', currentUserId);
             
-            // Nettoyer toutes les données locales pour partir sur une base propre
-            console.log('🧽 Nettoyage des données locales...');
-            flashcards = [];
-            translations = [];
-            localStorage.removeItem('flashcards');
-            localStorage.removeItem('translations');
-            localStorage.removeItem('lastDisconnectedUserId');
-            chrome.storage.local.remove(['flashcards', 'translations']);
+            // NE PAS nettoyer les données locales - on veut les préserver !
+            console.log('📌 Préservation des données locales...');
+            // flashcards = [];  // COMMENTÉ pour préserver les flashcards
+            // translations = []; // COMMENTÉ pour préserver l'historique
+            // localStorage.removeItem('flashcards');
+            // localStorage.removeItem('translations');
+            localStorage.removeItem('lastDisconnectedUserId'); // OK de nettoyer ça
+            // chrome.storage.local.remove(['flashcards', 'translations']); // COMMENTÉ
             
             // NE PAS appeler syncFlashcardsAfterLogin ici - updateUIAfterLogin s'en charge
             console.log(`👤 updateUIAfterLogin va gérer la synchronisation`);
@@ -2666,83 +2673,65 @@ function updateUIAfterLogin(user) {
 function showUserMenu(user) {
   console.log('showUserMenu appelé avec:', user);
   
-  // Supprimer tout menu existant
-  const existingMenu = document.querySelector('.user-menu');
-  if (existingMenu) {
-    existingMenu.remove();
+  // Utiliser le menu existant dans le HTML
+  const menu = document.getElementById('userMenu');
+  if (!menu) {
+    console.error('Menu utilisateur non trouvé dans le HTML');
+    return;
   }
   
-  const menu = document.createElement('div');
-  menu.className = 'user-menu';
-  menu.style.cssText = `
-    position: fixed;
-    top: 60px;
-    right: 10px;
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 12px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    z-index: 1000;
-    min-width: 200px;
-  `;
+  // Mettre à jour les informations de l'utilisateur
+  const userEmail = document.getElementById('userEmail');
+  const userPlan = document.getElementById('userPlan');
   
-  const isPremium = user.subscriptionStatus === 'premium';
-  menu.innerHTML = `
-    <div style="padding: 8px; border-bottom: 1px solid #e5e7eb; margin-bottom: 8px;">
-      <div style="font-weight: 600; color: #1f2937;">${user.name || user.email}</div>
-      <div style="font-size: 12px; color: ${isPremium ? '#f5576c' : '#6b7280'}; margin-top: 4px;">
-        ${isPremium ? '⭐ Compte Premium' : '📦 Compte Gratuit'}
-      </div>
-    </div>
-    <div style="padding: 8px; font-size: 13px; color: #4b5563;">
-      <div>Flashcards: ${user.flashcardsCount || 0}/${isPremium ? 200 : 50}</div>
-    </div>
-    <button id="switchAccountBtn" style="
-      width: 100%;
-      padding: 8px;
-      margin-top: 8px;
-      background: #3b82f6;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.2s;
-    " onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
-      🔄 Changer de compte
-    </button>
-    <button id="logoutBtn" style="
-      width: 100%;
-      padding: 8px;
-      margin-top: 8px;
-      background: #ef4444;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.2s;
-    " onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
-      🚪 Se déconnecter
-    </button>
-  `;
+  if (userEmail) {
+    userEmail.textContent = user.email || user.name || 'Utilisateur';
+  }
   
-  document.body.appendChild(menu);
+  if (userPlan) {
+    const isPremium = user.subscriptionStatus === 'premium';
+    userPlan.textContent = isPremium ? '⭐ Compte Premium' : '📦 Compte Gratuit';
+    userPlan.style.color = isPremium ? '#f5576c' : '#6b7280';
+  }
+  
+  // Afficher le menu
+  menu.style.display = 'block';
+  
+  // Mettre à jour le bouton de connexion
+  const loginButton = document.getElementById('loginButton');
+  if (loginButton) {
+    loginButton.innerHTML = `
+      <span style="font-size: 12px;">👤</span>
+      <span>${user.name || user.email || 'Mon compte'}</span>
+    `;
+    
+    // Ajouter l'événement pour basculer le menu
+    loginButton.onclick = (e) => {
+      e.stopPropagation();
+      const isVisible = menu.style.display === 'block';
+      menu.style.display = isVisible ? 'none' : 'block';
+    };
+  }
   
   // Fermer le menu en cliquant ailleurs
   const closeMenu = (e) => {
-    if (!menu.contains(e.target) && e.target.id !== 'loginButton') {
-      menu.remove();
-      document.removeEventListener('click', closeMenu);
+    if (!menu.contains(e.target) && !loginButton.contains(e.target)) {
+      menu.style.display = 'none';
     }
   };
+  
+  // Ajouter l'événement pour fermer le menu
   setTimeout(() => document.addEventListener('click', closeMenu), 100);
   
+  // Gérer les boutons du menu
+  const switchAccountBtn = document.getElementById('switchAccountBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  
   // Gérer le changement de compte
-  document.getElementById('switchAccountBtn').addEventListener('click', async () => {
-    // Sauvegarder les données de l'utilisateur actuel avant de se déconnecter
-    const currentUser = await authAPI.getCurrentUser();
+  if (switchAccountBtn) {
+    switchAccountBtn.onclick = async () => {
+      // Sauvegarder les données de l'utilisateur actuel avant de se déconnecter
+      const currentUser = await authAPI.getCurrentUser();
     if (currentUser && currentUser.id) {
       const userId = currentUser.id;
       
@@ -2799,28 +2788,55 @@ function showUserMenu(user) {
       });
     }
     
-    await authAPI.logout();
-    menu.remove();
-    showNotification('Déconnexion réussie', 'success');
-    resetUIAfterLogout();
-  });
+      // Ouvrir la page OAuth avec prompt=select_account
+      handleOAuthLogin('google');
+    };
+  }
+  
+  // Gérer la déconnexion
+  if (logoutBtn) {
+    logoutBtn.onclick = async () => {
+      menu.style.display = 'none';
+      await authAPI.logout();
+      showNotification('Déconnexion réussie', 'success');
+      resetUIAfterLogout();
+    };
+  }
 }
 
 // Fonction pour réinitialiser l'UI après déconnexion
 function resetUIAfterLogout() {
   console.log('🚪 Resetting UI after logout...');
   
-  // 1. Clear only authentication-related data, NOT user content
-  // Clear translations (keep this as it's language preference)
+  // IMPORTANT: Sauvegarder les données de l'utilisateur avant de déconnecter
+  const currentUserId = localStorage.getItem('lastUserId');
+  if (currentUserId && (flashcards.length > 0 || translations.length > 0)) {
+    const userDataKey = `userData_${currentUserId}`;
+    const userData = {
+      flashcards: [...flashcards], // Copie des flashcards
+      translations: [...translations], // Copie des traductions
+      targetLanguage: targetLanguage,
+      lastSaved: new Date().toISOString()
+    };
+    
+    // Sauvegarder dans chrome.storage.local
+    chrome.storage.local.set({ [userDataKey]: userData }, () => {
+      console.log(`💾 Données sauvegardées pour l'utilisateur ${currentUserId}`);
+      console.log(`   - ${flashcards.length} flashcards`);
+      console.log(`   - ${translations.length} traductions`);
+    });
+  }
+  
+  // Maintenant on peut nettoyer les variables globales
   translations = [];
   localStorage.removeItem('translations');
   chrome.storage.local.remove(['translations']);
   
-  // Nettoyer les flashcards car elles appartiennent au compte connecté
+  // Nettoyer les flashcards de la mémoire active seulement
   flashcards = [];
   localStorage.removeItem('flashcards');
   chrome.storage.local.remove(['flashcards']);
-  console.log('🧽 Flashcards nettoyées après déconnexion');
+  console.log('🧹 Variables globales nettoyées (données sauvegardées)');
   
   // Clear folder directions
   localStorage.removeItem('folderDirections');

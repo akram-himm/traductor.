@@ -1260,6 +1260,64 @@
                     <span style="font-size: 12px;">👤</span>
                     <span>Sign in</span>
                 </button>
+                
+                <!-- Menu utilisateur caché par défaut -->
+                <div id="userMenu" style="
+                    display: none;
+                    position: absolute;
+                    top: 100%;
+                    right: 0;
+                    margin-top: 8px;
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+                    min-width: 200px;
+                    overflow: hidden;
+                    z-index: 1000;
+                ">
+                    <div style="padding: 16px; border-bottom: 1px solid #e5e7eb;">
+                        <div id="userEmail" style="font-size: 13px; color: #374151; font-weight: 600; word-break: break-all;"></div>
+                        <div id="userPlan" style="font-size: 11px; color: #6b7280; margin-top: 4px;">Free Plan</div>
+                    </div>
+                    <div style="padding: 8px;">
+                        <button id="switchAccountBtn" style="
+                            width: 100%;
+                            text-align: left;
+                            padding: 10px 16px;
+                            background: none;
+                            border: none;
+                            cursor: pointer;
+                            font-size: 13px;
+                            color: #374151;
+                            border-radius: 8px;
+                            transition: all 0.2s;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        " onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">
+                            <span>🔄</span>
+                            <span>Changer de compte</span>
+                        </button>
+                        <button id="logoutBtn" style="
+                            width: 100%;
+                            text-align: left;
+                            padding: 10px 16px;
+                            background: none;
+                            border: none;
+                            cursor: pointer;
+                            font-size: 13px;
+                            color: #dc2626;
+                            border-radius: 8px;
+                            transition: all 0.2s;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        " onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='none'">
+                            <span>🚪</span>
+                            <span>Déconnexion</span>
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="logo">🌐</div>
             <div class="title">
