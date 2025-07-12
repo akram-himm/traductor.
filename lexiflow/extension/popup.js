@@ -2582,6 +2582,20 @@ function showUserMenu(user) {
     <div style="padding: 8px; font-size: 13px; color: #4b5563;">
       <div>Flashcards: ${user.flashcardsCount || 0}/${isPremium ? 200 : 50}</div>
     </div>
+    <button id="switchAccountBtn" style="
+      width: 100%;
+      padding: 8px;
+      margin-top: 8px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    " onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
+      🔄 Changer de compte
+    </button>
     <button id="logoutBtn" style="
       width: 100%;
       padding: 8px;
@@ -2593,8 +2607,8 @@ function showUserMenu(user) {
       font-size: 13px;
       cursor: pointer;
       transition: all 0.2s;
-    ">
-      Se déconnecter
+    " onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+      🚪 Se déconnecter
     </button>
   `;
   
@@ -2608,6 +2622,30 @@ function showUserMenu(user) {
     }
   };
   setTimeout(() => document.addEventListener('click', closeMenu), 100);
+  
+  // Gérer le changement de compte
+  document.getElementById('switchAccountBtn').addEventListener('click', async () => {
+    // D'abord se déconnecter
+    await authAPI.logout();
+    menu.remove();
+    
+    // Nettoyer les données locales
+    flashcards = [];
+    translations = [];
+    localStorage.removeItem('flashcards');
+    localStorage.removeItem('translations');
+    localStorage.removeItem('lastUserId');
+    localStorage.removeItem('lastDisconnectedUserId');
+    chrome.storage.local.remove(['flashcards', 'translations']);
+    
+    // Réinitialiser l'UI
+    resetUIAfterLogout();
+    
+    // Ouvrir directement la fenêtre de connexion Google
+    setTimeout(() => {
+      handleOAuthLogin('google');
+    }, 500);
+  });
   
   // Gérer la déconnexion
   document.getElementById('logoutBtn').addEventListener('click', async () => {
