@@ -739,9 +739,15 @@ async function createFlashcardFromHistory(original, translated, language) {
       
       // Sauvegarder localement pour l'utilisation hors ligne
       localStorage.setItem('flashcards', JSON.stringify(flashcards));
-      chrome.storage.local.set({ flashcards });
       
-      // Mettre à jour l'interface
+      // Marquer qu'on est en train d'ajouter pour éviter le rafraîchissement
+      isAddingFlashcard = true;
+      chrome.storage.local.set({ flashcards }, () => {
+        // Réinitialiser le flag après la sauvegarde
+        setTimeout(() => { isAddingFlashcard = false; }, 100);
+      });
+      
+      // Mettre à jour l'interface manuellement
       updateFlashcards();
       updateStats();
       
@@ -750,8 +756,7 @@ async function createFlashcardFromHistory(original, translated, language) {
   } catch (error) {
     console.error('❌ Erreur lors de la création:', error);
     showNotification('Erreur lors de la création de la flashcard', 'error');
-  } finally {
-    // Réinitialiser le flag
+    // Réinitialiser le flag en cas d'erreur
     isAddingFlashcard = false;
   }
 }
@@ -3789,8 +3794,8 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
       flashcards = changes.flashcards.newValue;
       console.log(`🔄 Mise à jour: ${flashcards.length} flashcards`);
       
-      // Ne pas rafraîchir si on est juste en train de flip une carte
-      if (!isFlippingCard) {
+      // Ne pas rafraîchir si on est en train de flip une carte ou d'ajouter une flashcard
+      if (!isFlippingCard && !isAddingFlashcard) {
         // Rafraîchir l'affichage si on est sur l'onglet flashcards
         const activeTab = document.querySelector('.tab-content.active');
         if (activeTab && activeTab.id === 'flashcards') {
