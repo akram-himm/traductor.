@@ -3802,13 +3802,16 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
       flashcards = changes.flashcards.newValue;
       console.log(`🔄 Mise à jour: ${flashcards.length} flashcards`);
       
-      // Ne pas rafraîchir si on est en train de flip une carte ou d'ajouter une flashcard
+      // Ne pas rafraîchir si on est en train de flip une carte ou d'ajouter une flashcard depuis le popup
       if (!isFlippingCard && !isAddingFlashcard) {
         // Rafraîchir l'affichage si on est sur l'onglet flashcards
         const activeTab = document.querySelector('.tab-content.active');
         if (activeTab && activeTab.id === 'flashcards') {
+          console.log('🔄 Rafraîchissement de l\'affichage des flashcards');
           updateFlashcards();
         }
+      } else {
+        console.log('⏸️ Rafraîchissement ignoré:', { isFlippingCard, isAddingFlashcard });
       }
       // Mettre à jour les stats
       updateStats();
@@ -3818,6 +3821,29 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 
 // Écouter les messages du background script pour OAuth
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // Gérer l'ajout de flashcard depuis content.js
+  if (message.action === 'flashcardAdded' && message.flashcard) {
+    console.log('📥 Nouvelle flashcard reçue du content script');
+    
+    // Forcer le rafraîchissement après un court délai pour contourner isAddingFlashcard
+    setTimeout(() => {
+      // Recharger les flashcards depuis le storage
+      chrome.storage.local.get({ flashcards: [] }, (data) => {
+        flashcards = data.flashcards || [];
+        console.log(`📊 ${flashcards.length} flashcards chargées depuis le storage`);
+        
+        // Forcer la mise à jour de l'affichage
+        const activeTab = document.querySelector('.tab-content.active');
+        if (activeTab && activeTab.id === 'flashcards') {
+          console.log('🔄 Forçage du rafraîchissement pour content.js');
+          updateFlashcards();
+        }
+        updateStats();
+      });
+    }, 200); // Délai pour s'assurer que le storage est bien mis à jour
+    return;
+  }
+  
   if (message.type === 'oauth-success' && message.token) {
     console.log('Message OAuth reçu avec token');
     

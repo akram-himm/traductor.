@@ -721,6 +721,12 @@ function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
         chrome.storage.local.set({ flashcards }, () => {
           console.log('✅ Flashcard saved locally');
           
+          // Notifier le popup de mettre à jour l'affichage
+          chrome.runtime.sendMessage({
+            action: 'flashcardAdded',
+            flashcard: flashcard
+          });
+          
           // Envoyer un message au background pour synchroniser avec le serveur
           if (data.authToken) {
             chrome.runtime.sendMessage({

@@ -35,7 +35,9 @@
       "Bash(npx acorn:*)",
       "Bash(./commit-backend-changes.sh:*)",
       "Bash(touch:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(git branch:*)",
+      "Bash(git restore:*)"
     ],
     "deny": []
   }
