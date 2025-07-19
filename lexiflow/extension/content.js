@@ -18,7 +18,6 @@ let isTranslating = false;
 let translationTimeout = null;
 let lastTranslation = null;
 let languageMenuOpen = false;
-let saveTranslationDebounce = null;
 
 // Générateur d'UUID pour les flashcards
 function generateUUID() {
@@ -643,25 +642,18 @@ async function saveTranslation(original, translated, fromLang, toLang) {
   try {
     if (fromLang === toLang) return;
     
-    // Annuler le debounce précédent s'il existe
-    if (saveTranslationDebounce) {
-      clearTimeout(saveTranslationDebounce);
-    }
+    const translation = {
+      id: Date.now(),
+      original: original.substring(0, 100),
+      translated: translated.substring(0, 100),
+      fromLang,
+      toLang,
+      timestamp: new Date().toISOString(),
+      url: window.location.href,
+      domain: window.location.hostname
+    };
     
-    // Utiliser un debounce pour éviter les sauvegardes multiples rapprochées
-    saveTranslationDebounce = setTimeout(() => {
-      const translation = {
-        id: Date.now(),
-        original: original.substring(0, 100),
-        translated: translated.substring(0, 100),
-        fromLang,
-        toLang,
-        timestamp: new Date().toISOString(),
-        url: window.location.href,
-        domain: window.location.hostname
-      };
-      
-      chrome.storage.local.get({ translations: [] }, (result) => {
+    chrome.storage.local.get({ translations: [] }, (result) => {
       const translations = result.translations || [];
       
       // Vérifier si une traduction identique existe déjà récemment (dans les 10 dernières)
@@ -687,7 +679,6 @@ async function saveTranslation(original, translated, fromLang, toLang) {
         console.log('⏭️ Translation already exists in recent history, skipping');
       }
     });
-    }, 300); // Debounce de 300ms
   } catch (error) {
     console.error('❌ Save error:', error);
   }
