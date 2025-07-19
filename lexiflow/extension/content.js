@@ -728,8 +728,8 @@ function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
               flashcard: {
                 originalText: front,
                 translatedText: back,
-                sourceLanguage: 'auto',
-                targetLanguage: language,
+                sourceLanguage: sourceLanguage,
+                targetLanguage: targetLanguage,
                 folder: 'default',
                 difficulty: 'normal'
               }
