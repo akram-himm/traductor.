@@ -204,7 +204,7 @@ function deleteHistoryFolder(key) {
 
 function deleteFlashcardFolder(key) {
   const cards = flashcards.filter(card => {
-    const fromLang = detectLanguage(card.front);
+    const fromLang = card.sourceLanguage && card.sourceLanguage !== 'auto' ? card.sourceLanguage : detectLanguage(card.front);
     const toLang = card.language;
     const langs = [fromLang, toLang].sort();
     return `${langs[0]}_${langs[1]}` === key;
@@ -213,7 +213,7 @@ function deleteFlashcardFolder(key) {
   if (!confirm(`Delete ${cards.length} flashcards from this folder?`)) return;
   
   flashcards = flashcards.filter(card => {
-    const fromLang = detectLanguage(card.front);
+    const fromLang = card.sourceLanguage && card.sourceLanguage !== 'auto' ? card.sourceLanguage : detectLanguage(card.front);
     const toLang = card.language;
     const langs = [fromLang, toLang].sort();
     return `${langs[0]}_${langs[1]}` !== key;
@@ -227,7 +227,7 @@ function deleteFlashcardFolder(key) {
 
 function practiceFolder(key) {
   const cards = flashcards.filter(card => {
-    const fromLang = detectLanguage(card.front);
+    const fromLang = card.sourceLanguage && card.sourceLanguage !== 'auto' ? card.sourceLanguage : detectLanguage(card.front);
     const toLang = card.language;
     const langs = [fromLang, toLang].sort();
     return `${langs[0]}_${langs[1]}` === key;
@@ -260,7 +260,7 @@ function exportFolderData(key, type) {
     });
   } else if (type === 'flashcards') {
     data.flashcards = flashcards.filter(card => {
-      const fromLang = detectLanguage(card.front);
+      const fromLang = card.sourceLanguage && card.sourceLanguage !== 'auto' ? card.sourceLanguage : detectLanguage(card.front);
       const toLang = card.language;
       const langs = [fromLang, toLang].sort();
       return `${langs[0]}_${langs[1]}` === key;
@@ -352,7 +352,7 @@ function swapFlashcardLanguages(key, currentDirection) {
   if (grid) {
     const cards = flashcards.map(card => ({
       ...card,
-      fromLang: detectLanguage(card.front),
+      fromLang: card.sourceLanguage && card.sourceLanguage !== 'auto' ? card.sourceLanguage : detectLanguage(card.front),
       toLang: card.language
     })).filter(card => {
       const langs = [card.fromLang, card.toLang].sort();
@@ -473,7 +473,10 @@ function startPracticeMode() {
   const languages = new Set();
   flashcards.forEach(card => {
     languages.add(card.language);
-    languages.add(detectLanguage(card.front));
+    const sourceLang = card.sourceLanguage && card.sourceLanguage !== 'auto' 
+      ? card.sourceLanguage 
+      : detectLanguage(card.front);
+    languages.add(sourceLang);
   });
   
   container.innerHTML = `
@@ -543,10 +546,12 @@ function launchPractice() {
   const limit = parseInt(document.getElementById('practiceLimit')?.value || '20');
   
   // Filtrer les cartes par langue
-  let practiceCards = flashcards.filter(card => 
-    selectedLangs.includes(card.language) || 
-    selectedLangs.includes(detectLanguage(card.front))
-  );
+  let practiceCards = flashcards.filter(card => {
+    const sourceLang = card.sourceLanguage && card.sourceLanguage !== 'auto' 
+      ? card.sourceLanguage 
+      : detectLanguage(card.front);
+    return selectedLangs.includes(card.language) || selectedLangs.includes(sourceLang);
+  });
   
   if (practiceCards.length === 0) {
     showNotification('Aucune carte pour les langues sélectionnées!', 'warning');
@@ -1463,7 +1468,10 @@ function updateFlashcards() {
     
     if (!frontText || !backText) return;
     
-    const fromLang = detectLanguage(frontText);
+    // Utiliser sourceLanguage si disponible, sinon détecter
+    const fromLang = card.sourceLanguage && card.sourceLanguage !== 'auto' 
+      ? card.sourceLanguage 
+      : detectLanguage(frontText);
     const toLang = targetLang;
     
     if (fromLang === toLang) return;
@@ -1770,7 +1778,7 @@ function displayPracticeMode() {
           <div class="practice-prompt">Traduisez ce mot/phrase:</div>
           <div class="practice-word">"${escapeHtml(currentCard.front)}"</div>
           <div class="flashcard-lang">
-            <span>${getFlagEmoji(detectLanguage(currentCard.front))}</span>
+            <span>${getFlagEmoji(currentCard.sourceLanguage && currentCard.sourceLanguage !== 'auto' ? currentCard.sourceLanguage : detectLanguage(currentCard.front))}</span>
             <span>→</span>
             <span>${getFlagEmoji(currentCard.language)}</span>
           </div>

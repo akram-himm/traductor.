@@ -18,6 +18,7 @@ let isTranslating = false;
 let translationTimeout = null;
 let lastTranslation = null;
 let languageMenuOpen = false;
+let saveTranslationDebounce = null;
 
 // Générateur d'UUID pour les flashcards
 function generateUUID() {
@@ -308,7 +309,7 @@ async function handleTranslation(event) {
       console.log('🔍 Checking auto save:', userSettings.autoSaveToFlashcards);
       if (userSettings.autoSaveToFlashcards) {
         console.log('✅ Sauvegarde automatique activée, création de la flashcard...');
-        createFlashcard(selectedText, result.translatedText, userSettings.targetLanguage);
+        createFlashcard(selectedText, result.translatedText, userSettings.targetLanguage, result.detectedLanguage);
       }
     }
     
@@ -415,7 +416,7 @@ function displayTranslation(bubble, result) {
     
     if (saveBtn) {
       saveBtn.addEventListener('click', () => {
-        createFlashcard(selectedText, translatedText, userSettings.targetLanguage);
+        createFlashcard(selectedText, translatedText, userSettings.targetLanguage, lastTranslation?.detectedLanguage || 'auto');
       });
     }
     
@@ -642,38 +643,60 @@ async function saveTranslation(original, translated, fromLang, toLang) {
   try {
     if (fromLang === toLang) return;
     
-    const translation = {
-      id: Date.now(),
-      original: original.substring(0, 100),
-      translated: translated.substring(0, 100),
-      fromLang,
-      toLang,
-      timestamp: new Date().toISOString(),
-      url: window.location.href,
-      domain: window.location.hostname
-    };
+    // Annuler le debounce précédent s'il existe
+    if (saveTranslationDebounce) {
+      clearTimeout(saveTranslationDebounce);
+    }
     
-    chrome.storage.local.get({ translations: [] }, (result) => {
+    // Utiliser un debounce pour éviter les sauvegardes multiples rapprochées
+    saveTranslationDebounce = setTimeout(() => {
+      const translation = {
+        id: Date.now(),
+        original: original.substring(0, 100),
+        translated: translated.substring(0, 100),
+        fromLang,
+        toLang,
+        timestamp: new Date().toISOString(),
+        url: window.location.href,
+        domain: window.location.hostname
+      };
+      
+      chrome.storage.local.get({ translations: [] }, (result) => {
       const translations = result.translations || [];
-      translations.unshift(translation);
       
-      if (translations.length > 1000) {
-        translations.splice(1000);
+      // Vérifier si une traduction identique existe déjà récemment (dans les 10 dernières)
+      const recentTranslations = translations.slice(0, 10);
+      const isDuplicate = recentTranslations.some(t => 
+        t.original === translation.original && 
+        t.translated === translation.translated &&
+        t.fromLang === translation.fromLang &&
+        t.toLang === translation.toLang
+      );
+      
+      if (!isDuplicate) {
+        translations.unshift(translation);
+        
+        if (translations.length > 1000) {
+          translations.splice(1000);
+        }
+        
+        chrome.storage.local.set({ translations }, () => {
+          console.log('✅ Translation saved');
+        });
+      } else {
+        console.log('⏭️ Translation already exists in recent history, skipping');
       }
-      
-      chrome.storage.local.set({ translations }, () => {
-        console.log('✅ Translation saved');
-      });
     });
+    }, 300); // Debounce de 300ms
   } catch (error) {
     console.error('❌ Save error:', error);
   }
 }
 
 // Créer une flashcard
-function createFlashcard(front, back, language) {
+function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
   try {
-    console.log('💾 Creating flashcard:', { front, back, language, autoSave: userSettings.autoSaveToFlashcards });
+    console.log('💾 Creating flashcard:', { front, back, targetLanguage, sourceLanguage, autoSave: userSettings.autoSaveToFlashcards });
     
     // Créer la flashcard avec le format cohérent avec popup.js
     const flashcard = {
@@ -682,9 +705,9 @@ function createFlashcard(front, back, language) {
       back: back.substring(0, 100),
       text: front.substring(0, 100), // Champs attendus par popup.js
       translation: back.substring(0, 100),
-      sourceLanguage: 'auto',
-      targetLanguage: language,
-      language: language, // Garder pour compatibilité
+      sourceLanguage: sourceLanguage, // Utiliser la langue détectée
+      targetLanguage: targetLanguage,
+      language: targetLanguage, // Garder pour compatibilité
       created: new Date().toISOString(),
       lastModified: new Date().toISOString(), // Pour la fusion
       folder: 'default',
