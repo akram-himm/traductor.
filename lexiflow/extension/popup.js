@@ -3001,11 +3001,12 @@ async function syncFlashcardsAfterLogin(mergeMode = false) {
   // Si on est en mode fusion, on garde les flashcards locales
   let localFlashcards = mergeMode ? [...flashcards] : [];
   
-  // Si on n'est pas en mode fusion, on nettoie
+  // Si on n'est pas en mode fusion, on nettoie SEULEMENT les flashcards (pas les traductions!)
   if (!mergeMode) {
     flashcards = [];
     localStorage.removeItem('flashcards');
     chrome.storage.local.remove(['flashcards']);
+    // NE PAS toucher aux traductions - elles restent locales
   }
   
   // Vérifier que flashcardsAPI est disponible
@@ -3796,25 +3797,46 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Écouter les changements dans chrome.storage pour mettre à jour l'UI
 chrome.storage.onChanged.addListener((changes, namespace) => {
-  if (namespace === 'local' && changes.flashcards) {
-    console.log('📌 Flashcards mises à jour dans storage');
-    if (changes.flashcards.newValue) {
-      flashcards = changes.flashcards.newValue;
-      console.log(`🔄 Mise à jour: ${flashcards.length} flashcards`);
-      
-      // Ne pas rafraîchir si on est en train de flip une carte ou d'ajouter une flashcard depuis le popup
-      if (!isFlippingCard && !isAddingFlashcard) {
-        // Rafraîchir l'affichage si on est sur l'onglet flashcards
-        const activeTab = document.querySelector('.tab-content.active');
-        if (activeTab && activeTab.id === 'flashcards') {
-          console.log('🔄 Rafraîchissement de l\'affichage des flashcards');
-          updateFlashcards();
+  if (namespace === 'local') {
+    // Gérer les changements de flashcards
+    if (changes.flashcards) {
+      console.log('📌 Flashcards mises à jour dans storage');
+      if (changes.flashcards.newValue) {
+        flashcards = changes.flashcards.newValue;
+        console.log(`🔄 Mise à jour: ${flashcards.length} flashcards`);
+        
+        // Ne pas rafraîchir si on est en train de flip une carte ou d'ajouter une flashcard depuis le popup
+        if (!isFlippingCard && !isAddingFlashcard) {
+          // Rafraîchir l'affichage si on est sur l'onglet flashcards
+          const activeTab = document.querySelector('.tab-content.active');
+          if (activeTab && activeTab.id === 'flashcards') {
+            console.log('🔄 Rafraîchissement de l\'affichage des flashcards');
+            updateFlashcards();
+          }
+        } else {
+          console.log('⏸️ Rafraîchissement ignoré:', { isFlippingCard, isAddingFlashcard });
         }
-      } else {
-        console.log('⏸️ Rafraîchissement ignoré:', { isFlippingCard, isAddingFlashcard });
+        // Mettre à jour les stats
+        updateStats();
       }
-      // Mettre à jour les stats
-      updateStats();
+    }
+    
+    // Gérer les changements de traductions
+    if (changes.translations) {
+      console.log('📌 Traductions mises à jour dans storage');
+      if (changes.translations.newValue) {
+        translations = changes.translations.newValue;
+        console.log(`🔄 Mise à jour: ${translations.length} traductions`);
+        
+        // Rafraîchir l'affichage si on est sur l'onglet historique
+        const activeTab = document.querySelector('.tab-content.active');
+        if (activeTab && activeTab.id === 'history') {
+          console.log('🔄 Rafraîchissement de l\'affichage de l\'historique');
+          updateHistory();
+        }
+        // Mettre à jour les stats
+        updateStats();
+      }
     }
   }
 });
@@ -3841,6 +3863,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         updateStats();
       });
     }, 200); // Délai pour s'assurer que le storage est bien mis à jour
+    return;
+  }
+  
+  // Gérer l'ajout de traduction depuis content.js
+  if (message.action === 'translationAdded' && message.translation) {
+    console.log('📥 Nouvelle traduction reçue du content script');
+    
+    // Recharger les traductions depuis le storage
+    setTimeout(() => {
+      chrome.storage.local.get({ translations: [] }, (data) => {
+        translations = data.translations || [];
+        console.log(`📊 ${translations.length} traductions chargées depuis le storage`);
+        
+        // Forcer la mise à jour de l'affichage
+        const activeTab = document.querySelector('.tab-content.active');
+        if (activeTab && activeTab.id === 'history') {
+          console.log('🔄 Forçage du rafraîchissement de l\'historique');
+          updateHistory();
+        }
+        updateStats();
+      });
+    }, 200);
     return;
   }
   

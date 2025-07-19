@@ -674,6 +674,12 @@ async function saveTranslation(original, translated, fromLang, toLang) {
         
         chrome.storage.local.set({ translations }, () => {
           console.log('✅ Translation saved');
+          
+          // Notifier le popup de mettre à jour l'historique
+          chrome.runtime.sendMessage({
+            action: 'translationAdded',
+            translation: translation
+          });
         });
       } else {
         console.log('⏭️ Translation already exists in recent history, skipping');
