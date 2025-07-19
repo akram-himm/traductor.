@@ -7,6 +7,8 @@ let flashcardsBackup = []; // Backup pour éviter la perte de données
 let lastAuthCheck = 0; // Pour éviter de vérifier l'auth trop souvent
 let oauthTimeoutId = null; // Pour stocker le timeout OAuth
 let isFlippingCard = false; // Pour éviter le rafraîchissement lors du flip
+let updateHistoryDebounce = null; // Pour éviter les rafraîchissements multiples
+let updateFlashcardsDebounce = null; // Pour éviter les rafraîchissements multiples
 
 // Générateur d'UUID simple pour les flashcards
 function generateUUID() {
@@ -3810,8 +3812,12 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
           // Rafraîchir l'affichage si on est sur l'onglet flashcards
           const activeTab = document.querySelector('.tab-content.active');
           if (activeTab && activeTab.id === 'flashcards') {
-            console.log('🔄 Rafraîchissement de l\'affichage des flashcards');
-            updateFlashcards();
+            // Debounce pour éviter les rafraîchissements multiples
+            if (updateFlashcardsDebounce) clearTimeout(updateFlashcardsDebounce);
+            updateFlashcardsDebounce = setTimeout(() => {
+              console.log('🔄 Rafraîchissement de l\'affichage des flashcards');
+              updateFlashcards();
+            }, 100);
           }
         } else {
           console.log('⏸️ Rafraîchissement ignoré:', { isFlippingCard, isAddingFlashcard });
@@ -3831,8 +3837,12 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         // Rafraîchir l'affichage si on est sur l'onglet historique
         const activeTab = document.querySelector('.tab-content.active');
         if (activeTab && activeTab.id === 'history') {
-          console.log('🔄 Rafraîchissement de l\'affichage de l\'historique');
-          updateHistory();
+          // Debounce pour éviter les rafraîchissements multiples
+          if (updateHistoryDebounce) clearTimeout(updateHistoryDebounce);
+          updateHistoryDebounce = setTimeout(() => {
+            console.log('🔄 Rafraîchissement de l\'affichage de l\'historique');
+            updateHistory();
+          }, 100);
         }
         // Mettre à jour les stats
         updateStats();
@@ -3847,46 +3857,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'flashcardAdded' && message.flashcard) {
     console.log('📥 Nouvelle flashcard reçue du content script');
     
-    // Forcer le rafraîchissement après un court délai pour contourner isAddingFlashcard
+    // Le listener chrome.storage.onChanged s'occupera de la mise à jour
+    // On force juste updateStats au cas où on n'est pas sur l'onglet flashcards
     setTimeout(() => {
-      // Recharger les flashcards depuis le storage
-      chrome.storage.local.get({ flashcards: [] }, (data) => {
-        flashcards = data.flashcards || [];
-        console.log(`📊 ${flashcards.length} flashcards chargées depuis le storage`);
-        
-        // Forcer la mise à jour de l'affichage
-        const activeTab = document.querySelector('.tab-content.active');
-        if (activeTab && activeTab.id === 'flashcards') {
-          console.log('🔄 Forçage du rafraîchissement pour content.js');
-          updateFlashcards();
-        }
-        updateStats();
-      });
-    }, 200); // Délai pour s'assurer que le storage est bien mis à jour
+      updateStats();
+    }, 100);
     return;
   }
   
-  // Gérer l'ajout de traduction depuis content.js
-  if (message.action === 'translationAdded' && message.translation) {
-    console.log('📥 Nouvelle traduction reçue du content script');
-    
-    // Recharger les traductions depuis le storage
-    setTimeout(() => {
-      chrome.storage.local.get({ translations: [] }, (data) => {
-        translations = data.translations || [];
-        console.log(`📊 ${translations.length} traductions chargées depuis le storage`);
-        
-        // Forcer la mise à jour de l'affichage
-        const activeTab = document.querySelector('.tab-content.active');
-        if (activeTab && activeTab.id === 'history') {
-          console.log('🔄 Forçage du rafraîchissement de l\'historique');
-          updateHistory();
-        }
-        updateStats();
-      });
-    }, 200);
-    return;
-  }
   
   if (message.type === 'oauth-success' && message.token) {
     console.log('Message OAuth reçu avec token');
