@@ -37,7 +37,8 @@
       "Bash(touch:*)",
       "Bash(git reset:*)",
       "Bash(git branch:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(git revert:*)"
     ],
     "deny": []
   }
