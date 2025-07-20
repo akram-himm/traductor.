@@ -1462,6 +1462,8 @@ function updateFlashcards() {
   
   // Grouper par paires de langues
   const grouped = {};
+  console.log(`📊 Groupement de ${flashcards.length} flashcards`);
+  
   flashcards.forEach(card => {
     // Support des deux formats (ancien et nouveau)
     const frontText = card.front || card.text || card.originalText;
@@ -1476,14 +1478,19 @@ function updateFlashcards() {
       : detectLanguage(frontText);
     const toLang = targetLang;
     
+    // Log pour debug
+    console.log(`📝 Carte: "${frontText.substring(0, 20)}..." - Source: ${card.sourceLanguage || 'auto'} → ${fromLang}, Target: ${toLang}`);
+    
     if (fromLang === toLang) return;
     
-    const langs = [fromLang, toLang].sort();
-    const key = `${langs[0]}_${langs[1]}`;
+    // Créer une clé unique basée sur la direction réelle (pas triée)
+    // Ceci préserve les dossiers séparés pour EN→FR et FR→EN
+    const key = `${fromLang}_${toLang}`;
     
     if (!grouped[key]) {
       grouped[key] = {
-        langs: langs,
+        fromLang: fromLang,
+        toLang: toLang,
         cards: [],
         primaryDirection: `${fromLang}_${toLang}`,
         currentDirection: `${fromLang}_${toLang}`
@@ -1503,6 +1510,8 @@ function updateFlashcards() {
     grouped[key].cards.push(normalizedCard);
   });
   
+  console.log(`📁 Dossiers créés:`, Object.keys(grouped));
+  
   // Récupérer les directions sauvegardées
   const savedDirections = JSON.parse(localStorage.getItem('flashcardDirections') || '{}');
   
@@ -1514,7 +1523,8 @@ function updateFlashcards() {
     }
     
     const currentDirection = group.currentDirection || group.primaryDirection;
-    const [fromLang, toLang] = currentDirection.split('_');
+    const fromLang = group.fromLang;
+    const toLang = group.toLang;
     const totalCount = group.cards.length;
     
     html += `
@@ -2965,7 +2975,10 @@ async function syncFlashcardsAfterLogin(mergeMode = false) {
         back: card.translatedText || card.back,
         text: card.originalText || card.text,
         translation: card.translatedText || card.translation,
-        sourceLanguage: card.sourceLanguage || 'auto',
+        // IMPORTANT: Préserver sourceLanguage du serveur ou détecter intelligemment
+        sourceLanguage: card.sourceLanguage && card.sourceLanguage !== 'auto' 
+          ? card.sourceLanguage 
+          : (card.detectedLanguage || detectLanguage(card.originalText || card.front || card.text)),
         targetLanguage: card.targetLanguage || card.language || 'fr',
         language: card.targetLanguage || card.language || 'fr',
         context: card.context || '',
