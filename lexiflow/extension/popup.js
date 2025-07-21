@@ -208,8 +208,8 @@ function deleteFlashcardFolder(key) {
   const cards = flashcards.filter(card => {
     const fromLang = card.sourceLanguage && card.sourceLanguage !== 'auto' ? card.sourceLanguage : detectLanguage(card.front);
     const toLang = card.language;
-    const langs = [fromLang, toLang].sort();
-    return `${langs[0]}_${langs[1]}` === key;
+    // Pas de tri - utiliser l'ordre source->cible
+    return `${fromLang}_${toLang}` === key;
   });
   
   if (!confirm(`Delete ${cards.length} flashcards from this folder?`)) return;
@@ -217,8 +217,8 @@ function deleteFlashcardFolder(key) {
   flashcards = flashcards.filter(card => {
     const fromLang = card.sourceLanguage && card.sourceLanguage !== 'auto' ? card.sourceLanguage : detectLanguage(card.front);
     const toLang = card.language;
-    const langs = [fromLang, toLang].sort();
-    return `${langs[0]}_${langs[1]}` !== key;
+    // Pas de tri - utiliser l'ordre source->cible
+    return `${fromLang}_${toLang}` !== key;
   });
   
   saveFlashcards();
@@ -231,8 +231,8 @@ function practiceFolder(key) {
   const cards = flashcards.filter(card => {
     const fromLang = card.sourceLanguage && card.sourceLanguage !== 'auto' ? card.sourceLanguage : detectLanguage(card.front);
     const toLang = card.language;
-    const langs = [fromLang, toLang].sort();
-    return `${langs[0]}_${langs[1]}` === key;
+    // Pas de tri - utiliser l'ordre source->cible
+    return `${fromLang}_${toLang}` === key;
   });
   
   if (cards.length === 0) {
@@ -264,8 +264,8 @@ function exportFolderData(key, type) {
     data.flashcards = flashcards.filter(card => {
       const fromLang = card.sourceLanguage && card.sourceLanguage !== 'auto' ? card.sourceLanguage : detectLanguage(card.front);
       const toLang = card.language;
-      const langs = [fromLang, toLang].sort();
-      return `${langs[0]}_${langs[1]}` === key;
+      // Pas de tri - utiliser l'ordre source->cible
+      return `${fromLang}_${toLang}` === key;
     });
   }
   
@@ -357,8 +357,8 @@ function swapFlashcardLanguages(key, currentDirection) {
       fromLang: card.sourceLanguage && card.sourceLanguage !== 'auto' ? card.sourceLanguage : detectLanguage(card.front),
       toLang: card.language
     })).filter(card => {
-      const langs = [card.fromLang, card.toLang].sort();
-      return `${langs[0]}_${langs[1]}` === key;
+      // Pas de tri - utiliser l'ordre source->cible
+      return `${card.fromLang}_${card.toLang}` === key;
     });
     
     grid.innerHTML = renderFlashcards(cards, toLang, fromLang);
