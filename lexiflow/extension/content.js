@@ -103,7 +103,7 @@ async function translateText(text, targetLang = 'fr', sourceLang = 'auto') {
   // Si tout échoue, retourner le texte original
   return {
     translatedText: text,
-    detectedLanguage: sourceLang === 'auto' ? 'en' : sourceLang,
+    detectedLanguage: sourceLang === 'auto' ? detectLanguage(text) : sourceLang,
     confidence: 0
   };
 }
@@ -119,9 +119,11 @@ async function translateWithGoogleFree(text, targetLang, sourceLang) {
     const data = await response.json();
     
     if (data && data[0] && data[0][0]) {
+      const detectedLang = data[2] || (sourceLang === 'auto' ? detectLanguage(text) : sourceLang);
+      console.log(`🔍 Google Translate - Détecté: ${detectedLang} pour "${text.substring(0, 30)}..."`);
       return {
         translatedText: data[0][0][0],
-        detectedLanguage: data[2] || sourceLang,
+        detectedLanguage: detectedLang,
         confidence: 0.9
       };
     }
