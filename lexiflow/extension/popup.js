@@ -680,7 +680,7 @@ function copyTranslation(text) {
   });
 }
 
-async function createFlashcardFromHistory(original, translated, language) {
+async function createFlashcardFromHistory(original, translated, language, sourceLanguage = null) {
   // Vérifier si l'utilisateur est connecté
   const token = await authAPI.getToken();
   if (!token) {
@@ -712,7 +712,7 @@ async function createFlashcardFromHistory(original, translated, language) {
     const response = await flashcardsAPI.create({
       originalText: original,
       translatedText: translated,
-      sourceLanguage: 'auto',
+      sourceLanguage: sourceLanguage || detectLanguage(original),
       targetLanguage: language,
       folder: 'default',
       difficulty: 'normal'
@@ -726,7 +726,7 @@ async function createFlashcardFromHistory(original, translated, language) {
         back: translated,
         text: original,
         translation: translated,
-        sourceLanguage: 'auto',
+        sourceLanguage: sourceLanguage || detectLanguage(original),
         targetLanguage: language,
         language: language,
         created: response.flashcard.createdAt || new Date().toISOString(),
@@ -1238,7 +1238,7 @@ function updateRecentTranslations() {
           </div>
           <div class="translation-actions">
             <span class="translation-action" data-action="copyTranslation" data-text="${escapeHtml(t.translated)}">📋 Copier</span>
-            <span class="translation-action" data-action="createFlashcard" data-original="${escapeHtml(t.original)}" data-translated="${escapeHtml(t.translated)}" data-lang="${t.toLang}">💾 Flashcard</span>
+            <span class="translation-action" data-action="createFlashcard" data-original="${escapeHtml(t.original)}" data-translated="${escapeHtml(t.translated)}" data-lang="${t.toLang}" data-source-lang="${t.fromLang}">💾 Flashcard</span>
           </div>
         </div>
       </div>
@@ -1409,7 +1409,7 @@ function renderFolderTranslations(translations, fromLang, toLang) {
           </div>
           <div class="translation-actions">
             <span class="translation-action" data-action="copyTranslation" data-text="${escapeHtml(displayTranslated)}">📋</span>
-            <span class="translation-action" data-action="createFlashcard" data-original="${escapeHtml(displayOriginal)}" data-translated="${escapeHtml(displayTranslated)}" data-lang="${displayToLang}">💾</span>
+            <span class="translation-action" data-action="createFlashcard" data-original="${escapeHtml(displayOriginal)}" data-translated="${escapeHtml(displayTranslated)}" data-lang="${displayToLang}" data-source-lang="${displayFromLang}">💾</span>
             <span class="translation-action" data-action="deleteTranslation" data-id="${t.id}">🗑️</span>
           </div>
         </div>
@@ -2957,6 +2957,10 @@ async function syncFlashcardsAfterLogin(mergeMode = false) {
     
     if (response && response.flashcards && Array.isArray(response.flashcards)) {
       console.log(`☁️ ${response.flashcards.length} flashcards du serveur`);
+      // Debug: voir ce que le serveur retourne vraiment
+      if (response.flashcards.length > 0) {
+        console.log('🔍 Exemple de flashcard du serveur:', response.flashcards[0]);
+      }
       
       // Convertir les flashcards du serveur au bon format
       const serverFlashcards = response.flashcards.map(card => ({
@@ -3383,7 +3387,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             createFlashcardFromHistory(
               target.dataset.original,
               target.dataset.translated,
-              target.dataset.lang
+              target.dataset.lang,
+              target.dataset.sourceLang
             );
             break;
         }
@@ -3407,7 +3412,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             createFlashcardFromHistory(
               target.dataset.original,
               target.dataset.translated,
-              target.dataset.lang
+              target.dataset.lang,
+              target.dataset.sourceLang
             );
             break;
           case 'deleteTranslation':
