@@ -2974,10 +2974,10 @@ async function syncFlashcardsAfterLogin(mergeMode = false) {
       
       // Convertir les flashcards du serveur au bon format
       const serverFlashcards = response.flashcards.map(card => {
-        // Le backend ne stocke pas sourceLanguage, on doit le détecter
-        const frontText = card.originalText || card.front || card.text;
-        const sourceLang = card.sourceLanguage || detectLanguage(frontText);
-        const targetLang = card.targetLanguage || card.language || 'fr';
+        // Utiliser sourceLanguage du serveur maintenant qu'il est stocké
+        const frontText = card.front || card.originalText || card.text;
+        const sourceLang = card.sourceLanguage || 'auto';
+        const targetLang = card.language || card.targetLanguage || 'fr';
         
         return {
           id: card.id || generateUUID(), // Utiliser l'ID existant ou générer un nouveau

@@ -26,6 +26,11 @@ const Flashcard = sequelize.define('Flashcard', {
     type: DataTypes.STRING(5),
     allowNull: false
   },
+  sourceLanguage: {
+    type: DataTypes.STRING(5),
+    allowNull: true,
+    defaultValue: 'auto'
+  },
   folder: {
     type: DataTypes.STRING,
     defaultValue: 'default'

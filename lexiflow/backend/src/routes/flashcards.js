@@ -27,27 +27,60 @@ router.get('/', authMiddleware, async (req, res) => {
 // Créer une flashcard
 router.post('/', authMiddleware, async (req, res) => {
   try {
-    const { front, back, language } = req.body;
+    const { front, back, language, sourceLanguage, category, difficulty } = req.body;
 
-    // Simulate limit check
-    const limit = 50;
-
-    if (fakeFlashcardCount >= limit) {
-      return res.status(403).json({
-        error: `Limite atteinte ! Vous avez ${fakeFlashcardCount}/${limit} flashcards.`,
-        needPremium: true
+    // Vérification des champs requis
+    if (!front || !back || !language) {
+      return res.status(400).json({ 
+        error: 'Les champs front, back et language sont requis' 
       });
     }
 
-    // Simulate flashcard creation
-    fakeFlashcardCount++;
+    // Vérifier la limite
+    const currentCount = await Flashcard.count({
+      where: { userId: req.user.id }
+    });
+    const limit = req.user.isPremium ? 200 : 50;
+
+    if (currentCount >= limit) {
+      return res.status(403).json({
+        error: `Limite atteinte ! Vous avez ${currentCount}/${limit} flashcards.`,
+        needPremium: true,
+        currentCount,
+        limit
+      });
+    }
+
+    // Créer la flashcard dans la base de données
+    const flashcard = await Flashcard.create({
+      userId: req.user.id,
+      front,
+      back,
+      language,
+      sourceLanguage: sourceLanguage || 'auto',
+      folder: category || 'default',
+      difficulty: difficulty || 'normal'
+    });
+
+    // Mettre à jour le compteur de l'utilisateur
+    await req.user.update({ flashcardCount: currentCount + 1 });
 
     res.status(201).json({
-      flashcard: { id: fakeFlashcardCount, front, back, language },
-      count: fakeFlashcardCount,
+      flashcard: {
+        id: flashcard.id,
+        front: flashcard.front,
+        back: flashcard.back,
+        language: flashcard.language,
+        sourceLanguage: flashcard.sourceLanguage,
+        folder: flashcard.folder,
+        difficulty: flashcard.difficulty,
+        createdAt: flashcard.createdAt
+      },
+      count: currentCount + 1,
       limit
     });
   } catch (error) {
+    console.error('Erreur création flashcard:', error);
     res.status(500).json({ error: 'Erreur lors de la création de la flashcard' });
   }
 });
