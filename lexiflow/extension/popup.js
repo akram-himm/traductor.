@@ -708,8 +708,13 @@ async function createFlashcardFromHistory(original, translated, language, source
   
   try {
     // Envoyer directement au serveur
-    console.log('📤 Envoi de la flashcard au serveur...');
     const detectedSourceLang = sourceLanguage || detectLanguage(original);
+    console.log('📤 Envoi de la flashcard au serveur:', {
+      original,
+      translated,
+      sourceLanguage: detectedSourceLang,
+      targetLanguage: language
+    });
     const response = await flashcardsAPI.create({
       originalText: original,
       translatedText: translated,
@@ -728,7 +733,7 @@ async function createFlashcardFromHistory(original, translated, language, source
         back: translated,
         text: original,
         translation: translated,
-        sourceLanguage: sourceLanguage || detectLanguage(original),
+        sourceLanguage: detectedSourceLang, // Utiliser la langue déjà détectée
         targetLanguage: language,
         language: language,
         created: response.flashcard.createdAt || new Date().toISOString(),

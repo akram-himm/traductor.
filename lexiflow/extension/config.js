@@ -82,7 +82,14 @@ async function apiRequest(endpoint, options = {}) {
             throw new Error('Authentication required');
           }
           
-          const errorData = await response.json().catch(() => ({}));
+          const errorText = await response.text();
+          console.error('❌ Réponse erreur du serveur:', response.status, errorText);
+          let errorData = {};
+          try {
+            errorData = JSON.parse(errorText);
+          } catch (e) {
+            // Pas un JSON valide
+          }
           throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
         }
         
@@ -204,9 +211,7 @@ const flashcardsAPI = {
       back: flashcardData.translatedText || flashcardData.back,
       language: flashcardData.language || flashcardData.targetLanguage || 'fr',
       category: flashcardData.folder || flashcardData.category || 'General',
-      difficulty: flashcardData.difficulty === 'normal' ? 0 : 
-                 flashcardData.difficulty === 'hard' ? 3 : 
-                 flashcardData.difficulty === 'medium' ? 1 : 0
+      difficulty: flashcardData.difficulty || 'normal' // Le backend attend 'easy', 'normal', 'hard'
     };
     
     console.log('📤 Envoi flashcard au backend:', adaptedData);
