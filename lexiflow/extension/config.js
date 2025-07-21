@@ -209,6 +209,8 @@ const flashcardsAPI = {
                  flashcardData.difficulty === 'medium' ? 1 : 0
     };
     
+    console.log('📤 Envoi flashcard au backend:', adaptedData);
+    
     return await apiRequest(API_CONFIG.ENDPOINTS.FLASHCARDS, {
       method: 'POST',
       body: JSON.stringify(adaptedData)

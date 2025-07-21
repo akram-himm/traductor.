@@ -709,15 +709,13 @@ async function createFlashcardFromHistory(original, translated, language, source
   try {
     // Envoyer directement au serveur
     console.log('📤 Envoi de la flashcard au serveur...');
-    // HACK temporaire : stocker sourceLanguage dans le champ language avec un format spécial
     const detectedSourceLang = sourceLanguage || detectLanguage(original);
     const response = await flashcardsAPI.create({
       originalText: original,
       translatedText: translated,
       sourceLanguage: detectedSourceLang,
       targetLanguage: language,
-      // Stocker les deux langues dans language pour que le backend les préserve
-      language: `${detectedSourceLang}|${language}`,
+      language: language, // Le backend n'accepte qu'une langue simple
       folder: 'default',
       difficulty: 'normal'
     });
@@ -1717,15 +1715,14 @@ async function saveFlashcards() {
             continue;
           }
           
-          const sourceLang = card.sourceLanguage || 'auto';
+          const sourceLang = card.sourceLanguage || detectLanguage(originalText);
           const targetLang = card.targetLanguage || card.language || 'fr';
           const response = await flashcardsAPI.create({
             originalText: originalText.trim(),
             translatedText: translatedText.trim(),
             sourceLanguage: sourceLang,
             targetLanguage: targetLang,
-            // HACK: Stocker les deux langues dans language pour le backend
-            language: `${sourceLang}|${targetLang}`,
+            language: targetLang, // Le backend n'accepte qu'une langue simple
             folder: card.folder || 'default',
             difficulty: card.difficulty || 'normal'
           });
@@ -2972,15 +2969,10 @@ async function syncFlashcardsAfterLogin(mergeMode = false) {
       
       // Convertir les flashcards du serveur au bon format
       const serverFlashcards = response.flashcards.map(card => {
-        // HACK: Extraire sourceLanguage du champ language si il contient "|"
-        let sourceLang = card.sourceLanguage || 'auto';
-        let targetLang = card.targetLanguage || card.language || 'fr';
-        
-        if (card.language && card.language.includes('|')) {
-          const [source, target] = card.language.split('|');
-          sourceLang = source || sourceLang;
-          targetLang = target || targetLang;
-        }
+        // Le backend ne stocke pas sourceLanguage, on doit le détecter
+        const frontText = card.originalText || card.front || card.text;
+        const sourceLang = card.sourceLanguage || detectLanguage(frontText);
+        const targetLang = card.targetLanguage || card.language || 'fr';
         
         return {
           id: card.id || generateUUID(), // Utiliser l'ID existant ou générer un nouveau
