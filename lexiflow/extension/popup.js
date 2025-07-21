@@ -2974,17 +2974,19 @@ async function syncFlashcardsAfterLogin(mergeMode = false) {
       
       // Convertir les flashcards du serveur au bon format
       const serverFlashcards = response.flashcards.map(card => {
-        // Utiliser sourceLanguage du serveur maintenant qu'il est stocké
+        // Utiliser sourceLanguage du serveur ou détecter pour les anciennes flashcards
         const frontText = card.front || card.originalText || card.text;
-        const sourceLang = card.sourceLanguage || 'auto';
+        const sourceLang = card.sourceLanguage && card.sourceLanguage !== 'auto' 
+          ? card.sourceLanguage 
+          : detectLanguage(frontText);
         const targetLang = card.language || card.targetLanguage || 'fr';
         
         return {
           id: card.id || generateUUID(), // Utiliser l'ID existant ou générer un nouveau
-          front: card.originalText || card.front,
-          back: card.translatedText || card.back,
-          text: card.originalText || card.text,
-          translation: card.translatedText || card.translation,
+          front: card.front || card.originalText,
+          back: card.back || card.translatedText,
+          text: card.front || card.originalText || card.text,
+          translation: card.back || card.translatedText || card.translation,
           sourceLanguage: sourceLang,
           targetLanguage: targetLang,
           language: targetLang,

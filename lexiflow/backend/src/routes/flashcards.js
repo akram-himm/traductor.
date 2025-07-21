@@ -63,7 +63,9 @@ router.post('/', authMiddleware, async (req, res) => {
     });
 
     // Mettre à jour le compteur de l'utilisateur
-    await req.user.update({ flashcardCount: currentCount + 1 });
+    if (req.user && typeof req.user.update === 'function') {
+      await req.user.update({ flashcardCount: currentCount + 1 });
+    }
 
     res.status(201).json({
       flashcard: {
@@ -105,7 +107,9 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     const newCount = await Flashcard.count({
       where: { userId: req.user.id }
     });
-    await req.user.update({ flashcardCount: newCount });
+    if (req.user && typeof req.user.update === 'function') {
+      await req.user.update({ flashcardCount: newCount });
+    }
     
     res.json({ message: 'Flashcard supprimée', count: newCount });
   } catch (error) {
