@@ -709,11 +709,15 @@ async function createFlashcardFromHistory(original, translated, language, source
   try {
     // Envoyer directement au serveur
     console.log('📤 Envoi de la flashcard au serveur...');
+    // HACK temporaire : stocker sourceLanguage dans le champ language avec un format spécial
+    const detectedSourceLang = sourceLanguage || detectLanguage(original);
     const response = await flashcardsAPI.create({
       originalText: original,
       translatedText: translated,
-      sourceLanguage: sourceLanguage || detectLanguage(original),
+      sourceLanguage: detectedSourceLang,
       targetLanguage: language,
+      // Stocker les deux langues dans language pour que le backend les préserve
+      language: `${detectedSourceLang}|${language}`,
       folder: 'default',
       difficulty: 'normal'
     });
@@ -1713,11 +1717,15 @@ async function saveFlashcards() {
             continue;
           }
           
+          const sourceLang = card.sourceLanguage || 'auto';
+          const targetLang = card.targetLanguage || card.language || 'fr';
           const response = await flashcardsAPI.create({
             originalText: originalText.trim(),
             translatedText: translatedText.trim(),
-            sourceLanguage: card.sourceLanguage || 'auto',
-            targetLanguage: card.targetLanguage || card.language || 'fr',
+            sourceLanguage: sourceLang,
+            targetLanguage: targetLang,
+            // HACK: Stocker les deux langues dans language pour le backend
+            language: `${sourceLang}|${targetLang}`,
             folder: card.folder || 'default',
             difficulty: card.difficulty || 'normal'
           });
@@ -2963,29 +2971,41 @@ async function syncFlashcardsAfterLogin(mergeMode = false) {
       }
       
       // Convertir les flashcards du serveur au bon format
-      const serverFlashcards = response.flashcards.map(card => ({
-        id: card.id || generateUUID(), // Utiliser l'ID existant ou générer un nouveau
-        front: card.originalText || card.front,
-        back: card.translatedText || card.back,
-        text: card.originalText || card.text,
-        translation: card.translatedText || card.translation,
-        sourceLanguage: card.sourceLanguage || 'auto',
-        targetLanguage: card.targetLanguage || card.language || 'fr',
-        language: card.targetLanguage || card.language || 'fr',
-        context: card.context || '',
-        difficulty: card.difficulty || 'medium',
-        tags: card.tags || [],
-        folder: card.folder || 'default',
-        created: card.createdAt || card.created || new Date().toISOString(),
-        lastModified: card.lastModified || card.updatedAt || new Date().toISOString(),
-        createdAt: card.createdAt || card.created || new Date().toISOString(),
-        isFavorite: card.tags?.includes('favorite') || false,
-        reviewCount: card.reviewCount || 0,
-        lastReviewed: card.lastReviewed || null,
-        synced: true,
-        syncedWithServer: true,
-        serverId: card._id || card.id
-      }));
+      const serverFlashcards = response.flashcards.map(card => {
+        // HACK: Extraire sourceLanguage du champ language si il contient "|"
+        let sourceLang = card.sourceLanguage || 'auto';
+        let targetLang = card.targetLanguage || card.language || 'fr';
+        
+        if (card.language && card.language.includes('|')) {
+          const [source, target] = card.language.split('|');
+          sourceLang = source || sourceLang;
+          targetLang = target || targetLang;
+        }
+        
+        return {
+          id: card.id || generateUUID(), // Utiliser l'ID existant ou générer un nouveau
+          front: card.originalText || card.front,
+          back: card.translatedText || card.back,
+          text: card.originalText || card.text,
+          translation: card.translatedText || card.translation,
+          sourceLanguage: sourceLang,
+          targetLanguage: targetLang,
+          language: targetLang,
+          context: card.context || '',
+          difficulty: card.difficulty || 'medium',
+          tags: card.tags || [],
+          folder: card.folder || 'default',
+          created: card.createdAt || card.created || new Date().toISOString(),
+          lastModified: card.lastModified || card.updatedAt || new Date().toISOString(),
+          createdAt: card.createdAt || card.created || new Date().toISOString(),
+          isFavorite: card.tags?.includes('favorite') || false,
+          reviewCount: card.reviewCount || 0,
+          lastReviewed: card.lastReviewed || null,
+          synced: true,
+          syncedWithServer: true,
+          serverId: card._id || card.id
+        };
+      });
       
       if (mergeMode) {
         // FUSION : Utiliser un Map pour éviter les doublons par ID

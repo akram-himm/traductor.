@@ -198,10 +198,11 @@ const flashcardsAPI = {
   },
   
   async create(flashcardData) {
-    // Adapter le format pour le backend qui attend front/back
+    // Adapter le format pour le backend qui attend front/back/language
     const adaptedData = {
       front: flashcardData.originalText || flashcardData.front,
       back: flashcardData.translatedText || flashcardData.back,
+      language: flashcardData.language || flashcardData.targetLanguage || 'fr',
       category: flashcardData.folder || flashcardData.category || 'General',
       difficulty: flashcardData.difficulty === 'normal' ? 0 : 
                  flashcardData.difficulty === 'hard' ? 3 : 
