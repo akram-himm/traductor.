@@ -204,7 +204,7 @@ function deleteHistoryFolder(key) {
   });
 }
 
-function deleteFlashcardFolder(key) {
+async function deleteFlashcardFolder(key) {
   const cards = flashcards.filter(card => {
     const fromLang = card.sourceLanguage && card.sourceLanguage !== 'auto' ? card.sourceLanguage : detectLanguage(card.front);
     const toLang = card.language;
@@ -214,6 +214,30 @@ function deleteFlashcardFolder(key) {
   
   if (!confirm(`Delete ${cards.length} flashcards from this folder?`)) return;
   
+  // Supprimer sur le serveur si connecté
+  const token = await authAPI.getToken();
+  if (token) {
+    try {
+      // Supprimer toutes les cartes du dossier qui ont un serverId
+      const deletePromises = cards
+        .filter(card => card.serverId)
+        .map(card => 
+          fetch(`${API_BASE_URL}/flashcards/${card.serverId}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+        );
+      
+      await Promise.allSettled(deletePromises);
+    } catch (error) {
+      console.error('Erreur lors de la suppression sur le serveur:', error);
+      // Continuer même si l'erreur serveur
+    }
+  }
+  
+  // Supprimer localement
   flashcards = flashcards.filter(card => {
     const fromLang = card.sourceLanguage && card.sourceLanguage !== 'auto' ? card.sourceLanguage : detectLanguage(card.front);
     const toLang = card.language;
@@ -221,7 +245,7 @@ function deleteFlashcardFolder(key) {
     return `${fromLang}_${toLang}` !== key;
   });
   
-  saveFlashcards();
+  await saveFlashcards();
   updateFlashcards();
   updateStats();
   showNotification('Flashcards folder deleted', 'info');
@@ -427,10 +451,29 @@ function moveToFolder(cardId, folderId) {
   showNotification(`Carte déplacée vers ${flashcardFolders[folderId].name}`, 'success');
 }
 
-function deleteFlashcard(cardId) {
+async function deleteFlashcard(cardId) {
   if (!confirm('Delete this flashcard?')) return;
   
   const cardIdInt = parseInt(cardId);
+  const cardToDelete = flashcards.find(c => c.id === cardIdInt);
+  
+  // Supprimer sur le serveur si connecté et si la carte a un serverId
+  const token = await authAPI.getToken();
+  if (token && cardToDelete && cardToDelete.serverId) {
+    try {
+      await fetch(`${API_BASE_URL}/flashcards/${cardToDelete.serverId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+    } catch (error) {
+      console.error('Erreur lors de la suppression sur le serveur:', error);
+      // Continuer même si l'erreur serveur
+    }
+  }
+  
+  // Supprimer localement
   flashcards = flashcards.filter(c => c.id !== cardIdInt);
   
   // Supprimer aussi du localStorage
@@ -442,7 +485,7 @@ function deleteFlashcard(cardId) {
     });
   });
   
-  saveFlashcards();
+  await saveFlashcards();
   updateFlashcards();
   updateStats();
   
@@ -2760,9 +2803,8 @@ function showUserMenu(user) {
   if (switchAccountBtn) {
     switchAccountBtn.onclick = async () => {
       // Sauvegarder les données de l'utilisateur actuel avant de se déconnecter
-      const currentUser = await authAPI.getCurrentUser();
-      if (currentUser && currentUser.id) {
-        const userId = currentUser.id;
+      if (window.currentUser && window.currentUser.id) {
+        const userId = window.currentUser.id || window.currentUser._id;
         
         // Sauvegarder les flashcards et traductions par utilisateur
         const userDataKey = `userData_${userId}`;
@@ -3078,9 +3120,31 @@ async function syncFlashcardsAfterLogin(mergeMode = false) {
 }
 
 // Effacer tout l'historique
-function clearHistory() {
+async function clearHistory() {
   if (!confirm('Effacer tout l\'historique des traductions ?')) return;
   
+  // Supprimer sur le serveur si connecté
+  const token = await authAPI.getToken();
+  if (token) {
+    try {
+      showNotification('Suppression en cours...', 'info');
+      const response = await fetch(`${API_BASE_URL}/translations/clear`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        console.error('Erreur lors de la suppression sur le serveur');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression sur le serveur:', error);
+      // Continuer même si l'erreur serveur
+    }
+  }
+  
+  // Supprimer localement
   translations = [];
   chrome.storage.local.set({ translations }, () => {
     updateHistory();
@@ -3128,17 +3192,39 @@ function restoreFlashcardsFromBackup() {
 }
 
 // Effacer toutes les flashcards
-function clearFlashcards() {
+async function clearFlashcards() {
   if (!confirm('Effacer toutes les flashcards ?')) return;
   
   // Créer un backup avant de supprimer
   backupFlashcards();
   
+  // Supprimer aussi sur le serveur si connecté
+  const token = await authAPI.getToken();
+  if (token) {
+    try {
+      showNotification('Suppression en cours...', 'info');
+      
+      // Supprimer toutes les flashcards sur le serveur une par une
+      const deletePromises = flashcards
+        .filter(card => card.id && !card.id.startsWith('local_'))
+        .map(card => flashcardsAPI.delete(card.id).catch(err => {
+          console.error(`Erreur suppression ${card.id}:`, err);
+        }));
+      
+      await Promise.all(deletePromises);
+      console.log('✅ Toutes les flashcards supprimées du serveur');
+    } catch (error) {
+      console.error('❌ Erreur lors de la suppression serveur:', error);
+      showNotification('Erreur de suppression sur le serveur', 'error');
+    }
+  }
+  
+  // Supprimer localement
   flashcards = [];
   chrome.storage.local.set({ flashcards }, () => {
     updateFlashcards();
     updateStats();
-    showNotification('Flashcards effacées (backup créé)', 'info');
+    showNotification('Flashcards effacées (backup créé)', 'success');
   });
 }
 
@@ -3495,7 +3581,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           clearHistory();
           break;
         case 'clearFlashcards':
-          clearFlashcards();
+          clearFlashcards(); // Async mais pas besoin d'await ici car gère ses propres erreurs
           break;
         case 'viewAllHistory':
           switchTab('history');
