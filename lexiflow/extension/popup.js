@@ -2633,9 +2633,19 @@ function updateUIAfterLogin(user) {
       await syncFlashcardsAfterLogin(true); // true = mode fusion
       
     } else {
-      console.log('Aucune donnée locale trouvée, synchronisation initiale...');
-      // Pas de données locales, charger depuis le serveur
-      await syncFlashcardsAfterLogin(false); // false = charger depuis serveur
+      console.log('Aucune donnée locale trouvée pour cet utilisateur');
+      // Vérifier s'il y a des flashcards locales actuelles
+      chrome.storage.local.get(['flashcards'], async (data) => {
+        const localFlashcards = data.flashcards || [];
+        if (localFlashcards.length > 0) {
+          console.log(`${localFlashcards.length} flashcards locales trouvées, mode fusion`);
+          flashcards = localFlashcards;
+          await syncFlashcardsAfterLogin(true); // Mode fusion pour préserver les données locales
+        } else {
+          console.log('Aucune flashcard locale, chargement depuis le serveur');
+          await syncFlashcardsAfterLogin(false); // Charger depuis serveur
+        }
+      });
     }
   });
   
