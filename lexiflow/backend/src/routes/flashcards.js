@@ -36,6 +36,22 @@ router.post('/', authMiddleware, async (req, res) => {
       });
     }
 
+    // Vérifier si la flashcard existe déjà
+    const existingFlashcard = await Flashcard.findOne({
+      where: {
+        userId: req.user.id,
+        front: front.trim(),
+        back: back.trim()
+      }
+    });
+
+    if (existingFlashcard) {
+      return res.status(409).json({
+        error: 'Cette flashcard existe déjà',
+        flashcard: existingFlashcard
+      });
+    }
+
     // Vérifier la limite
     const currentCount = await Flashcard.count({
       where: { userId: req.user.id }

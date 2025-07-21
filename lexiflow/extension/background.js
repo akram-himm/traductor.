@@ -134,7 +134,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             language: request.flashcard.targetLanguage || 'fr',
             sourceLanguage: request.flashcard.sourceLanguage || 'auto',
             category: request.flashcard.folder || 'default',
-            difficulty: request.flashcard.difficulty || 'normal'
+            difficulty: request.flashcard.difficulty === 'normal' ? 0 : 
+                       request.flashcard.difficulty === 'hard' ? 3 : 
+                       request.flashcard.difficulty === 'easy' ? 1 : 0
           };
           
           const response = await fetch('https://my-backend-api-cng7.onrender.com/api/flashcards', {

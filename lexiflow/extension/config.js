@@ -212,7 +212,9 @@ const flashcardsAPI = {
       language: flashcardData.language || flashcardData.targetLanguage || 'fr',
       sourceLanguage: flashcardData.sourceLanguage || 'auto',
       category: flashcardData.folder || flashcardData.category || 'General',
-      difficulty: flashcardData.difficulty || 'normal' // Le backend attend 'easy', 'normal', 'hard'
+      difficulty: flashcardData.difficulty === 'normal' ? 0 : 
+                 flashcardData.difficulty === 'hard' ? 3 : 
+                 flashcardData.difficulty === 'easy' ? 1 : 0 // TEMPORAIRE: L'ancien backend attend des nombres
     };
     
     console.log('📤 Envoi flashcard au backend:', adaptedData);
