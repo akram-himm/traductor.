@@ -1485,12 +1485,12 @@ function updateFlashcards() {
     
     if (fromLang === toLang) return;
     
-    const langs = [fromLang, toLang].sort();
-    const key = `${langs[0]}_${langs[1]}`;
+    // Ne pas trier les langues - garder l'ordre source->cible
+    const key = `${fromLang}_${toLang}`;
     
     if (!grouped[key]) {
       grouped[key] = {
-        langs: langs,
+        langs: [fromLang, toLang],
         cards: [],
         primaryDirection: `${fromLang}_${toLang}`,
         currentDirection: `${fromLang}_${toLang}`
