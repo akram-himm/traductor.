@@ -473,8 +473,10 @@ function flipCard(cardId) {
     return;
   }
   
-  const front = document.getElementById(`front-${cardId}`);
-  const back = document.getElementById(`back-${cardId}`);
+  // Utiliser le même format d'ID que dans renderFlashcards
+  const safeId = cardId.replace(/-/g, '_');
+  const front = document.getElementById(`front-${safeId}`);
+  const back = document.getElementById(`back-${safeId}`);
   const cardEl = document.querySelector(`[data-id="${cardId}"]`);
   
   if (!front || !back) {
@@ -1744,18 +1746,21 @@ function renderFlashcards(cards, fromLang, toLang) {
     const displayFromLang = isReversed ? card.toLang : card.fromLang;
     const displayToLang = isReversed ? card.fromLang : card.toLang;
     
+    // Créer un ID sûr pour HTML en remplaçant les tirets par des underscores
+    const safeId = card.id.replace(/-/g, '_');
+    
     return `
       <div class="flashcard" data-id="${card.id}" style="cursor: pointer;">
         <div class="flashcard-difficulty difficulty-${card.difficulty || 'normal'}"></div>
-        <div class="flashcard-content" id="card-content-${card.id}">
-          <div class="flashcard-front" id="front-${card.id}">
+        <div class="flashcard-content" id="card-content-${safeId}">
+          <div class="flashcard-front" id="front-${safeId}">
             <div class="flashcard-text">${escapeHtml(displayFront)}</div>
             <div class="flashcard-hint">
               <span>${getFlagEmoji(displayFromLang)}</span>
               <span>Cliquez pour révéler</span>
             </div>
           </div>
-          <div class="flashcard-back" id="back-${card.id}" style="display: none;">
+          <div class="flashcard-back" id="back-${safeId}" style="display: none;">
             <div class="flashcard-text">${escapeHtml(displayBack)}</div>
             <div class="flashcard-lang">
               <span>${getFlagEmoji(displayToLang)}</span>
