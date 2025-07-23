@@ -959,50 +959,130 @@ function showPremiumPrompt() {
     left: 50%;
     transform: translate(-50%, -50%);
     background: white;
-    padding: 32px;
     border-radius: 16px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+    padding: 32px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
     z-index: 10000;
-    max-width: 400px;
+    max-width: 480px;
+    width: 90%;
     text-align: center;
+    max-height: 90vh;
+    overflow-y: auto;
   `;
   
   prompt.innerHTML = `
     <div style="font-size: 48px; margin-bottom: 16px;">🚀</div>
-    <h2 style="font-size: 24px; margin-bottom: 16px;">Passez à Premium!</h2>
-    <p style="margin-bottom: 24px; color: #6b7280;">
-      Débloquez toutes les fonctionnalités avec DeepSeek AI
+    <h2 style="font-size: 24px; margin-bottom: 16px; color: #1f2937;">Débloquez LexiFlow Premium</h2>
+    <p style="margin-bottom: 24px; color: #6b7280; font-size: 14px;">
+      Offre de lancement limitée - Économisez jusqu'à 33%!
     </p>
     
-    <div style="text-align: left; margin-bottom: 24px;">
-      <div style="margin-bottom: 12px;">✅ Traductions illimitées</div>
-      <div style="margin-bottom: 12px;">✅ Flashcards illimitées</div>
-      <div style="margin-bottom: 12px;">✅ IA DeepSeek ultra-précise</div>
-      <div style="margin-bottom: 12px;">✅ Statistiques avancées</div>
-      <div style="margin-bottom: 12px;">✅ Support prioritaire</div>
+    <div style="text-align: left; margin-bottom: 32px; background: #f9fafb; padding: 20px; border-radius: 12px;">
+      <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <span style="color: #10b981;">✅</span> 
+        <span>Flashcards illimitées (vs 50)</span>
+      </div>
+      <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <span style="color: #10b981;">✅</span>
+        <span>IA DeepSeek ultra-précise</span>
+      </div>
+      <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <span style="color: #10b981;">✅</span>
+        <span>Synchronisation multi-appareils</span>
+      </div>
+      <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <span style="color: #10b981;">✅</span>
+        <span>Mode révision intelligent</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="color: #10b981;">✅</span>
+        <span>Support prioritaire 24/7</span>
+      </div>
     </div>
     
-    <div style="display: flex; gap: 12px;">
-      <button class="btn btn-primary btn-block js-go-to-settings">
-        Activer Premium →
-      </button>
-      <button class="btn btn-secondary js-close-prompt">
-        Plus tard
-      </button>
+    <!-- Plans de tarification -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+      <!-- Plan Mensuel -->
+      <div class="pricing-card" style="border: 2px solid #e5e7eb; border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.2s;">
+        <h3 style="font-size: 16px; margin-bottom: 8px; color: #374151;">Mensuel</h3>
+        <div style="margin-bottom: 12px;">
+          <span style="font-size: 28px; font-weight: bold; color: #1f2937;">4,99€</span>
+          <span style="color: #6b7280; font-size: 14px;">/mois</span>
+        </div>
+        <button class="btn btn-secondary btn-block js-subscribe-monthly" style="font-size: 14px;">
+          Choisir Mensuel
+        </button>
+      </div>
+      
+      <!-- Plan Annuel -->
+      <div class="pricing-card" style="border: 2px solid #3b82f6; border-radius: 12px; padding: 20px; cursor: pointer; background: #eff6ff; position: relative;">
+        <div style="position: absolute; top: -10px; right: 20px; background: #3b82f6; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+          -33%
+        </div>
+        <h3 style="font-size: 16px; margin-bottom: 8px; color: #374151;">Annuel</h3>
+        <div style="margin-bottom: 4px;">
+          <span style="font-size: 28px; font-weight: bold; color: #1f2937;">39,99€</span>
+          <span style="color: #6b7280; font-size: 14px;">/an</span>
+        </div>
+        <div style="font-size: 12px; color: #10b981; margin-bottom: 12px;">
+          Économisez 19,89€!
+        </div>
+        <button class="btn btn-primary btn-block js-subscribe-yearly" style="font-size: 14px;">
+          Choisir Annuel
+        </button>
+      </div>
     </div>
+    
+    <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 16px; color: #6b7280; font-size: 12px;">
+      <span>🔒 Paiement sécurisé par Stripe</span>
+      <span>•</span>
+      <span>Annulez à tout moment</span>
+    </div>
+    
+    <button class="btn btn-secondary js-close-prompt" style="font-size: 14px;">
+      Peut-être plus tard
+    </button>
   `;
   
   document.body.appendChild(prompt);
   
-  // Event listeners
-  prompt.querySelector('.js-go-to-settings').addEventListener('click', () => {
-    switchTab('settings');
-    prompt.remove();
+  // Ajouter les hover effects
+  const cards = prompt.querySelectorAll('.pricing-card');
+  cards.forEach(card => {
+    card.addEventListener('mouseenter', () => {
+      card.style.transform = 'translateY(-2px)';
+      card.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'translateY(0)';
+      card.style.boxShadow = 'none';
+    });
   });
   
-  prompt.querySelector('.js-close-prompt').addEventListener('click', () => {
+  // Event listeners pour les boutons
+  prompt.querySelector('.js-subscribe-monthly').onclick = async () => {
+    try {
+      showNotification('Redirection vers le paiement...', 'info');
+      // TODO: Remplacer par les vrais price IDs de Stripe
+      await subscriptionAPI.createCheckoutSession('price_monthly', 'monthly');
+    } catch (error) {
+      showNotification('Erreur lors de la création de la session de paiement', 'error');
+    }
+  };
+  
+  prompt.querySelector('.js-subscribe-yearly').onclick = async () => {
+    try {
+      showNotification('Redirection vers le paiement...', 'info');
+      // TODO: Remplacer par les vrais price IDs de Stripe
+      await subscriptionAPI.createCheckoutSession('price_yearly', 'yearly');
+    } catch (error) {
+      showNotification('Erreur lors de la création de la session de paiement', 'error');
+    }
+  };
+  
+  prompt.querySelector('.js-close-prompt').onclick = () => {
     prompt.remove();
-  });
+  };
 }
 
 // Charger les données
@@ -1513,6 +1593,11 @@ function renderFolderTranslations(translations, fromLang, toLang) {
 function updateFlashcards() {
   const container = document.getElementById('flashcardsList');
   if (!container) return;
+  
+  // Mettre à jour le badge de révision
+  if (window.reviewSystem) {
+    window.reviewSystem.updateReviewBadge();
+  }
   
   // Détecter si les flashcards ont disparu de manière inattendue
   if (flashcards.length === 0 && flashcardsBackup.length > 0) {

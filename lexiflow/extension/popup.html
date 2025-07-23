@@ -1455,10 +1455,10 @@
                     <span>My Flashcards</span>
                 </h3>
                 <div class="setting-control" style="display: flex; gap: 8px;">
-                    <button class="btn btn-primary disabled" data-action="startPracticeMode" disabled title="Coming soon! This feature will be available in the next update.">
-                        <span>🎮</span>
-                        <span>Practice Mode</span>
-                        <span style="font-size: 10px; margin-left: 4px;">🔒</span>
+                    <button class="btn btn-primary" id="startReviewBtn" onclick="reviewSystem.showReviewMode()">
+                        <span>📚</span>
+                        <span>Mode Révision</span>
+                        <span id="reviewBadge" style="display: none; background: #ef4444; color: white; border-radius: 10px; padding: 2px 6px; font-size: 11px; margin-left: 6px;">0</span>
                     </button>
                     <button class="btn btn-sm btn-secondary" data-action="clearFlashcards">
                         <span>🗑️</span>
@@ -1605,6 +1605,8 @@
     </div>
 
     <script src="config.js"></script>
+  <script src="subscription-api.js"></script>
+  <script src="review-system.js"></script>
   <script src="flashcard-sync.js"></script>
   <script src="popup.js"></script>
 </body>
