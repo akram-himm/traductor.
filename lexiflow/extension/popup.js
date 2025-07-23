@@ -34,6 +34,10 @@ async function loadFlashcardsFromServer() {
     
     if (response && response.flashcards && Array.isArray(response.flashcards)) {
       console.log(`☁️ ${response.flashcards.length} flashcards du serveur`);
+      // Debug: voir ce que le serveur retourne
+      if (response.flashcards.length > 0) {
+        console.log('🔍 Première flashcard du serveur:', response.flashcards[0]);
+      }
       
       // Convertir les flashcards du serveur au format attendu par l'UI
       flashcards = response.flashcards.map(card => ({

@@ -469,7 +469,13 @@ function displayTranslation(bubble, result) {
     
     if (saveBtn) {
       saveBtn.addEventListener('click', () => {
-        createFlashcard(selectedText, translatedText, userSettings.targetLanguage, lastTranslation?.detectedLanguage || 'auto');
+        // Utiliser la langue détectée ou faire une détection locale
+        let sourceLanguage = lastTranslation?.detectedLanguage;
+        if (!sourceLanguage || sourceLanguage === 'auto') {
+          sourceLanguage = detectLanguageLocally(selectedText);
+          console.log('🔍 Détection locale pour flashcard:', sourceLanguage);
+        }
+        createFlashcard(selectedText, translatedText, userSettings.targetLanguage, sourceLanguage);
       });
     }
     
