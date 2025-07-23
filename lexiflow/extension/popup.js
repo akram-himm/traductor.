@@ -467,7 +467,7 @@ function flipCard(cardId) {
   console.log('flipCard appelé avec cardId:', cardId);
   
   // Ne pas parser en int car les IDs sont maintenant des UUIDs
-  const card = flashcards.find(c => c.id === cardId || c.id === parseInt(cardId));
+  const card = flashcards.find(c => c.id === cardId);
   if (!card) {
     console.error('Carte non trouvée:', cardId);
     return;
@@ -508,7 +508,7 @@ function flipCard(cardId) {
 }
 
 function moveToFolder(cardId, folderId) {
-  const card = flashcards.find(c => c.id === parseInt(cardId));
+  const card = flashcards.find(c => c.id === cardId);
   if (!card) return;
   
   card.folder = folderId;
@@ -532,16 +532,13 @@ async function deleteFlashcard(cardId) {
   
   console.log('🗑️ Début suppression, cardId reçu:', cardId, 'type:', typeof cardId);
   
-  const cardIdInt = parseInt(cardId);
-  console.log('🔢 cardIdInt après parseInt:', cardIdInt);
-  
   // Debug: afficher toutes les flashcards et leurs IDs
   console.log('📚 Flashcards actuelles:', flashcards.map(c => ({ id: c.id, type: typeof c.id, front: c.front.substring(0, 20) })));
   
-  const cardToDelete = flashcards.find(c => c.id === cardIdInt);
+  const cardToDelete = flashcards.find(c => c.id === cardId);
   
   if (!cardToDelete) {
-    console.error('❌ Flashcard non trouvée avec ID:', cardIdInt);
+    console.error('❌ Flashcard non trouvée avec ID:', cardId);
     console.error('IDs disponibles:', flashcards.map(c => c.id));
     showNotification('Flashcard introuvable', 'error');
     return;
@@ -1704,7 +1701,7 @@ function updateFlashcards() {
           e.stopPropagation();
           const btn = e.target.closest('.js-card-action');
           const action = btn.dataset.action;
-          const cardId = parseInt(btn.dataset.cardId);
+          const cardId = btn.dataset.cardId;
           
           console.log('Action flashcard:', { action, cardId });
           
