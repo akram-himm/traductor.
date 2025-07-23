@@ -1594,10 +1594,6 @@ function updateFlashcards() {
   const container = document.getElementById('flashcardsList');
   if (!container) return;
   
-  // Mettre à jour le badge de révision
-  if (window.reviewSystem) {
-    window.reviewSystem.updateReviewBadge();
-  }
   
   // Détecter si les flashcards ont disparu de manière inattendue
   if (flashcards.length === 0 && flashcardsBackup.length > 0) {
