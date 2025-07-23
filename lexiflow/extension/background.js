@@ -150,13 +150,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           
           if (response.ok) {
             console.log('✅ Flashcard synchronisée avec le serveur');
+            const data = await response.json();
+            sendResponse({ success: true, flashcard: data });
           } else {
             const error = await response.text();
             console.error('❌ Erreur lors de la synchronisation:', error);
+            sendResponse({ success: false, error: error });
           }
         } catch (error) {
           console.error('❌ Erreur réseau:', error);
+          sendResponse({ success: false, error: error.message });
         }
+      } else {
+        sendResponse({ success: false, error: 'Not authenticated' });
       }
     });
     return true;

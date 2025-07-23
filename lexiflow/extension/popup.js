@@ -18,6 +18,65 @@ function generateUUID() {
     return v.toString(16);
   });
 }
+
+// Charger les flashcards uniquement depuis le serveur
+async function loadFlashcardsFromServer() {
+  try {
+    const token = await authAPI.getToken();
+    if (!token) {
+      console.log('Utilisateur non connecté, pas de flashcards');
+      flashcards = [];
+      updateFlashcards();
+      updateStats();
+      return;
+    }
+
+    console.log('🔄 Chargement des flashcards depuis le serveur...');
+    const response = await flashcardsAPI.getAll();
+    
+    if (response && response.flashcards && Array.isArray(response.flashcards)) {
+      console.log(`☁️ ${response.flashcards.length} flashcards du serveur`);
+      
+      // Convertir les flashcards du serveur au format attendu par l'UI
+      flashcards = response.flashcards.map(card => ({
+        id: card.id,
+        front: card.front,
+        back: card.back,
+        text: card.front, // Pour compatibilité
+        translation: card.back, // Pour compatibilité
+        sourceLanguage: card.sourceLanguage || 'unknown',
+        targetLanguage: card.language || 'fr',
+        language: card.language || 'fr',
+        category: card.category || 'General',
+        difficulty: card.difficulty || 0,
+        created: card.createdAt,
+        lastModified: card.updatedAt,
+        reviewCount: card.reviewCount || 0,
+        lastReviewed: card.lastReviewed,
+        nextReview: card.nextReview,
+        successRate: card.successRate || 0,
+        folder: card.category || 'default',
+        synced: true,
+        syncedWithServer: true
+      }));
+      
+      console.log(`✅ ${flashcards.length} flashcards chargées`);
+    } else {
+      console.log('ℹ️ Aucune flashcard sur le serveur');
+      flashcards = [];
+    }
+    
+    updateFlashcards();
+    updateStats();
+    
+  } catch (error) {
+    console.error('❌ Erreur lors du chargement des flashcards:', error);
+    showNotification('Erreur de chargement des flashcards', 'error');
+    flashcards = [];
+    updateFlashcards();
+    updateStats();
+  }
+}
 let flashcardFolders = {
   default: { name: 'Uncategorized', icon: '📁' },
   favorites: { name: 'Favorites', icon: '⭐' },

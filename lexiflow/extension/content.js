@@ -119,7 +119,7 @@ async function translateWithGoogleFree(text, targetLang, sourceLang) {
     const data = await response.json();
     
     if (data && data[0] && data[0][0]) {
-      const detectedLang = data[2] || (sourceLang === 'auto' ? detectLanguage(text) : sourceLang);
+      const detectedLang = data[2] || sourceLang;
       console.log(`🔍 Google Translate - Détecté: ${detectedLang} pour "${text.substring(0, 30)}..."`);
       return {
         translatedText: data[0][0][0],
@@ -151,7 +151,7 @@ async function translateWithMyMemory(text, targetLang, sourceLang) {
     if (data.responseStatus === 200) {
       return {
         translatedText: data.responseData.translatedText,
-        detectedLanguage: sourceLang === 'auto' ? detectLanguage(text) : sourceLang,
+        detectedLanguage: sourceLang === 'auto' ? 'unknown' : sourceLang,
         confidence: data.responseData.match
       };
     }
@@ -692,58 +692,66 @@ function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
   try {
     console.log('💾 Creating flashcard:', { front, back, targetLanguage, sourceLanguage, autoSave: userSettings.autoSaveToFlashcards });
     
-    // Créer la flashcard avec le format cohérent avec popup.js
-    const flashcard = {
-      id: generateUUID(), // Utiliser UUID au lieu de Date.now()
-      front: front.substring(0, 100),
-      back: back.substring(0, 100),
-      text: front.substring(0, 100), // Champs attendus par popup.js
-      translation: back.substring(0, 100),
-      sourceLanguage: sourceLanguage, // Utiliser la langue détectée
-      targetLanguage: targetLanguage,
-      language: targetLanguage, // Garder pour compatibilité
-      created: new Date().toISOString(),
-      lastModified: new Date().toISOString(), // Pour la fusion
-      folder: 'default',
-      reviews: 0,
-      lastReview: null,
-      difficulty: 'normal',
-      synced: false // Marquer comme non synchronisé
-    };
+    // Vérifier qu'on a une langue source valide
+    if (!sourceLanguage || sourceLanguage === 'auto') {
+      console.log('⚠️ Pas de langue source détectée, flashcard ignorée');
+      if (!userSettings.autoSaveToFlashcards) {
+        const btn = document.getElementById('qt-save-flashcard');
+        if (btn) {
+          btn.textContent = '⚠️ Langue non détectée';
+          btn.style.background = '#f59e0b';
+          setTimeout(() => {
+            btn.textContent = '💾 Flashcard';
+            btn.style.background = '#10b981';
+          }, 2000);
+        }
+      }
+      return;
+    }
     
-    chrome.storage.local.get({ flashcards: [], authToken: null }, (data) => {
-      const flashcards = data.flashcards || [];
+    // Vérifier si l'utilisateur est connecté
+    chrome.storage.local.get({ authToken: null }, (data) => {
+      if (!data.authToken) {
+        console.log('⚠️ User not logged in, cannot create flashcard');
+        if (!userSettings.autoSaveToFlashcards) {
+          const btn = document.getElementById('qt-save-flashcard');
+          if (btn) {
+            btn.textContent = '⚠️ Non connecté';
+            btn.style.background = '#f59e0b';
+            setTimeout(() => {
+              btn.textContent = '💾 Flashcard';
+              btn.style.background = '#10b981';
+            }, 2000);
+          }
+        }
+        return;
+      }
       
-      const exists = flashcards.some(f => 
-        f.front?.toLowerCase() === front.toLowerCase() && 
-        f.back?.toLowerCase() === back.toLowerCase()
-      );
-      
-      if (!exists) {
-        flashcards.unshift(flashcard); // Ajouter au début comme dans popup.js
-        chrome.storage.local.set({ flashcards }, () => {
-          console.log('✅ Flashcard saved locally');
+      // Envoyer directement au serveur via le background script
+      chrome.runtime.sendMessage({
+        action: 'syncFlashcard',
+        flashcard: {
+          originalText: front.substring(0, 100),
+          translatedText: back.substring(0, 100),
+          sourceLanguage: sourceLanguage,
+          targetLanguage: targetLanguage,
+          folder: 'default',
+          difficulty: 'normal'
+        }
+      }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.error('❌ Error sending flashcard:', chrome.runtime.lastError);
+          return;
+        }
+        
+        if (response && response.success) {
+          console.log('✅ Flashcard saved on server');
           
-          // Notifier le popup de mettre à jour l'affichage
+          // Notifier le popup de recharger les flashcards
           chrome.runtime.sendMessage({
             action: 'flashcardAdded',
-            flashcard: flashcard
+            flashcard: response.flashcard
           });
-          
-          // Envoyer un message au background pour synchroniser avec le serveur
-          if (data.authToken) {
-            chrome.runtime.sendMessage({
-              action: 'syncFlashcard',
-              flashcard: {
-                originalText: front,
-                translatedText: back,
-                sourceLanguage: sourceLanguage,
-                targetLanguage: targetLanguage,
-                folder: 'default',
-                difficulty: 'normal'
-              }
-            });
-          }
           
           // Si c'est une sauvegarde manuelle, afficher le feedback
           if (!userSettings.autoSaveToFlashcards) {
@@ -757,21 +765,34 @@ function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
               }, 2000);
             }
           }
-        });
-      } else {
-        console.log('⚠️ Flashcard already exists');
-        if (!userSettings.autoSaveToFlashcards) {
-          const btn = document.getElementById('qt-save-flashcard');
-          if (btn) {
-            btn.textContent = '⚠️ Existe déjà';
-            btn.style.background = '#f59e0b';
-            setTimeout(() => {
-              btn.textContent = '💾 Flashcard';
-              btn.style.background = '#10b981';
-            }, 2000);
+        } else if (response && response.error && response.error.includes('existe déjà')) {
+          console.log('⚠️ Flashcard already exists');
+          if (!userSettings.autoSaveToFlashcards) {
+            const btn = document.getElementById('qt-save-flashcard');
+            if (btn) {
+              btn.textContent = '⚠️ Existe déjà';
+              btn.style.background = '#f59e0b';
+              setTimeout(() => {
+                btn.textContent = '💾 Flashcard';
+                btn.style.background = '#10b981';
+              }, 2000);
+            }
+          }
+        } else {
+          console.error('❌ Failed to save flashcard:', response?.error);
+          if (!userSettings.autoSaveToFlashcards) {
+            const btn = document.getElementById('qt-save-flashcard');
+            if (btn) {
+              btn.textContent = '❌ Erreur';
+              btn.style.background = '#ef4444';
+              setTimeout(() => {
+                btn.textContent = '💾 Flashcard';
+                btn.style.background = '#10b981';
+              }, 2000);
+            }
           }
         }
-      }
+      });
     });
   } catch (error) {
     console.error('❌ Flashcard creation error:', error);
