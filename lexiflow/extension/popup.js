@@ -528,30 +528,48 @@ function moveToFolder(cardId, folderId) {
 async function deleteFlashcard(cardId) {
   if (!confirm('Delete this flashcard?')) return;
   
+  console.log('🗑️ Début suppression, cardId reçu:', cardId, 'type:', typeof cardId);
+  
   const cardIdInt = parseInt(cardId);
+  console.log('🔢 cardIdInt après parseInt:', cardIdInt);
+  
+  // Debug: afficher toutes les flashcards et leurs IDs
+  console.log('📚 Flashcards actuelles:', flashcards.map(c => ({ id: c.id, type: typeof c.id, front: c.front.substring(0, 20) })));
+  
   const cardToDelete = flashcards.find(c => c.id === cardIdInt);
   
   if (!cardToDelete) {
-    console.error('Flashcard non trouvée:', cardIdInt);
+    console.error('❌ Flashcard non trouvée avec ID:', cardIdInt);
+    console.error('IDs disponibles:', flashcards.map(c => c.id));
+    showNotification('Flashcard introuvable', 'error');
     return;
   }
+  
+  console.log('✅ Flashcard trouvée:', cardToDelete);
   
   // Supprimer sur le serveur si connecté
   const token = await authAPI.getToken();
   if (token) {
     try {
-      console.log('🗑️ Suppression de la flashcard sur le serveur:', cardToDelete.id);
-      await flashcardsAPI.delete(cardToDelete.id);
-      console.log('✅ Flashcard supprimée du serveur');
+      console.log('🗑️ Appel API delete avec ID:', cardToDelete.id);
+      const result = await flashcardsAPI.delete(cardToDelete.id);
+      console.log('✅ Réponse du serveur:', result);
     } catch (error) {
       console.error('❌ Erreur lors de la suppression sur le serveur:', error);
       showNotification('Erreur lors de la suppression', 'error');
       return; // Ne pas supprimer localement si échec serveur
     }
+  } else {
+    console.log('⚠️ Pas de token, suppression impossible');
+    showNotification('Veuillez vous connecter', 'error');
+    return;
   }
   
   // Supprimer localement uniquement si succès serveur
+  console.log('🗑️ Suppression locale...');
+  const oldLength = flashcards.length;
   flashcards = flashcards.filter(c => c.id !== cardIdInt);
+  console.log(`✅ Flashcards: ${oldLength} → ${flashcards.length}`);
   
   // Mettre à jour l'interface
   updateFlashcards();
