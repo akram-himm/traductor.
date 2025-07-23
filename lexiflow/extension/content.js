@@ -28,6 +28,40 @@ function generateUUID() {
   });
 }
 
+// Fonction pour afficher une notification temporaire
+function showNotification(message, type = 'info') {
+  const colors = {
+    success: '#10b981',
+    warning: '#f59e0b',
+    error: '#ef4444',
+    info: '#3b82f6'
+  };
+  
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: ${colors[type]};
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000;
+    animation: slideIn 0.3s ease-out;
+    font-size: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  `;
+  notification.textContent = message;
+  
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.style.animation = 'slideOut 0.3s ease-out';
+    setTimeout(() => notification.remove(), 300);
+  }, 3000);
+}
+
 // Fonction de détection de langue locale
 function detectLanguageLocally(text) {
   if (!text) return null;
@@ -67,6 +101,32 @@ function detectLanguageLocally(text) {
   
   return null;
 }
+
+// Ajouter les animations CSS
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  @keyframes slideOut {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+  }
+`;
+document.head.appendChild(style);
 
 // Charger les paramètres au démarrage
 loadSettings();
@@ -161,13 +221,9 @@ async function translateWithGoogleFree(text, targetLang, sourceLang) {
     if (data && data[0] && data[0][0]) {
       let detectedLang = data[2] || sourceLang;
       
-      // Si Google ne détecte pas la langue ou retourne 'auto', utiliser la détection locale
-      if (!detectedLang || detectedLang === 'auto' || detectedLang === sourceLang) {
-        const localDetected = detectLanguageLocally(text);
-        if (localDetected && localDetected !== targetLang) {
-          detectedLang = localDetected;
-          console.log(`🔍 Détection locale utilisée: ${detectedLang}`);
-        }
+      // Ne PAS utiliser la détection locale - se baser uniquement sur Google Translate
+      if (!detectedLang || detectedLang === 'auto') {
+        detectedLang = sourceLang; // Garder la langue source
       }
       
       console.log(`🔍 Google Translate - Détecté: ${detectedLang} pour "${text.substring(0, 30)}..."`);
@@ -469,12 +525,8 @@ function displayTranslation(bubble, result) {
     
     if (saveBtn) {
       saveBtn.addEventListener('click', () => {
-        // Utiliser la langue détectée ou faire une détection locale
-        let sourceLanguage = lastTranslation?.detectedLanguage;
-        if (!sourceLanguage || sourceLanguage === 'auto') {
-          sourceLanguage = detectLanguageLocally(selectedText);
-          console.log('🔍 Détection locale pour flashcard:', sourceLanguage);
-        }
+        // Utiliser uniquement la langue détectée par Google Translate
+        const sourceLanguage = lastTranslation?.detectedLanguage || 'auto';
         createFlashcard(selectedText, translatedText, userSettings.targetLanguage, sourceLanguage);
       });
     }
@@ -803,12 +855,19 @@ function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
         }
         
         if (response && response.success) {
-          console.log('✅ Flashcard saved on server');
+          if (response.duplicate) {
+            console.log('⚠️ Cette flashcard existe déjà');
+            showNotification('Cette flashcard existe déjà!', 'warning');
+          } else {
+            console.log('✅ Flashcard saved on server');
+            showNotification('Flashcard ajoutée!', 'success');
+          }
           
           // Notifier le popup de recharger les flashcards
           chrome.runtime.sendMessage({
             action: 'flashcardAdded',
-            flashcard: response.flashcard
+            flashcard: response.flashcard,
+            duplicate: response.duplicate
           });
           
           // Si c'est une sauvegarde manuelle, afficher le feedback
