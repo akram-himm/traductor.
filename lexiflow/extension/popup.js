@@ -535,14 +535,7 @@ async function deleteFlashcard(cardId) {
   // Supprimer localement
   flashcards = flashcards.filter(c => c.id !== cardIdInt);
   
-  // Supprimer aussi du localStorage
-  chrome.storage.sync.get(['flashcards'], (result) => {
-    const storedFlashcards = result.flashcards || [];
-    const updatedFlashcards = storedFlashcards.filter(c => c.id !== cardIdInt);
-    chrome.storage.sync.set({ flashcards: updatedFlashcards }, () => {
-      console.log('Flashcard deleted from storage');
-    });
-  });
+  // Les flashcards sont maintenant uniquement sur le serveur, pas besoin de nettoyer le localStorage
   
   await saveFlashcards();
   updateFlashcards();
@@ -1783,9 +1776,8 @@ async function saveFlashcards() {
       console.warn('⚠️ flashcardsAPI non disponible, synchronisation ignorée');
     }
     
-    // Sauvegarder à nouveau avec les états de sync mis à jour
-    localStorage.setItem('flashcards', JSON.stringify(flashcards));
-    chrome.storage.local.set({ flashcards });
+    // Ne plus sauvegarder localement - les flashcards sont uniquement sur le serveur
+    console.log('✅ Flashcards marquées comme synchronisées (pas de sauvegarde locale)');
   }
 }
 
@@ -3241,12 +3233,36 @@ function importData() {
           saveSettings();
         }
         
-        // Sauvegarder
+        // Sauvegarder les traductions et dossiers localement
         chrome.storage.local.set({ 
           translations, 
-          flashcards, 
           flashcardFolders 
-        }, () => {
+        }, async () => {
+          // Si connecté, synchroniser les flashcards importées avec le serveur
+          const token = await authAPI.getToken();
+          if (token && flashcards.length > 0) {
+            showNotification('Synchronisation des flashcards importées...', 'info');
+            
+            // Envoyer toutes les flashcards importées au serveur
+            for (const card of flashcards) {
+              try {
+                await flashcardsAPI.create({
+                  originalText: card.front || card.text,
+                  translatedText: card.back || card.translation,
+                  sourceLanguage: card.sourceLanguage || detectLanguage(card.front || card.text),
+                  targetLanguage: card.targetLanguage || card.language || 'fr',
+                  difficulty: card.difficulty || 0,
+                  category: card.category || 'General'
+                });
+              } catch (error) {
+                console.error('Erreur lors de la synchronisation:', error);
+              }
+            }
+            
+            // Recharger depuis le serveur pour avoir les IDs corrects
+            await loadFlashcardsFromServer();
+          }
+          
           initUI();
           showNotification('Data imported successfully!', 'success');
         });
@@ -3257,6 +3273,32 @@ function importData() {
   };
   
   input.click();
+}
+
+// Exporter toutes les données
+function exportData() {
+  const data = {
+    translations: [...translations],
+    flashcards: [...flashcards],
+    flashcardFolders: {...flashcardFolders},
+    settings: {...userSettings},
+    exportDate: new Date().toISOString(),
+    version: '1.0'
+  };
+  
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `lexiflow-backup-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  
+  URL.revokeObjectURL(url);
+  showNotification('Données exportées avec succès!', 'success');
 }
 
 // Réinitialiser l'application
@@ -3282,6 +3324,9 @@ function resetApp() {
   chrome.storage.local.set({ fullBackup }, () => {
     console.log('💾 Backup complet créé avant reset');
   });
+  
+  // Sauvegarder les flashcards actuelles pour pouvoir les supprimer du serveur
+  const flashcardsToDelete = [...flashcards];
   
   // Réinitialiser toutes les données
   translations = [];
@@ -3312,11 +3357,30 @@ function resetApp() {
   
   // Sauvegarder
   chrome.storage.local.clear(() => {
-    chrome.storage.sync.clear(() => {
+    chrome.storage.sync.clear(async () => {
       saveSettings();
+      
+      // Supprimer aussi les flashcards du serveur si connecté
+      const token = await authAPI.getToken();
+      if (token) {
+        try {
+          // Supprimer toutes les flashcards sur le serveur
+          const deletePromises = flashcardsToDelete
+            .filter(card => card.id && !card.id.toString().startsWith('local_'))
+            .map(card => flashcardsAPI.delete(card.id).catch(err => {
+              console.error(`Erreur suppression ${card.id}:`, err);
+            }));
+          
+          await Promise.all(deletePromises);
+          console.log('✅ Toutes les flashcards supprimées du serveur lors du reset');
+        } catch (error) {
+          console.error('❌ Erreur lors de la suppression serveur:', error);
+        }
+      }
+      
+      // Ne sauvegarder que les traductions et les dossiers (pas les flashcards)
       chrome.storage.local.set({ 
         translations, 
-        flashcards, 
         flashcardFolders 
       }, () => {
         initUI();
@@ -3572,6 +3636,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           break;
         case 'importData':
           importData();
+          break;
+        case 'exportData':
+          exportData();
           break;
         case 'resetApp':
           resetApp();
@@ -3834,7 +3901,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Écouter les changements dans chrome.storage pour mettre à jour l'UI
 chrome.storage.onChanged.addListener((changes, namespace) => {
   if (namespace === 'local') {
-    // Gérer les changements de flashcards
+    // Les flashcards ne sont plus stockées localement, uniquement sur le serveur
+    // Ce code est gardé au cas où on voudrait réactiver le stockage local plus tard
+    /*
     if (changes.flashcards) {
       console.log('📌 Flashcards mises à jour dans storage');
       if (changes.flashcards.newValue) {
@@ -3860,6 +3929,7 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         updateStats();
       }
     }
+    */
     
     // Gérer les changements de traductions
     if (changes.translations) {
