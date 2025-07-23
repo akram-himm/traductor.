@@ -40,27 +40,35 @@ async function loadFlashcardsFromServer() {
       }
       
       // Convertir les flashcards du serveur au format attendu par l'UI
-      flashcards = response.flashcards.map(card => ({
-        id: card.id,
-        front: card.front,
-        back: card.back,
-        text: card.front, // Pour compatibilité
-        translation: card.back, // Pour compatibilité
-        sourceLanguage: card.sourceLanguage || null,
-        targetLanguage: card.language || 'fr',
-        language: card.language || 'fr',
-        category: card.category || 'General',
-        difficulty: card.difficulty || 0,
-        created: card.createdAt,
-        lastModified: card.updatedAt,
-        reviewCount: card.reviewCount || 0,
-        lastReviewed: card.lastReviewed,
-        nextReview: card.nextReview,
-        successRate: card.successRate || 0,
-        folder: card.category || 'default',
-        synced: true,
-        syncedWithServer: true
-      }));
+      flashcards = response.flashcards.map(card => {
+        // Utiliser detectLanguage si sourceLanguage est manquant
+        const sourceLang = card.sourceLanguage || detectLanguage(card.front);
+        const targetLang = card.language || userSettings?.targetLanguage || 'fr';
+        
+        console.log(`📝 Flashcard: "${card.front}" - source: ${sourceLang}, target: ${targetLang}`);
+        
+        return {
+          id: card.id,
+          front: card.front,
+          back: card.back,
+          text: card.front, // Pour compatibilité
+          translation: card.back, // Pour compatibilité
+          sourceLanguage: sourceLang,
+          targetLanguage: targetLang,
+          language: targetLang,
+          category: card.category || 'General',
+          difficulty: card.difficulty || 0,
+          created: card.createdAt,
+          lastModified: card.updatedAt,
+          reviewCount: card.reviewCount || 0,
+          lastReviewed: card.lastReviewed,
+          nextReview: card.nextReview,
+          successRate: card.successRate || 0,
+          folder: card.category || 'default',
+          synced: true,
+          syncedWithServer: true
+        };
+      });
       
       console.log(`✅ ${flashcards.length} flashcards chargées`);
     } else {
@@ -3108,14 +3116,9 @@ async function clearHistory() {
   const token = await authAPI.getToken();
   if (token) {
     try {
-      showNotification('Suppression en cours...', 'info');
-      const response = await apiRequest('/api/translations/clear', {
-        method: 'DELETE'
-      });
-      
-      if (!response.ok) {
-        console.error('Erreur lors de la suppression sur le serveur');
-      }
+      // Note: Le backend n'a pas de route pour supprimer les traductions
+      // On supprime seulement localement pour l'instant
+      console.log('⚠️ Suppression côté serveur non implémentée');
     } catch (error) {
       console.error('Erreur lors de la suppression sur le serveur:', error);
       // Continuer même si l'erreur serveur

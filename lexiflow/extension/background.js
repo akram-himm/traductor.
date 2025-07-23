@@ -161,9 +161,21 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               // Ignorer l'erreur si le popup n'est pas ouvert
             });
           } else {
-            const error = await response.text();
-            console.error('❌ Erreur lors de la synchronisation:', error);
-            sendResponse({ success: false, error: error });
+            const errorText = await response.text();
+            if (response.status === 409) {
+              console.log('⚠️ Flashcard existe déjà, pas grave');
+              // Considérer comme un succès pour éviter les re-tentatives
+              sendResponse({ success: true, duplicate: true });
+              
+              // Notifier quand même le popup pour rafraîchir
+              chrome.runtime.sendMessage({
+                action: 'flashcardAdded',
+                duplicate: true
+              }).catch(() => {});
+            } else {
+              console.error('❌ Erreur lors de la synchronisation:', errorText);
+              sendResponse({ success: false, error: errorText });
+            }
           }
         } catch (error) {
           console.error('❌ Erreur réseau:', error);
