@@ -857,10 +857,10 @@ function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
         if (response && response.success) {
           if (response.duplicate) {
             console.log('⚠️ Cette flashcard existe déjà');
-            showNotification('Cette flashcard existe déjà!', 'warning');
+            // Pas de notification en haut, juste sur le bouton
           } else {
             console.log('✅ Flashcard saved on server');
-            showNotification('Flashcard ajoutée!', 'success');
+            // Pas de notification en haut pour le succès non plus
           }
           
           // Notifier le popup de recharger les flashcards
@@ -870,20 +870,31 @@ function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
             duplicate: response.duplicate
           });
           
-          // Si c'est une sauvegarde manuelle, afficher le feedback
+          // Si c'est une sauvegarde manuelle, afficher le feedback sur le bouton
           if (!userSettings.autoSaveToFlashcards) {
             const btn = document.getElementById('qt-save-flashcard');
             if (btn) {
-              btn.textContent = '✅ Ajouté!';
-              btn.style.background = '#059669';
-              setTimeout(() => {
-                btn.textContent = '💾 Flashcard';
-                btn.style.background = '#10b981';
-              }, 2000);
+              if (response.duplicate) {
+                // Feedback pour doublon
+                btn.textContent = '⚠️ Existe déjà';
+                btn.style.background = '#f59e0b';
+                setTimeout(() => {
+                  btn.textContent = '💾 Flashcard';
+                  btn.style.background = '#10b981';
+                }, 2000);
+              } else {
+                // Feedback pour succès
+                btn.textContent = '✅ Ajouté!';
+                btn.style.background = '#059669';
+                setTimeout(() => {
+                  btn.textContent = '💾 Flashcard';
+                  btn.style.background = '#10b981';
+                }, 2000);
+              }
             }
           }
         } else if (response && response.error && response.error.includes('existe déjà')) {
-          console.log('⚠️ Flashcard already exists');
+          console.log('⚠️ Flashcard already exists (error response)');
           if (!userSettings.autoSaveToFlashcards) {
             const btn = document.getElementById('qt-save-flashcard');
             if (btn) {
