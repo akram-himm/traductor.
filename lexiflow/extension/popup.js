@@ -2745,8 +2745,27 @@ function showUserMenu(user) {
     userPlan.style.color = isPremium ? '#f5576c' : '#6b7280';
   }
   
-  // Afficher le menu
-  menu.style.display = 'block';
+  // Déplacer le menu dans le body pour éviter les problèmes d'overflow
+  if (menu.parentElement !== document.body) {
+    document.body.appendChild(menu);
+    // Forcer le style pour s'assurer qu'il est visible
+    menu.style.cssText = `
+      display: block;
+      position: fixed !important;
+      top: 60px !important;
+      right: 20px !important;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      min-width: 200px;
+      z-index: 99999 !important;
+      max-height: calc(100vh - 100px);
+      overflow-y: auto;
+    `;
+  } else {
+    // Afficher le menu
+    menu.style.display = 'block';
+  }
   
   // Mettre à jour le bouton de connexion
   const loginButton = document.getElementById('loginButton');
@@ -2759,8 +2778,12 @@ function showUserMenu(user) {
     // Ajouter l'événement pour basculer le menu
     loginButton.onclick = (e) => {
       e.stopPropagation();
-      const isVisible = menu.style.display === 'block';
-      menu.style.display = isVisible ? 'none' : 'block';
+      const isVisible = menu.style.display === 'block' || menu.style.display === '';
+      if (isVisible) {
+        menu.style.display = 'none';
+      } else {
+        showUserMenu(user);
+      }
     };
   }
   
