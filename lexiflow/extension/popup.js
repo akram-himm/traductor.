@@ -1043,13 +1043,23 @@ async function loadData() {
         resolve();
         
         // Charger les flashcards depuis le serveur en arrière-plan
-        // pour ne pas bloquer l'interface
-        loadFlashcardsFromServer().then(() => {
-          console.log('✅ Flashcards chargées en arrière-plan');
-          updateFlashcards();
-          updateStats();
+        // SEULEMENT si l'utilisateur est connecté
+        authAPI.getToken().then(token => {
+          if (token) {
+            console.log('🔐 Token trouvé, chargement des flashcards...');
+            return loadFlashcardsFromServer();
+          } else {
+            console.log('👤 Pas connecté, pas de chargement des flashcards');
+            return Promise.resolve();
+          }
+        }).then(() => {
+          if (flashcards.length > 0) {
+            console.log('✅ Flashcards chargées en arrière-plan');
+            updateFlashcards();
+            updateStats();
+          }
         }).catch(error => {
-          console.log('⚠️ Chargement des flashcards en arrière-plan échoué:', error.message);
+          console.log('⚠️ Chargement des flashcards échoué:', error.message);
         });
       });
     });
