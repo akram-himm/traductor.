@@ -24,10 +24,8 @@ async function loadFlashcardsFromServer() {
   try {
     const token = await authAPI.getToken();
     if (!token) {
-      console.log('Utilisateur non connecté, pas de flashcards');
-      flashcards = [];
-      updateFlashcards();
-      updateStats();
+      console.log('Utilisateur non connecté, pas de chargement des flashcards');
+      // Ne pas vider les flashcards, l'utilisateur pourrait se connecter plus tard
       return;
     }
 
@@ -3107,11 +3105,8 @@ async function clearHistory() {
   if (token) {
     try {
       showNotification('Suppression en cours...', 'info');
-      const response = await fetch(`${API_BASE_URL}/translations/clear`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await apiRequest('/api/translations/clear', {
+        method: 'DELETE'
       });
       
       if (!response.ok) {
@@ -3961,11 +3956,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'flashcardAdded' && message.flashcard) {
     console.log('📥 Nouvelle flashcard reçue du content script');
     
-    // Le listener chrome.storage.onChanged s'occupera de la mise à jour
-    // On force juste updateStats au cas où on n'est pas sur l'onglet flashcards
-    setTimeout(() => {
+    // Recharger les flashcards depuis le serveur
+    setTimeout(async () => {
+      await loadFlashcardsFromServer();
       updateStats();
-    }, 100);
+    }, 500); // Petit délai pour laisser le temps au serveur
     return;
   }
   

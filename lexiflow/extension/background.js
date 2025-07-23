@@ -152,6 +152,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             console.log('✅ Flashcard synchronisée avec le serveur');
             const data = await response.json();
             sendResponse({ success: true, flashcard: data });
+            
+            // Notifier le popup pour rafraîchir les flashcards
+            chrome.runtime.sendMessage({
+              action: 'flashcardAdded',
+              flashcard: data
+            }).catch(() => {
+              // Ignorer l'erreur si le popup n'est pas ouvert
+            });
           } else {
             const error = await response.text();
             console.error('❌ Erreur lors de la synchronisation:', error);
