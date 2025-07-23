@@ -1,4 +1,9 @@
 // Variables globales
+// Debug function - désactiver en production
+const DEBUG = false; // Mettre à true pour activer les logs
+const debug = (...args) => DEBUG && console.log(...args);
+
+
 let selectedText = '';
 let qtIcon = null;
 let qtBubble = null;
@@ -147,7 +152,7 @@ async function loadSettings() {
       autoSaveToFlashcards: false
     });
     userSettings = result;
-    console.log('⚙️ Settings loaded:', userSettings);
+    debug('⚙️ Settings loaded:', userSettings);
   } catch (error) {
     console.error('❌ Error loading settings:', error);
   }
@@ -157,8 +162,8 @@ async function loadSettings() {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'updateSettings') {
     userSettings = { ...userSettings, ...request.settings };
-    console.log('🔄 Settings updated:', userSettings);
-    console.log('📌 Auto save flashcards:', userSettings.autoSaveToFlashcards);
+    debug('🔄 Settings updated:', userSettings);
+    debug('📌 Auto save flashcards:', userSettings.autoSaveToFlashcards);
   } else if (request.action === 'toggleExtension') {
     userSettings.isEnabled = request.enabled;
   } else if (request.action === 'updateButtonColor') {
@@ -171,7 +176,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // API de traduction avec plusieurs services
 async function translateText(text, targetLang = 'fr', sourceLang = 'auto') {
-  console.log('🌐 Translation:', { text, from: sourceLang, to: targetLang });
+  debug('🌐 Translation:', { text, from: sourceLang, to: targetLang });
   
   // Ne pas traduire si même langue
   if (sourceLang === targetLang && sourceLang !== 'auto') {
@@ -226,7 +231,7 @@ async function translateWithGoogleFree(text, targetLang, sourceLang) {
         detectedLang = sourceLang; // Garder la langue source
       }
       
-      console.log(`🔍 Google Translate - Détecté: ${detectedLang} pour "${text.substring(0, 30)}..."`);
+      debug(`🔍 Google Translate - Détecté: ${detectedLang} pour "${text.substring(0, 30)}..."`);
       return {
         translatedText: data[0][0][0],
         detectedLanguage: detectedLang,
@@ -415,9 +420,9 @@ async function handleTranslation(event) {
       );
       
       // Créer automatiquement une flashcard si activé
-      console.log('🔍 Checking auto save:', userSettings.autoSaveToFlashcards);
+      debug('🔍 Checking auto save:', userSettings.autoSaveToFlashcards);
       if (userSettings.autoSaveToFlashcards) {
-        console.log('✅ Sauvegarde automatique activée, création de la flashcard...');
+        debug('✅ Sauvegarde automatique activée, création de la flashcard...');
         createFlashcard(selectedText, result.translatedText, userSettings.targetLanguage, result.detectedLanguage);
       }
     }
@@ -785,11 +790,11 @@ async function saveTranslation(original, translated, fromLang, toLang) {
         }
         
         chrome.storage.local.set({ translations }, () => {
-          console.log('✅ Translation saved');
+          debug('✅ Translation saved');
           // Le listener chrome.storage.onChanged dans popup.js s'occupera de la mise à jour
         });
       } else {
-        console.log('⏭️ Translation already exists in recent history, skipping');
+        debug('⏭️ Translation already exists in recent history, skipping');
       }
     });
   } catch (error) {
@@ -800,11 +805,11 @@ async function saveTranslation(original, translated, fromLang, toLang) {
 // Créer une flashcard
 function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
   try {
-    console.log('💾 Creating flashcard:', { front, back, targetLanguage, sourceLanguage, autoSave: userSettings.autoSaveToFlashcards });
+    debug('💾 Creating flashcard:', { front, back, targetLanguage, sourceLanguage, autoSave: userSettings.autoSaveToFlashcards });
     
     // Vérifier qu'on a une langue source valide
     if (!sourceLanguage || sourceLanguage === 'auto' || sourceLanguage === 'unknown') {
-      console.log('⚠️ Pas de langue source détectée, flashcard ignorée');
+      debug('⚠️ Pas de langue source détectée, flashcard ignorée');
       if (!userSettings.autoSaveToFlashcards) {
         const btn = document.getElementById('qt-save-flashcard');
         if (btn) {
@@ -822,7 +827,7 @@ function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
     // Vérifier si l'utilisateur est connecté
     chrome.storage.local.get({ authToken: null }, (data) => {
       if (!data.authToken) {
-        console.log('⚠️ User not logged in, cannot create flashcard');
+        debug('⚠️ User not logged in, cannot create flashcard');
         if (!userSettings.autoSaveToFlashcards) {
           const btn = document.getElementById('qt-save-flashcard');
           if (btn) {
@@ -856,10 +861,10 @@ function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
         
         if (response && response.success) {
           if (response.duplicate) {
-            console.log('⚠️ Cette flashcard existe déjà');
+            debug('⚠️ Cette flashcard existe déjà');
             // Pas de notification en haut, juste sur le bouton
           } else {
-            console.log('✅ Flashcard saved on server');
+            debug('✅ Flashcard saved on server');
             // Pas de notification en haut pour le succès non plus
           }
           
@@ -894,7 +899,7 @@ function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
             }
           }
         } else if (response && response.error && response.error.includes('existe déjà')) {
-          console.log('⚠️ Flashcard already exists (error response)');
+          debug('⚠️ Flashcard already exists (error response)');
           if (!userSettings.autoSaveToFlashcards) {
             const btn = document.getElementById('qt-save-flashcard');
             if (btn) {
@@ -951,7 +956,7 @@ function detectLanguage(text) {
   // Si on trouve des caractères spéciaux, c'est définitif
   for (const [lang, pattern] of Object.entries(patterns)) {
     if (pattern.test(text)) {
-      console.log(`🎯 Langue détectée par caractères spéciaux: ${lang} pour "${text}"`);
+      debug(`🎯 Langue détectée par caractères spéciaux: ${lang} pour "${text}"`);
       return lang;
     }
   }
@@ -977,7 +982,7 @@ function detectLanguage(text) {
     }
   }
   
-  console.log(`🔍 Langue détectée par mots: ${detectedLang} (score: ${maxScore}) pour "${text}"`);
+  debug(`🔍 Langue détectée par mots: ${detectedLang} (score: ${maxScore}) pour "${text}"`);
   return detectedLang;
 }
 
@@ -1115,4 +1120,4 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
-console.log('✅ LexiFlow content script chargé');
+debug('✅ LexiFlow content script chargé');

@@ -1,9 +1,14 @@
 // Service Worker pour Quick Translator Pro
 
 // Gestion de l'installation
+// Debug function - désactiver en production
+const DEBUG = false; // Mettre à true pour activer les logs
+const debug = (...args) => DEBUG && console.log(...args);
+
+
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
-    console.log('🎉 Quick Translator Pro installé avec succès!');
+    debug('🎉 Quick Translator Pro installé avec succès!');
     
     // Définir les paramètres par défaut
     chrome.storage.sync.set({
@@ -24,7 +29,7 @@ chrome.runtime.onInstalled.addListener((details) => {
       url: 'popup.html'
     });
   } else if (details.reason === 'update') {
-    console.log('✨ Quick Translator Pro mis à jour!');
+    debug('✨ Quick Translator Pro mis à jour!');
   }
 });
 
@@ -37,7 +42,7 @@ chrome.commands.onCommand.addListener((command) => {
         chrome.tabs.sendMessage(tabs[0].id, { 
           action: 'triggerTranslation' 
         }).catch(() => {
-          console.log('Content script not loaded on this page');
+          debug('Content script not loaded on this page');
         });
       }
     });
@@ -60,7 +65,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       if (token) {
         // Sauvegarder le token
         chrome.storage.local.set({ authToken: token }, () => {
-          console.log('Token sauvegardé dans chrome.storage');
+          debug('Token sauvegardé dans chrome.storage');
           
           // Fermer l'onglet OAuth
           chrome.tabs.remove(tabId);
@@ -82,7 +87,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
               message: 'Vous êtes maintenant connecté à LexiFlow.'
             }, () => {
               if (chrome.runtime.lastError) {
-                console.log('Notification error:', chrome.runtime.lastError);
+                debug('Notification error:', chrome.runtime.lastError);
               }
             });
           }
@@ -99,7 +104,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
             message: error || 'Une erreur est survenue'
           }, () => {
             if (chrome.runtime.lastError) {
-              console.log('Notification error:', chrome.runtime.lastError);
+              debug('Notification error:', chrome.runtime.lastError);
             }
           });
         }
@@ -149,7 +154,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           });
           
           if (response.ok) {
-            console.log('✅ Flashcard synchronisée avec le serveur');
+            debug('✅ Flashcard synchronisée avec le serveur');
             const data = await response.json();
             sendResponse({ success: true, flashcard: data });
             
@@ -163,7 +168,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           } else {
             const errorText = await response.text();
             if (response.status === 409) {
-              console.log('⚠️ Flashcard existe déjà, pas grave');
+              debug('⚠️ Flashcard existe déjà, pas grave');
               // Considérer comme un succès pour éviter les re-tentatives
               sendResponse({ success: true, duplicate: true });
               
@@ -193,7 +198,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 chrome.alarms.create('keepAlive', { periodInMinutes: 1 });
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === 'keepAlive') {
-    console.log('⏰ Keep alive ping');
+    debug('⏰ Keep alive ping');
   }
 });
 
@@ -214,7 +219,7 @@ async function cleanupOldData() {
     if (translations.length > 1000) {
       const trimmed = translations.slice(0, 1000);
       await chrome.storage.local.set({ translations: trimmed });
-      console.log(`🧹 Nettoyage: ${translations.length - 1000} traductions supprimées`);
+      debug(`🧹 Nettoyage: ${translations.length - 1000} traductions supprimées`);
     }
   } catch (error) {
     console.error('❌ Erreur de nettoyage:', error);

@@ -1,12 +1,17 @@
 // Fonctions pour synchroniser les flashcards avec le backend
 
 // Fonction principale pour sauvegarder une flashcard
+// Debug function - désactiver en production
+const DEBUG = false; // Mettre à true pour activer les logs
+const debug = (...args) => DEBUG && console.log(...args);
+
+
 async function saveFlashcardToBackend(flashcardData) {
   try {
     // Vérifier si l'utilisateur est connecté
     const token = await authAPI.getToken();
     if (!token) {
-      console.log('Utilisateur non connecté, sauvegarde locale uniquement');
+      debug('Utilisateur non connecté, sauvegarde locale uniquement');
       return { success: false, reason: 'not_authenticated' };
     }
 
@@ -25,7 +30,7 @@ async function saveFlashcardToBackend(flashcardData) {
     // Envoyer au backend
     const response = await flashcardsAPI.create(flashcardPayload);
     
-    console.log('✅ Flashcard sauvegardée sur le serveur:', response);
+    debug('✅ Flashcard sauvegardée sur le serveur:', response);
     return { success: true, data: response };
     
   } catch (error) {
@@ -51,7 +56,7 @@ async function syncLocalFlashcardsToBackend() {
     // Vérifier l'authentification
     const token = await authAPI.getToken();
     if (!token) {
-      console.log('Sync impossible: utilisateur non connecté');
+      debug('Sync impossible: utilisateur non connecté');
       return { success: false, reason: 'not_authenticated' };
     }
 
@@ -59,11 +64,11 @@ async function syncLocalFlashcardsToBackend() {
     const localFlashcards = JSON.parse(localStorage.getItem('flashcards') || '[]');
     
     if (localFlashcards.length === 0) {
-      console.log('Aucune flashcard locale à synchroniser');
+      debug('Aucune flashcard locale à synchroniser');
       return { success: true, synced: 0 };
     }
 
-    console.log(`🔄 Synchronisation de ${localFlashcards.length} flashcards...`);
+    debug(`🔄 Synchronisation de ${localFlashcards.length} flashcards...`);
     
     let syncedCount = 0;
     let errors = [];
@@ -90,7 +95,7 @@ async function syncLocalFlashcardsToBackend() {
       }
     }
 
-    console.log(`✅ Synchronisation terminée: ${syncedCount}/${localFlashcards.length} réussies`);
+    debug(`✅ Synchronisation terminée: ${syncedCount}/${localFlashcards.length} réussies`);
     
     if (errors.length > 0) {
       console.error('❌ Erreurs de synchronisation:', errors);
@@ -98,7 +103,7 @@ async function syncLocalFlashcardsToBackend() {
 
     // Ne PAS supprimer les flashcards locales après sync
     // Les garder comme backup local au cas où
-    console.log('📚 Flashcards locales conservées comme backup');
+    debug('📚 Flashcards locales conservées comme backup');
 
     return { 
       success: true, 
@@ -118,12 +123,12 @@ async function loadFlashcardsFromBackend() {
   try {
     const token = await authAPI.getToken();
     if (!token) {
-      console.log('Chargement impossible: utilisateur non connecté');
+      debug('Chargement impossible: utilisateur non connecté');
       return { success: false, reason: 'not_authenticated' };
     }
 
     const flashcards = await flashcardsAPI.getAll();
-    console.log(`✅ ${flashcards.length} flashcards chargées depuis le serveur`);
+    debug(`✅ ${flashcards.length} flashcards chargées depuis le serveur`);
     
     return { success: true, data: flashcards };
     
@@ -142,7 +147,7 @@ async function updateFlashcardOnBackend(id, updates) {
     }
 
     const response = await flashcardsAPI.update(id, updates);
-    console.log('✅ Flashcard mise à jour:', response);
+    debug('✅ Flashcard mise à jour:', response);
     
     return { success: true, data: response };
     
@@ -161,7 +166,7 @@ async function deleteFlashcardFromBackend(id) {
     }
 
     await flashcardsAPI.delete(id);
-    console.log('✅ Flashcard supprimée');
+    debug('✅ Flashcard supprimée');
     
     return { success: true };
     
@@ -173,7 +178,7 @@ async function deleteFlashcardFromBackend(id) {
 
 // Écouter les événements d'authentification
 window.addEventListener('auth-required', () => {
-  console.log('🔐 Authentification requise');
+  debug('🔐 Authentification requise');
   // Afficher l'interface de connexion
   if (typeof showAuthSection === 'function') {
     showAuthSection();
@@ -186,24 +191,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   setTimeout(async () => {
     const token = await authAPI.getToken();
     if (!token) {
-      console.log('👤 Pas de token, pas de synchronisation');
+      debug('👤 Pas de token, pas de synchronisation');
       return; // Arrêter ici si pas de token
     }
     
-    console.log('🔄 Vérification de la connexion...');
+    debug('🔄 Vérification de la connexion...');
     try {
       const isValid = await authAPI.verifyToken();
       
       if (isValid) {
-        console.log('✅ Utilisateur connecté, chargement des flashcards...');
+        debug('✅ Utilisateur connecté, chargement des flashcards...');
         await loadFlashcardsFromBackend();
-        console.log('✅ Flashcards chargées depuis le serveur uniquement');
+        debug('✅ Flashcards chargées depuis le serveur uniquement');
       } else {
-        console.log('❌ Token invalide, reconnexion nécessaire');
+        debug('❌ Token invalide, reconnexion nécessaire');
         chrome.storage.local.remove(['authToken', 'user']);
       }
     } catch (error) {
-      console.log('⚠️ Erreur de vérification, ignorée:', error.message);
+      debug('⚠️ Erreur de vérification, ignorée:', error.message);
     }
   }, 3000); // Délai de 3 secondes pour éviter les conflits avec popup.js
 });

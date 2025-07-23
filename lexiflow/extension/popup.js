@@ -1,4 +1,9 @@
 // Variables globales
+// Debug function - désactiver en production
+const DEBUG = false; // Mettre à true pour activer les logs
+const debug = (...args) => DEBUG && debug(...args);
+
+
 let userSettings = {};
 let translations = [];
 let flashcards = [];
@@ -24,19 +29,19 @@ async function loadFlashcardsFromServer() {
   try {
     const token = await authAPI.getToken();
     if (!token) {
-      console.log('👤 Pas de token, pas de chargement des flashcards');
+      debug('👤 Pas de token, pas de chargement des flashcards');
       flashcards = []; // S'assurer que c'est un tableau vide
       return;
     }
 
-    console.log('🔄 Chargement des flashcards depuis le serveur...');
+    debug('🔄 Chargement des flashcards depuis le serveur...');
     const response = await flashcardsAPI.getAll();
     
     if (response && response.flashcards && Array.isArray(response.flashcards)) {
-      console.log(`☁️ ${response.flashcards.length} flashcards du serveur`);
+      debug(`☁️ ${response.flashcards.length} flashcards du serveur`);
       // Debug: voir ce que le serveur retourne
       if (response.flashcards.length > 0) {
-        console.log('🔍 Première flashcard du serveur:', response.flashcards[0]);
+        debug('🔍 Première flashcard du serveur:', response.flashcards[0]);
       }
       
       // Convertir les flashcards du serveur au format attendu par l'UI
@@ -45,7 +50,7 @@ async function loadFlashcardsFromServer() {
         const sourceLang = card.sourceLanguage || detectLanguage(card.front);
         const targetLang = card.language || userSettings?.targetLanguage || 'fr';
         
-        console.log(`📝 Flashcard: "${card.front}" - source: ${sourceLang}, target: ${targetLang}`);
+        debug(`📝 Flashcard: "${card.front}" - source: ${sourceLang}, target: ${targetLang}`);
         
         return {
           id: card.id,
@@ -70,9 +75,9 @@ async function loadFlashcardsFromServer() {
         };
       });
       
-      console.log(`✅ ${flashcards.length} flashcards chargées`);
+      debug(`✅ ${flashcards.length} flashcards chargées`);
     } else {
-      console.log('ℹ️ Aucune flashcard sur le serveur');
+      debug('ℹ️ Aucune flashcard sur le serveur');
       flashcards = [];
     }
     
@@ -82,7 +87,7 @@ async function loadFlashcardsFromServer() {
   } catch (error) {
     // Ne pas afficher d'erreur si c'est juste un problème d'authentification
     if (error.message && error.message.includes('Authentication required')) {
-      console.log('🔐 Authentification requise pour charger les flashcards');
+      debug('🔐 Authentification requise pour charger les flashcards');
     } else {
       console.error('❌ Erreur lors du chargement des flashcards:', error);
       showNotification('Erreur de chargement des flashcards', 'error');
@@ -108,7 +113,7 @@ let practiceMode = {
 
 // Fonction pour basculer un dossier
 function toggleFolder(key) {
-  console.log('toggleFolder appelé avec key:', key);
+  debug('toggleFolder appelé avec key:', key);
   const folder = document.querySelector(`.language-folder[data-key="${key}"]`);
   if (!folder) {
     console.error('Dossier non trouvé:', key);
@@ -144,7 +149,7 @@ function toggleFolder(key) {
 
 // Fonction pour échanger les langues
 function swapLanguages(key, currentDirection) {
-  console.log('swapLanguages appelé:', key, currentDirection);
+  debug('swapLanguages appelé:', key, currentDirection);
   const [fromLang, toLang] = currentDirection.split('_');
   const newDirection = `${toLang}_${fromLang}`;
   
@@ -384,7 +389,7 @@ function exportFolderData(key, type) {
 }
 
 function toggleFlashcardFolder(key) {
-  console.log('toggleFlashcardFolder appelé avec key:', key);
+  debug('toggleFlashcardFolder appelé avec key:', key);
   const folder = document.querySelector(`.flashcard-language-folder[data-key="${key}"]`);
   if (!folder) {
     console.error('Flashcard folder not found:', key);
@@ -419,7 +424,7 @@ function toggleFlashcardFolder(key) {
 }
 
 function swapFlashcardLanguages(key, currentDirection) {
-  console.log('swapFlashcardLanguages appelé:', key, currentDirection);
+  debug('swapFlashcardLanguages appelé:', key, currentDirection);
   const [fromLang, toLang] = currentDirection.split('_');
   const newDirection = `${toLang}_${fromLang}`;
   
@@ -464,7 +469,7 @@ function swapFlashcardLanguages(key, currentDirection) {
 }
 
 function flipCard(cardId) {
-  console.log('flipCard appelé avec cardId:', cardId);
+  debug('flipCard appelé avec cardId:', cardId);
   
   // Ne pas parser en int car les IDs sont maintenant des UUIDs
   const card = flashcards.find(c => c.id === cardId);
@@ -530,10 +535,6 @@ function moveToFolder(cardId, folderId) {
 async function deleteFlashcard(cardId) {
   if (!confirm('Delete this flashcard?')) return;
   
-  console.log('🗑️ Début suppression, cardId reçu:', cardId, 'type:', typeof cardId);
-  
-  // Debug: afficher toutes les flashcards et leurs IDs
-  console.log('📚 Flashcards actuelles:', flashcards.map(c => ({ id: c.id, type: typeof c.id, front: c.front.substring(0, 20) })));
   
   const cardToDelete = flashcards.find(c => c.id === cardId);
   
@@ -544,31 +545,24 @@ async function deleteFlashcard(cardId) {
     return;
   }
   
-  console.log('✅ Flashcard trouvée:', cardToDelete);
   
   // Supprimer sur le serveur si connecté
   const token = await authAPI.getToken();
   if (token) {
     try {
-      console.log('🗑️ Appel API delete avec ID:', cardToDelete.id);
       const result = await flashcardsAPI.delete(cardToDelete.id);
-      console.log('✅ Réponse du serveur:', result);
     } catch (error) {
       console.error('❌ Erreur lors de la suppression sur le serveur:', error);
       showNotification('Erreur lors de la suppression', 'error');
       return; // Ne pas supprimer localement si échec serveur
     }
   } else {
-    console.log('⚠️ Pas de token, suppression impossible');
     showNotification('Veuillez vous connecter', 'error');
     return;
   }
   
   // Supprimer localement uniquement si succès serveur
-  console.log('🗑️ Suppression locale...');
-  const oldLength = flashcards.length;
   flashcards = flashcards.filter(c => c.id !== cardId);
-  console.log(`✅ Flashcards: ${oldLength} → ${flashcards.length}`);
   
   // Mettre à jour l'interface
   updateFlashcards();
@@ -837,7 +831,7 @@ async function createFlashcardFromHistory(original, translated, language, source
   try {
     // Envoyer directement au serveur
     const detectedSourceLang = sourceLanguage || detectLanguage(original);
-    console.log('📤 Envoi de la flashcard au serveur:', {
+    debug('📤 Envoi de la flashcard au serveur:', {
       original,
       translated,
       sourceLanguage: detectedSourceLang,
@@ -854,7 +848,7 @@ async function createFlashcardFromHistory(original, translated, language, source
     });
     
     if (response && response.flashcard) {
-      console.log('✅ Flashcard créée sur le serveur');
+      debug('✅ Flashcard créée sur le serveur');
       
       // Recharger toutes les flashcards depuis le serveur pour éviter les duplications
       await loadFlashcardsFromServer();
@@ -1015,7 +1009,7 @@ function showPremiumPrompt() {
 async function loadData() {
   // Ne pas recharger si on est en train d'ajouter une flashcard
   if (isAddingFlashcard) {
-    console.log('⏸️ LoadData ignoré: ajout de flashcard en cours');
+    debug('⏸️ LoadData ignoré: ajout de flashcard en cours');
     return Promise.resolve();
   }
   
@@ -1036,7 +1030,7 @@ async function loadData() {
       autoSaveToFlashcards: false
     }, async (settings) => {
       userSettings = settings;
-      console.log('⚙️ Paramètres chargés:', userSettings);
+      debug('⚙️ Paramètres chargés:', userSettings);
       
       chrome.storage.local.get({
         translations: [],
@@ -1050,7 +1044,7 @@ async function loadData() {
         // Initialiser avec un tableau vide
         flashcards = [];
         
-        console.log('📊 Données chargées:', {
+        debug('📊 Données chargées:', {
           translations: translations.length,
           flashcards: flashcards.length
         });
@@ -1063,20 +1057,20 @@ async function loadData() {
         // SEULEMENT si l'utilisateur est connecté
         authAPI.getToken().then(token => {
           if (token) {
-            console.log('🔐 Token trouvé, chargement des flashcards...');
+            debug('🔐 Token trouvé, chargement des flashcards...');
             return loadFlashcardsFromServer();
           } else {
-            console.log('👤 Pas connecté, pas de chargement des flashcards');
+            debug('👤 Pas connecté, pas de chargement des flashcards');
             return Promise.resolve();
           }
         }).then(() => {
           if (flashcards.length > 0) {
-            console.log('✅ Flashcards chargées en arrière-plan');
+            debug('✅ Flashcards chargées en arrière-plan');
             updateFlashcards();
             updateStats();
           }
         }).catch(error => {
-          console.log('⚠️ Chargement des flashcards échoué:', error.message);
+          debug('⚠️ Chargement des flashcards échoué:', error.message);
         });
       });
     });
@@ -1086,7 +1080,7 @@ async function loadData() {
 // Sauvegarder les paramètres
 function saveSettings() {
   chrome.storage.sync.set(userSettings, () => {
-    console.log('💾 Paramètres sauvegardés');
+    debug('💾 Paramètres sauvegardés');
     // Notifier le content script
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]) {
@@ -1229,7 +1223,7 @@ function enableUIInteractions() {
     tab.style.cursor = 'pointer';
   });
   
-  console.log('✅ Interface activée pour utilisation hors ligne');
+  debug('✅ Interface activée pour utilisation hors ligne');
 }
 
 // Mettre à jour les statistiques
@@ -1527,7 +1521,7 @@ function updateFlashcards() {
     
     // Essayer de restaurer depuis le backup
     flashcards = [...flashcardsBackup];
-    console.log('🔄 Flashcards restaurées depuis le backup');
+    debug('🔄 Flashcards restaurées depuis le backup');
   }
   
   if (practiceMode.active) {
@@ -1673,7 +1667,7 @@ function updateFlashcards() {
           e.stopPropagation();
           e.preventDefault();
           const cardId = flashcard.dataset.id;
-          console.log('Clic sur flashcard détecté, id:', cardId);
+          debug('Clic sur flashcard détecté, id:', cardId);
           flipCard(cardId);
           return;
         }
@@ -1703,7 +1697,7 @@ function updateFlashcards() {
           const action = btn.dataset.action;
           const cardId = btn.dataset.cardId;
           
-          console.log('Action flashcard:', { action, cardId });
+          debug('Action flashcard:', { action, cardId });
           
           switch(action) {
             case 'favorite':
@@ -1716,7 +1710,7 @@ function updateFlashcards() {
               moveToFolder(cardId, 'learned');
               break;
             case 'delete':
-              console.log('Suppression de la flashcard:', cardId);
+              debug('Suppression de la flashcard:', cardId);
               deleteFlashcard(cardId);
               break;
           }
@@ -1778,10 +1772,10 @@ function renderFlashcards(cards, fromLang, toLang) {
 
 // Sauvegarder les flashcards
 async function saveFlashcards() {
-  console.log('📝 saveFlashcards appelée avec', flashcards.length, 'flashcards');
+  debug('📝 saveFlashcards appelée avec', flashcards.length, 'flashcards');
   
   // Ne plus sauvegarder localement - les flashcards sont uniquement sur le serveur
-  console.log('☁️ Les flashcards sont maintenant uniquement sur le serveur');
+  debug('☁️ Les flashcards sont maintenant uniquement sur le serveur');
   
   // Si l'utilisateur est connecté, synchroniser avec le backend
   const token = await authAPI.getToken();
@@ -1789,7 +1783,7 @@ async function saveFlashcards() {
     // Synchroniser TOUTES les flashcards non synchronisées
     const unsyncedCards = flashcards.filter(card => !card.synced && !card.syncedWithServer);
     
-    console.log(`📤 ${unsyncedCards.length} flashcards à synchroniser`);
+    debug(`📤 ${unsyncedCards.length} flashcards à synchroniser`);
     
     // Vérifier que flashcardsAPI est disponible
     if (typeof flashcardsAPI !== 'undefined' && flashcardsAPI.create) {
@@ -1817,7 +1811,7 @@ async function saveFlashcards() {
           });
           
           if (response && response.id) {
-            console.log('✅ Flashcard synchronisée:', card.front || card.text);
+            debug('✅ Flashcard synchronisée:', card.front || card.text);
             // Marquer comme synchronisée
             card.synced = true;
             card.syncedWithServer = true;
@@ -1833,7 +1827,7 @@ async function saveFlashcards() {
     }
     
     // Ne plus sauvegarder localement - les flashcards sont uniquement sur le serveur
-    console.log('✅ Flashcards marquées comme synchronisées (pas de sauvegarde locale)');
+    debug('✅ Flashcards marquées comme synchronisées (pas de sauvegarde locale)');
   }
 }
 
@@ -2295,13 +2289,13 @@ function showLoginWindow() {
       
       if (previousUserId && previousUserId !== currentUserId) {
         // C'est un utilisateur différent, nettoyer les données
-        console.log('🔄 Changement d\'utilisateur détecté, nettoyage des données...');
+        debug('🔄 Changement d\'utilisateur détecté, nettoyage des données...');
         flashcards = [];
         translations = [];
         localStorage.removeItem('translations');
         chrome.storage.local.remove(['translations']);
       } else {
-        console.log('✅ Même utilisateur, conservation des données locales');
+        debug('✅ Même utilisateur, conservation des données locales');
       }
       
       // Sauvegarder l'ID de l'utilisateur actuel
@@ -2443,7 +2437,7 @@ function handleOAuthLogin(provider) {
       return;
     }
     
-    console.log('Fenêtre OAuth ouverte:', window.id);
+    debug('Fenêtre OAuth ouverte:', window.id);
     
     // Fermer le modal si tout va bien
     if (loginModal) {
@@ -2493,7 +2487,7 @@ function handleOAuthLogin(provider) {
             localStorage.setItem('lastUserId', currentUserId);
             
             // NE PAS nettoyer les données locales - on veut les préserver !
-            console.log('📌 Préservation des données locales...');
+            debug('📌 Préservation des données locales...');
             // flashcards = [];  // COMMENTÉ pour préserver les flashcards
             // translations = []; // COMMENTÉ pour préserver l'historique
             // localStorage.removeItem('flashcards');
@@ -2502,7 +2496,7 @@ function handleOAuthLogin(provider) {
             // chrome.storage.local.remove(['flashcards', 'translations']); // COMMENTÉ
             
             // NE PAS appeler syncFlashcardsAfterLogin ici - updateUIAfterLogin s'en charge
-            console.log(`👤 updateUIAfterLogin va gérer la synchronisation`);
+            debug(`👤 updateUIAfterLogin va gérer la synchronisation`);
             
             // Réinitialiser le currentUser avec les nouvelles infos
             window.currentUser = response.user;
@@ -2677,7 +2671,7 @@ function updateUIAfterLogin(user) {
   // Sauvegarder l'utilisateur courant
   window.currentUser = user;
   
-  console.log('👤 Utilisateur connecté:', user.email || user.name);
+  debug('👤 Utilisateur connecté:', user.email || user.name);
   
   // Mettre à jour l'interface
   const loginButton = document.getElementById('loginButton');
@@ -2696,9 +2690,9 @@ function updateUIAfterLogin(user) {
   if (registerModal) registerModal.style.display = 'none';
   
   // Charger les flashcards depuis le serveur
-  console.log('🔄 Chargement des flashcards après connexion...');
+  debug('🔄 Chargement des flashcards après connexion...');
   loadFlashcardsFromServer().then(() => {
-    console.log('✅ Flashcards chargées après connexion');
+    debug('✅ Flashcards chargées après connexion');
     updateFlashcards();
     updateStats();
   }).catch(error => {
@@ -2714,7 +2708,7 @@ function updateUIAfterLogin(user) {
 
 // Fonction pour afficher le menu utilisateur
 function showUserMenu(user) {
-  console.log('showUserMenu appelé avec:', user);
+  debug('showUserMenu appelé avec:', user);
   
   // Utiliser le menu existant dans le HTML
   const menu = document.getElementById('userMenu');
@@ -2817,7 +2811,7 @@ function showUserMenu(user) {
     switchAccountBtn.onclick = async () => {
       // Les flashcards sont déjà sauvegardées sur le serveur en temps réel
       // Pas besoin de sauvegarder localement car on veut un stockage 100% serveur
-      console.log('🔄 Changement de compte - Les flashcards sont déjà sur le serveur');
+      debug('🔄 Changement de compte - Les flashcards sont déjà sur le serveur');
       
       // Se déconnecter
       await authAPI.logout();
@@ -2844,7 +2838,7 @@ function showUserMenu(user) {
       
       // Les flashcards sont déjà sauvegardées sur le serveur en temps réel
       // Pas besoin de sauvegarder localement car on veut un stockage 100% serveur
-      console.log('👋 Déconnexion - Les flashcards sont déjà sur le serveur');
+      debug('👋 Déconnexion - Les flashcards sont déjà sur le serveur');
       
       await authAPI.logout();
       
@@ -2860,7 +2854,7 @@ function showUserMenu(user) {
 
 // Fonction pour réinitialiser l'UI après déconnexion
 function resetUIAfterLogout() {
-  console.log('🚪 Resetting UI after logout...');
+  debug('🚪 Resetting UI after logout...');
   
   // IMPORTANT: Sauvegarder les données de l'utilisateur avant de déconnecter
   const currentUserId = localStorage.getItem('lastUserId');
@@ -2875,9 +2869,9 @@ function resetUIAfterLogout() {
     
     // Sauvegarder dans chrome.storage.local
     chrome.storage.local.set({ [userDataKey]: userData }, () => {
-      console.log(`💾 Données sauvegardées pour l'utilisateur ${currentUserId}`);
-      console.log(`   - ${flashcards.length} flashcards`);
-      console.log(`   - ${translations.length} traductions`);
+      debug(`💾 Données sauvegardées pour l'utilisateur ${currentUserId}`);
+      debug(`   - ${flashcards.length} flashcards`);
+      debug(`   - ${translations.length} traductions`);
     });
   }
   
@@ -2889,7 +2883,7 @@ function resetUIAfterLogout() {
   // Nettoyer les flashcards de la mémoire active seulement
   flashcards = [];
   // Ne plus supprimer localement - les flashcards sont uniquement sur le serveur
-  console.log('🧹 Variables globales nettoyées (données sauvegardées)');
+  debug('🧹 Variables globales nettoyées (données sauvegardées)');
   
   // Clear folder directions
   localStorage.removeItem('folderDirections');
@@ -2958,7 +2952,7 @@ function resetUIAfterLogout() {
     if (flashcardsSection) flashcardsSection.style.display = 'block';
   }
   
-  console.log('✅ UI reset completed after logout');
+  debug('✅ UI reset completed after logout');
 }
 
 // Fonction pour mettre à jour le quota affiché
@@ -2999,7 +2993,7 @@ function updateUserQuota(user) {
 
 // Fonction pour synchroniser les flashcards après connexion
 async function syncFlashcardsAfterLogin(mergeMode = false) {
-  console.log('🔄 Synchronisation des flashcards...', mergeMode ? 'Mode fusion' : 'Mode chargement');
+  debug('🔄 Synchronisation des flashcards...', mergeMode ? 'Mode fusion' : 'Mode chargement');
   
   // Si on est en mode fusion, on garde les flashcards locales
   let localFlashcards = mergeMode ? [...flashcards] : [];
@@ -3024,10 +3018,10 @@ async function syncFlashcardsAfterLogin(mergeMode = false) {
     const response = await flashcardsAPI.getAll();
     
     if (response && response.flashcards && Array.isArray(response.flashcards)) {
-      console.log(`☁️ ${response.flashcards.length} flashcards du serveur`);
+      debug(`☁️ ${response.flashcards.length} flashcards du serveur`);
       // Debug: voir ce que le serveur retourne vraiment
       if (response.flashcards.length > 0) {
-        console.log('🔍 Exemple de flashcard du serveur:', response.flashcards[0]);
+        debug('🔍 Exemple de flashcard du serveur:', response.flashcards[0]);
       }
       
       // Convertir les flashcards du serveur au bon format
@@ -3083,28 +3077,28 @@ async function syncFlashcardsAfterLogin(mergeMode = false) {
         });
         
         flashcards = Array.from(flashcardMap.values());
-        console.log(`✅ Fusion terminée: ${flashcards.length} flashcards au total`);
+        debug(`✅ Fusion terminée: ${flashcards.length} flashcards au total`);
         
       } else {
         // Mode chargement simple
         flashcards = serverFlashcards;
-        console.log(`✅ ${flashcards.length} flashcards chargées du serveur`);
+        debug(`✅ ${flashcards.length} flashcards chargées du serveur`);
       }
       
       // Ne plus sauvegarder localement - les flashcards sont uniquement sur le serveur
-      console.log('☁️ Flashcards chargées depuis le serveur uniquement');
+      debug('☁️ Flashcards chargées depuis le serveur uniquement');
       
     } else {
-      console.log('ℹ️ Aucune flashcard sur le serveur');
+      debug('ℹ️ Aucune flashcard sur le serveur');
       
       if (mergeMode) {
         // Garder les flashcards locales
         flashcards = localFlashcards;
-        console.log(`📱 Conservation de ${flashcards.length} flashcards locales`);
+        debug(`📱 Conservation de ${flashcards.length} flashcards locales`);
       } else {
         // Compte vide
         flashcards = [];
-        console.log('🔄 Compte vide, pas de flashcards');
+        debug('🔄 Compte vide, pas de flashcards');
       }
     }
     
@@ -3133,7 +3127,7 @@ async function clearHistory() {
     try {
       // Note: Le backend n'a pas de route pour supprimer les traductions
       // On supprime seulement localement pour l'instant
-      console.log('⚠️ Suppression côté serveur non implémentée');
+      debug('⚠️ Suppression côté serveur non implémentée');
     } catch (error) {
       console.error('Erreur lors de la suppression sur le serveur:', error);
       // Continuer même si l'erreur serveur
@@ -3159,7 +3153,7 @@ function backupFlashcards() {
   
   // Stocker le backup dans chrome.storage.local avec une clé différente
   chrome.storage.local.set({ flashcardsBackup: backup }, () => {
-    console.log(`💾 Backup créé: ${flashcards.length} flashcards sauvegardées`);
+    debug(`💾 Backup créé: ${flashcards.length} flashcards sauvegardées`);
   });
   
   return backup;
@@ -3173,7 +3167,7 @@ function restoreFlashcardsFromBackup() {
       flashcards = backup.flashcards;
       
       // Ne plus sauvegarder localement - les flashcards sont uniquement sur le serveur
-      console.log('🔄 Flashcards restaurées depuis le backup');
+      debug('🔄 Flashcards restaurées depuis le backup');
       
       // Mettre à jour l'interface
       updateFlashcards();
@@ -3207,7 +3201,7 @@ async function clearFlashcards() {
         }));
       
       await Promise.all(deletePromises);
-      console.log('✅ Toutes les flashcards supprimées du serveur');
+      debug('✅ Toutes les flashcards supprimées du serveur');
     } catch (error) {
       console.error('❌ Erreur lors de la suppression serveur:', error);
       showNotification('Erreur de suppression sur le serveur', 'error');
@@ -3339,7 +3333,7 @@ function resetApp() {
   };
   
   chrome.storage.local.set({ fullBackup }, () => {
-    console.log('💾 Backup complet créé avant reset');
+    debug('💾 Backup complet créé avant reset');
   });
   
   // Sauvegarder les flashcards actuelles pour pouvoir les supprimer du serveur
@@ -3389,7 +3383,7 @@ function resetApp() {
             }));
           
           await Promise.all(deletePromises);
-          console.log('✅ Toutes les flashcards supprimées du serveur lors du reset');
+          debug('✅ Toutes les flashcards supprimées du serveur lors du reset');
         } catch (error) {
           console.error('❌ Erreur lors de la suppression serveur:', error);
         }
@@ -3432,50 +3426,15 @@ window.addEventListener('unhandledrejection', (e) => {
   console.error('❌ Unhandled promise rejection:', e.reason);
 });
 
-// Fonction pour vérifier si les éléments sont cliquables
-function debugClickability() {
-  console.log('🔍 Vérification de la cliquabilité des éléments...');
-  
-  // Vérifier le bouton de connexion
-  const loginButton = document.getElementById('loginButton');
-  if (loginButton) {
-    console.log('Login button:', {
-      exists: true,
-      onclick: loginButton.onclick ? 'defined' : 'undefined',
-      disabled: loginButton.disabled,
-      style: loginButton.style.cssText
-    });
-  }
-  
-  // Vérifier tous les boutons
-  const allButtons = document.querySelectorAll('button');
-  console.log(`Total buttons found: ${allButtons.length}`);
-  
-  // Vérifier les onglets
-  const navTabs = document.querySelectorAll('.nav-tab');
-  console.log(`Nav tabs found: ${navTabs.length}`);
-  navTabs.forEach(tab => {
-    console.log('Tab:', tab.textContent.trim(), 'has onclick:', !!tab.onclick);
-  });
-  
-  // Vérifier s'il y a des éléments qui bloquent
-  const allElements = document.querySelectorAll('*');
-  allElements.forEach(el => {
-    const zIndex = window.getComputedStyle(el).zIndex;
-    if (zIndex && zIndex !== 'auto' && parseInt(zIndex) > 1000) {
-      console.warn('Element with high z-index:', el, zIndex);
-    }
-  });
-}
 
 // Event listeners principaux
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('🚀 DOMContentLoaded fired');
+  debug('🚀 DOMContentLoaded fired');
   
   // Réveiller le serveur dès le chargement
   if (API_CONFIG && API_CONFIG.wakeUpServer) {
     API_CONFIG.wakeUpServer().catch(() => {
-      console.log('⏰ Tentative de réveil du serveur...');
+      debug('⏰ Tentative de réveil du serveur...');
     });
   }
   
@@ -3483,13 +3442,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadData();
     await initUI();
     
-    // Déboguer après un court délai
-    setTimeout(debugClickability, 1000);
     
     // Debug: Vérifier les flashcards au démarrage
-    console.log('🚀 Démarrage - Flashcards chargées:', flashcards.length);
+    debug('🚀 Démarrage - Flashcards chargées:', flashcards.length);
     // Ne plus vérifier localStorage pour les flashcards
-    console.log('📦 Flashcards uniquement sur le serveur maintenant');
+    debug('📦 Flashcards uniquement sur le serveur maintenant');
     
     // Vérifier l'authentification au démarrage (en arrière-plan pour ne pas bloquer)
     // Mais pas trop souvent pour éviter les erreurs répétées
@@ -3504,7 +3461,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Vérifier la validité du token et récupérer les infos utilisateur
             const response = await apiRequest('/api/user/profile');
             if (response && response.user) {
-              console.log('Utilisateur connecté:', response.user);
+              debug('Utilisateur connecté:', response.user);
               updateUIAfterLogin(response.user);
               
               // Vérifier si c'est le même utilisateur
@@ -3513,11 +3470,11 @@ document.addEventListener('DOMContentLoaded', async () => {
               
               if (!previousUserId || previousUserId === currentUserId) {
                 // Même utilisateur ou première connexion, garder les données locales
-                console.log('✅ Même utilisateur, conservation des flashcards locales');
+                debug('✅ Même utilisateur, conservation des flashcards locales');
                 localStorage.setItem('lastUserId', currentUserId);
               } else {
                 // Utilisateur différent, charger ses flashcards depuis le serveur
-                console.log('🔄 Utilisateur différent détecté au démarrage');
+                debug('🔄 Utilisateur différent détecté au démarrage');
                 flashcards = [];
                 translations = [];
                 localStorage.removeItem('translations');
@@ -3530,7 +3487,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           } catch (error) {
             // Token invalide, mais c'est normal si l'utilisateur n'est pas connecté
             // Ne pas afficher d'erreur, juste mettre à jour l'UI silencieusement
-            console.log('Pas d\'utilisateur connecté');
+            debug('Pas d\'utilisateur connecté');
             window.currentUser = null;
             const loginButton = document.getElementById('loginButton');
             if (loginButton) {
@@ -3910,7 +3867,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Ne pas afficher de notification d'erreur sauf si c'est vraiment critique
     // Car cela peut être juste un problème temporaire de connexion
     if (error.message && !error.message.includes('token')) {
-      console.log('Erreur non critique, continuons sans notification');
+      debug('Erreur non critique, continuons sans notification');
     }
   }
 });
@@ -3922,10 +3879,10 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     // Ce code est gardé au cas où on voudrait réactiver le stockage local plus tard
     /*
     if (changes.flashcards) {
-      console.log('📌 Flashcards mises à jour dans storage');
+      debug('📌 Flashcards mises à jour dans storage');
       if (changes.flashcards.newValue) {
         flashcards = changes.flashcards.newValue;
-        console.log(`🔄 Mise à jour: ${flashcards.length} flashcards`);
+        debug(`🔄 Mise à jour: ${flashcards.length} flashcards`);
         
         // Ne pas rafraîchir si on est en train de flip une carte ou d'ajouter une flashcard depuis le popup
         if (!isFlippingCard && !isAddingFlashcard) {
@@ -3935,12 +3892,12 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
             // Debounce pour éviter les rafraîchissements multiples
             if (updateFlashcardsDebounce) clearTimeout(updateFlashcardsDebounce);
             updateFlashcardsDebounce = setTimeout(() => {
-              console.log('🔄 Rafraîchissement de l\'affichage des flashcards');
+              debug('🔄 Rafraîchissement de l\'affichage des flashcards');
               updateFlashcards();
             }, 100);
           }
         } else {
-          console.log('⏸️ Rafraîchissement ignoré:', { isFlippingCard, isAddingFlashcard });
+          debug('⏸️ Rafraîchissement ignoré:', { isFlippingCard, isAddingFlashcard });
         }
         // Mettre à jour les stats
         updateStats();
@@ -3950,10 +3907,10 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     
     // Gérer les changements de traductions
     if (changes.translations) {
-      console.log('📌 Traductions mises à jour dans storage');
+      debug('📌 Traductions mises à jour dans storage');
       if (changes.translations.newValue) {
         translations = changes.translations.newValue;
-        console.log(`🔄 Mise à jour: ${translations.length} traductions`);
+        debug(`🔄 Mise à jour: ${translations.length} traductions`);
         
         // Rafraîchir l'affichage si on est sur l'onglet historique
         const activeTab = document.querySelector('.tab-content.active');
@@ -3961,7 +3918,7 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
           // Debounce pour éviter les rafraîchissements multiples
           if (updateHistoryDebounce) clearTimeout(updateHistoryDebounce);
           updateHistoryDebounce = setTimeout(() => {
-            console.log('🔄 Rafraîchissement de l\'affichage de l\'historique');
+            debug('🔄 Rafraîchissement de l\'affichage de l\'historique');
             updateHistory();
           }, 100);
         }
@@ -3976,7 +3933,7 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // Gérer l'ajout de flashcard depuis content.js
   if (message.action === 'flashcardAdded' && message.flashcard) {
-    console.log('📥 Nouvelle flashcard reçue du content script');
+    debug('📥 Nouvelle flashcard reçue du content script');
     
     // Recharger les flashcards depuis le serveur
     setTimeout(async () => {
@@ -3988,7 +3945,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   
   
   if (message.type === 'oauth-success' && message.token) {
-    console.log('Message OAuth reçu avec token');
+    debug('Message OAuth reçu avec token');
     
     // Annuler le timeout OAuth s'il existe
     if (oauthTimeoutId) {
