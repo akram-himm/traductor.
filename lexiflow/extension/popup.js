@@ -567,7 +567,7 @@ async function deleteFlashcard(cardId) {
   // Supprimer localement uniquement si succès serveur
   console.log('🗑️ Suppression locale...');
   const oldLength = flashcards.length;
-  flashcards = flashcards.filter(c => c.id !== cardIdInt);
+  flashcards = flashcards.filter(c => c.id !== cardId);
   console.log(`✅ Flashcards: ${oldLength} → ${flashcards.length}`);
   
   // Mettre à jour l'interface
