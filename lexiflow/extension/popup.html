@@ -1226,8 +1226,8 @@
 <body>
     <div class="header">
         <div class="header-content">
-            <div style="position: absolute; top: 10px; right: 10px; z-index: 10;">
-                <div style="display: flex; align-items: center; gap: 10px; position: relative;">
+            <div style="position: absolute; top: 10px; right: 10px; z-index: 10; overflow: visible;">
+                <div style="display: flex; align-items: center; gap: 10px; position: relative; overflow: visible;">
                 <!-- Quota indicator -->
                 <div id="quotaIndicator" style="
                     display: none;
@@ -1266,15 +1266,17 @@
                 <!-- Menu utilisateur caché par défaut -->
                 <div id="userMenu" style="
                     display: none;
-                    position: fixed;
-                    top: 60px;
-                    right: 20px;
+                    position: absolute;
+                    top: 40px;
+                    right: -10px;
                     background: white;
                     border-radius: 12px;
                     box-shadow: 0 10px 25px rgba(0,0,0,0.15);
                     min-width: 200px;
                     overflow: visible;
                     z-index: 10000;
+                    max-height: calc(100vh - 200px);
+                    overflow-y: auto;
                 ">
                     <div style="padding: 16px; border-bottom: 1px solid #e5e7eb;">
                         <div id="userEmail" style="font-size: 13px; color: #374151; font-weight: 600; word-break: break-all;"></div>
