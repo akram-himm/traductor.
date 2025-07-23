@@ -149,9 +149,11 @@ async function translateWithMyMemory(text, targetLang, sourceLang) {
     const data = await response.json();
     
     if (data.responseStatus === 200) {
+      // MyMemory ne détecte pas la langue, on utilise notre détection locale
+      const detectedLang = sourceLang === 'auto' ? detectLanguage(text) : sourceLang;
       return {
         translatedText: data.responseData.translatedText,
-        detectedLanguage: sourceLang === 'auto' ? 'unknown' : sourceLang,
+        detectedLanguage: detectedLang,
         confidence: data.responseData.match
       };
     }
@@ -693,7 +695,7 @@ function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
     console.log('💾 Creating flashcard:', { front, back, targetLanguage, sourceLanguage, autoSave: userSettings.autoSaveToFlashcards });
     
     // Vérifier qu'on a une langue source valide
-    if (!sourceLanguage || sourceLanguage === 'auto') {
+    if (!sourceLanguage || sourceLanguage === 'auto' || sourceLanguage === 'unknown') {
       console.log('⚠️ Pas de langue source détectée, flashcard ignorée');
       if (!userSettings.autoSaveToFlashcards) {
         const btn = document.getElementById('qt-save-flashcard');

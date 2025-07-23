@@ -132,7 +132,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             front: request.flashcard.originalText,
             back: request.flashcard.translatedText,
             language: request.flashcard.targetLanguage || 'fr',
-            sourceLanguage: request.flashcard.sourceLanguage || 'auto',
+            sourceLanguage: request.flashcard.sourceLanguage || null,
             category: request.flashcard.folder || 'default',
             difficulty: request.flashcard.difficulty === 'normal' ? 0 : 
                        request.flashcard.difficulty === 'hard' ? 3 : 

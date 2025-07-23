@@ -210,7 +210,7 @@ const flashcardsAPI = {
       front: flashcardData.originalText || flashcardData.front,
       back: flashcardData.translatedText || flashcardData.back,
       language: flashcardData.language || flashcardData.targetLanguage || 'fr',
-      sourceLanguage: flashcardData.sourceLanguage || 'auto',
+      sourceLanguage: flashcardData.sourceLanguage || null,
       category: flashcardData.folder || flashcardData.category || 'General',
       difficulty: flashcardData.difficulty === 'normal' ? 0 : 
                  flashcardData.difficulty === 'hard' ? 3 : 

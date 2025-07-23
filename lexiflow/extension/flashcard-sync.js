@@ -14,7 +14,7 @@ async function saveFlashcardToBackend(flashcardData) {
     const flashcardPayload = {
       originalText: flashcardData.originalText || flashcardData.text,
       translatedText: flashcardData.translatedText || flashcardData.translation,
-      sourceLanguage: flashcardData.sourceLanguage || 'auto',
+      sourceLanguage: flashcardData.sourceLanguage || null,
       targetLanguage: flashcardData.targetLanguage || 'fr',
       context: flashcardData.context || '',
       difficulty: flashcardData.difficulty || 'medium',
@@ -74,7 +74,7 @@ async function syncLocalFlashcardsToBackend() {
         await flashcardsAPI.create({
           originalText: flashcard.text || flashcard.originalText,
           translatedText: flashcard.translation || flashcard.translatedText,
-          sourceLanguage: flashcard.sourceLanguage || 'auto',
+          sourceLanguage: flashcard.sourceLanguage || null,
           targetLanguage: flashcard.targetLanguage || 'fr',
           context: flashcard.context || '',
           difficulty: flashcard.difficulty || 'medium',
@@ -83,7 +83,10 @@ async function syncLocalFlashcardsToBackend() {
         });
         syncedCount++;
       } catch (error) {
-        errors.push({ flashcard, error: error.message });
+        // Ignorer les erreurs de duplication (409)
+        if (!error.message.includes('409') && !error.message.includes('existe déjà')) {
+          errors.push({ flashcard, error: error.message });
+        }
       }
     }
 
