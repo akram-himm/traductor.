@@ -42,7 +42,7 @@ async function loadFlashcardsFromServer() {
         back: card.back,
         text: card.front, // Pour compatibilité
         translation: card.back, // Pour compatibilité
-        sourceLanguage: card.sourceLanguage || 'unknown',
+        sourceLanguage: card.sourceLanguage || null,
         targetLanguage: card.language || 'fr',
         language: card.language || 'fr',
         category: card.category || 'General',

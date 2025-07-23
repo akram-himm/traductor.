@@ -191,15 +191,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.log('✅ Utilisateur connecté, chargement des flashcards...');
       await loadFlashcardsFromBackend();
       
-      // Synchroniser automatiquement en arrière-plan sans embêter l'utilisateur
-      const localFlashcards = JSON.parse(localStorage.getItem('flashcards') || '[]');
-      if (localFlashcards.length > 0) {
-        console.log(`📤 ${localFlashcards.length} flashcards locales trouvées, sync en arrière-plan...`);
-        // Sync silencieuse en arrière-plan
-        syncLocalFlashcardsToBackend().catch(err => {
-          console.log('Sync auto échouée, ce n\'est pas grave:', err);
-        });
-      }
+      // Ne plus synchroniser depuis localStorage - les flashcards sont uniquement sur le serveur maintenant
+      console.log('✅ Flashcards chargées depuis le serveur uniquement');
     } else {
       console.log('❌ Token invalide, reconnexion nécessaire');
       chrome.storage.local.remove(['authToken', 'user']);
