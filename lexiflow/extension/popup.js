@@ -531,32 +531,33 @@ async function deleteFlashcard(cardId) {
   const cardIdInt = parseInt(cardId);
   const cardToDelete = flashcards.find(c => c.id === cardIdInt);
   
-  // Supprimer sur le serveur si connecté et si la carte a un serverId
+  if (!cardToDelete) {
+    console.error('Flashcard non trouvée:', cardIdInt);
+    return;
+  }
+  
+  // Supprimer sur le serveur si connecté
   const token = await authAPI.getToken();
-  if (token && cardToDelete && cardToDelete.serverId) {
+  if (token) {
     try {
-      await fetch(`${API_BASE_URL}/flashcards/${cardToDelete.serverId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      console.log('🗑️ Suppression de la flashcard sur le serveur:', cardToDelete.id);
+      await flashcardsAPI.delete(cardToDelete.id);
+      console.log('✅ Flashcard supprimée du serveur');
     } catch (error) {
-      console.error('Erreur lors de la suppression sur le serveur:', error);
-      // Continuer même si l'erreur serveur
+      console.error('❌ Erreur lors de la suppression sur le serveur:', error);
+      showNotification('Erreur lors de la suppression', 'error');
+      return; // Ne pas supprimer localement si échec serveur
     }
   }
   
-  // Supprimer localement
+  // Supprimer localement uniquement si succès serveur
   flashcards = flashcards.filter(c => c.id !== cardIdInt);
   
-  // Les flashcards sont maintenant uniquement sur le serveur, pas besoin de nettoyer le localStorage
-  
-  await saveFlashcards();
+  // Mettre à jour l'interface
   updateFlashcards();
   updateStats();
   
-  showNotification('Flashcard deleted', 'info');
+  showNotification('Flashcard supprimée', 'success');
 }
 
 function showFlashcardTips() {
