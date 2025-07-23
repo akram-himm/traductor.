@@ -1030,8 +1030,8 @@ async function loadData() {
         flashcardFolders = data.flashcardFolders || flashcardFolders;
         
         // NE PLUS UTILISER LE STOCKAGE LOCAL POUR LES FLASHCARDS
-        // Charger uniquement depuis le serveur
-        await loadFlashcardsFromServer();
+        // Initialiser avec un tableau vide
+        flashcards = [];
         
         console.log('📊 Données chargées:', {
           translations: translations.length,
@@ -1041,6 +1041,16 @@ async function loadData() {
         updateHistory();
         updateStats();
         resolve();
+        
+        // Charger les flashcards depuis le serveur en arrière-plan
+        // pour ne pas bloquer l'interface
+        loadFlashcardsFromServer().then(() => {
+          console.log('✅ Flashcards chargées en arrière-plan');
+          updateFlashcards();
+          updateStats();
+        }).catch(error => {
+          console.log('⚠️ Chargement des flashcards en arrière-plan échoué:', error.message);
+        });
       });
     });
   });

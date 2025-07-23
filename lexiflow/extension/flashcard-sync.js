@@ -205,7 +205,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
       console.log('⚠️ Erreur de vérification, ignorée:', error.message);
     }
-  }, 1000); // Délai de 1 seconde
+  }, 3000); // Délai de 3 secondes pour éviter les conflits avec popup.js
 });
 
 // Export des fonctions
