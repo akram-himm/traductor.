@@ -24,8 +24,8 @@ async function loadFlashcardsFromServer() {
   try {
     const token = await authAPI.getToken();
     if (!token) {
-      console.log('Utilisateur non connecté, pas de chargement des flashcards');
-      // Ne pas vider les flashcards, l'utilisateur pourrait se connecter plus tard
+      console.log('👤 Pas de token, pas de chargement des flashcards');
+      flashcards = []; // S'assurer que c'est un tableau vide
       return;
     }
 
@@ -80,8 +80,13 @@ async function loadFlashcardsFromServer() {
     updateStats();
     
   } catch (error) {
-    console.error('❌ Erreur lors du chargement des flashcards:', error);
-    showNotification('Erreur de chargement des flashcards', 'error');
+    // Ne pas afficher d'erreur si c'est juste un problème d'authentification
+    if (error.message && error.message.includes('Authentication required')) {
+      console.log('🔐 Authentification requise pour charger les flashcards');
+    } else {
+      console.error('❌ Erreur lors du chargement des flashcards:', error);
+      showNotification('Erreur de chargement des flashcards', 'error');
+    }
     flashcards = [];
     updateFlashcards();
     updateStats();
@@ -2795,30 +2800,15 @@ function showUserMenu(user) {
   // Gérer le changement de compte
   if (switchAccountBtn) {
     switchAccountBtn.onclick = async () => {
-      // Sauvegarder les données de l'utilisateur actuel avant de se déconnecter
-      if (window.currentUser && window.currentUser.id) {
-        const userId = window.currentUser.id || window.currentUser._id;
-        
-        // Sauvegarder les flashcards et traductions par utilisateur
-        const userDataKey = `userData_${userId}`;
-        const userData = {
-          flashcards: flashcards,
-          translations: translations,
-          targetLanguage: targetLanguage,
-          lastSaved: new Date().toISOString()
-        };
-        
-        // Sauvegarder dans chrome.storage.local
-        chrome.storage.local.set({ [userDataKey]: userData }, () => {
-          console.log(`Données sauvegardées pour l'utilisateur ${userId}`);
-        });
-      }
+      // Les flashcards sont déjà sauvegardées sur le serveur en temps réel
+      // Pas besoin de sauvegarder localement car on veut un stockage 100% serveur
+      console.log('🔄 Changement de compte - Les flashcards sont déjà sur le serveur');
       
       // Se déconnecter
       await authAPI.logout();
       menu.style.display = 'none';
       
-      // NE PAS nettoyer toutes les données, juste réinitialiser les variables actuelles
+      // Réinitialiser les variables actuelles
       flashcards = [];
       translations = [];
       
@@ -2836,7 +2826,17 @@ function showUserMenu(user) {
   if (logoutBtn) {
     logoutBtn.onclick = async () => {
       menu.style.display = 'none';
+      
+      // Les flashcards sont déjà sauvegardées sur le serveur en temps réel
+      // Pas besoin de sauvegarder localement car on veut un stockage 100% serveur
+      console.log('👋 Déconnexion - Les flashcards sont déjà sur le serveur');
+      
       await authAPI.logout();
+      
+      // Réinitialiser les données locales
+      flashcards = [];
+      translations = [];
+      
       showNotification('Déconnexion réussie', 'success');
       resetUIAfterLogout();
     };
