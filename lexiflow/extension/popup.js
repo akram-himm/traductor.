@@ -2657,82 +2657,33 @@ function updateUIAfterLogin(user) {
   // Sauvegarder l'utilisateur courant
   window.currentUser = user;
   
-  // Restaurer les données de l'utilisateur s'il revient
-  const userId = user.id || user._id;
-  const userDataKey = `userData_${userId}`;
+  console.log('👤 Utilisateur connecté:', user.email || user.name);
   
-  chrome.storage.local.get([userDataKey], async (result) => {
-    if (result[userDataKey]) {
-      console.log(`Restauration des données pour l'utilisateur ${userId}`);
-      const userData = result[userDataKey];
-      
-      // Restaurer les flashcards
-      if (userData.flashcards && userData.flashcards.length > 0) {
-        flashcards = userData.flashcards;
-        console.log(`${flashcards.length} flashcards restaurées`);
-        updateFlashcards();
-      }
-      
-      // Restaurer les traductions
-      if (userData.translations && userData.translations.length > 0) {
-        translations = userData.translations;
-        console.log(`${translations.length} traductions restaurées`);
-        updateHistory();
-      }
-      
-      // Restaurer la langue cible
-      if (userData.targetLanguage) {
-        targetLanguage = userData.targetLanguage;
-        const langSelect = document.getElementById('targetLanguage');
-        if (langSelect) {
-          langSelect.value = targetLanguage;
-        }
-        chrome.storage.sync.set({ targetLanguage });
-      }
-      
-      // IMPORTANT: Synchroniser APRÈS la restauration
-      console.log('Lancement de la synchronisation avec fusion...');
-      await syncFlashcardsAfterLogin(true); // true = mode fusion
-      
-    } else {
-      console.log('Aucune donnée locale trouvée pour cet utilisateur');
-      // Vérifier s'il y a des flashcards locales actuelles
-      chrome.storage.local.get(['flashcards'], async (data) => {
-        const localFlashcards = data.flashcards || [];
-        if (localFlashcards.length > 0) {
-          console.log(`${localFlashcards.length} flashcards locales trouvées, mode fusion`);
-          flashcards = localFlashcards;
-          await syncFlashcardsAfterLogin(true); // Mode fusion pour préserver les données locales
-        } else {
-          console.log('Aucune flashcard locale, chargement depuis le serveur');
-          await syncFlashcardsAfterLogin(false); // Charger depuis serveur
-        }
-      });
-    }
-  });
-  
-  // Mettre à jour le bouton de connexion
+  // Mettre à jour l'interface
   const loginButton = document.getElementById('loginButton');
   if (loginButton) {
-    const isPremium = user.subscriptionStatus === 'premium';
-    loginButton.innerHTML = `
-      <span style="font-size: 14px;">${isPremium ? '⭐' : '✅'}</span>
-      <span>${user.name || user.email}</span>
-    `;
-    loginButton.style.background = isPremium ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' : 'rgba(16, 185, 129, 0.3)';
-    loginButton.style.borderColor = isPremium ? 'transparent' : 'rgba(16, 185, 129, 0.5)';
-    loginButton.style.cursor = 'pointer';
-    
-    // Changer le comportement du bouton pour afficher le menu utilisateur
-    loginButton.onclick = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log('Bouton cliqué, utilisateur:', user);
-      showUserMenu(user);
-    };
-    loginButton.onmouseenter = null;
-    loginButton.onmouseleave = null;
+    loginButton.style.background = 'rgba(255, 255, 255, 0.2)';
+    loginButton.style.color = 'white';
   }
+  
+  // Afficher le menu utilisateur
+  showUserMenu(user);
+  
+  // Fermer les modales
+  const loginModal = document.getElementById('loginModal');
+  const registerModal = document.getElementById('registerModal');
+  if (loginModal) loginModal.style.display = 'none';
+  if (registerModal) registerModal.style.display = 'none';
+  
+  // Charger les flashcards depuis le serveur
+  console.log('🔄 Chargement des flashcards après connexion...');
+  loadFlashcardsFromServer().then(() => {
+    console.log('✅ Flashcards chargées après connexion');
+    updateFlashcards();
+    updateStats();
+  }).catch(error => {
+    console.error('❌ Erreur chargement flashcards après connexion:', error);
+  });
   
   // Mettre à jour le quota
   updateUserQuota(user);
