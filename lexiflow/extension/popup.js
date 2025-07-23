@@ -2639,7 +2639,7 @@ function updateUIAfterLogin(user) {
       if (userData.translations && userData.translations.length > 0) {
         translations = userData.translations;
         console.log(`${translations.length} traductions restaurées`);
-        renderHistory();
+        updateHistory();
       }
       
       // Restaurer la langue cible

@@ -182,22 +182,27 @@ window.addEventListener('auth-required', () => {
 
 // Auto-sync au démarrage si connecté
 document.addEventListener('DOMContentLoaded', async () => {
-  const token = await authAPI.getToken();
-  if (token) {
-    console.log('🔄 Vérification de la connexion...');
-    const isValid = await authAPI.verifyToken();
-    
-    if (isValid) {
-      console.log('✅ Utilisateur connecté, chargement des flashcards...');
-      await loadFlashcardsFromBackend();
-      
-      // Ne plus synchroniser depuis localStorage - les flashcards sont uniquement sur le serveur maintenant
-      console.log('✅ Flashcards chargées depuis le serveur uniquement');
-    } else {
-      console.log('❌ Token invalide, reconnexion nécessaire');
-      chrome.storage.local.remove(['authToken', 'user']);
+  // Délai pour éviter de bloquer l'interface au démarrage
+  setTimeout(async () => {
+    const token = await authAPI.getToken();
+    if (token) {
+      console.log('🔄 Vérification de la connexion...');
+      try {
+        const isValid = await authAPI.verifyToken();
+        
+        if (isValid) {
+          console.log('✅ Utilisateur connecté, chargement des flashcards...');
+          await loadFlashcardsFromBackend();
+          console.log('✅ Flashcards chargées depuis le serveur uniquement');
+        } else {
+          console.log('❌ Token invalide, reconnexion nécessaire');
+          chrome.storage.local.remove(['authToken', 'user']);
+        }
+      } catch (error) {
+        console.log('⚠️ Erreur de vérification, ignorée:', error.message);
+      }
     }
-  }
+  }, 1000); // Délai de 1 seconde
 });
 
 // Export des fonctions

@@ -28,6 +28,46 @@ function generateUUID() {
   });
 }
 
+// Fonction de détection de langue locale
+function detectLanguageLocally(text) {
+  if (!text) return null;
+  
+  // Détection par caractères spéciaux
+  const patterns = {
+    'ar': /[\u0600-\u06ff]/,  // Arabe
+    'zh': /[\u4e00-\u9fff]/,  // Chinois
+    'ja': /[\u3040-\u309f\u30a0-\u30ff]/,  // Japonais
+    'ko': /[\uac00-\ud7af]/,  // Coréen
+    'ru': /[а-яё]/i,  // Russe
+    'de': /[äöüß]/i,  // Allemand
+    'fr': /[àâäéêëèîïôùûüÿç]/i,  // Français
+    'es': /[áéíóúñ¿¡]/i,  // Espagnol
+    'it': /[àèéìíîòóù]/i,  // Italien
+    'pt': /[àáâãçéêíõôú]/i  // Portugais
+  };
+  
+  // Vérifier d'abord les scripts non-latins
+  for (const [lang, pattern] of Object.entries(patterns)) {
+    if (['ar', 'zh', 'ja', 'ko', 'ru'].includes(lang) && pattern.test(text)) {
+      return lang;
+    }
+  }
+  
+  // Pour les langues latines, vérifier les caractères spéciaux
+  for (const [lang, pattern] of Object.entries(patterns)) {
+    if (!['ar', 'zh', 'ja', 'ko', 'ru'].includes(lang) && pattern.test(text)) {
+      return lang;
+    }
+  }
+  
+  // Par défaut, supposer anglais pour le texte latin sans accents
+  if (/[a-zA-Z]/.test(text)) {
+    return 'en';
+  }
+  
+  return null;
+}
+
 // Charger les paramètres au démarrage
 loadSettings();
 
@@ -119,7 +159,17 @@ async function translateWithGoogleFree(text, targetLang, sourceLang) {
     const data = await response.json();
     
     if (data && data[0] && data[0][0]) {
-      const detectedLang = data[2] || sourceLang;
+      let detectedLang = data[2] || sourceLang;
+      
+      // Si Google ne détecte pas la langue ou retourne 'auto', utiliser la détection locale
+      if (!detectedLang || detectedLang === 'auto' || detectedLang === sourceLang) {
+        const localDetected = detectLanguageLocally(text);
+        if (localDetected && localDetected !== targetLang) {
+          detectedLang = localDetected;
+          console.log(`🔍 Détection locale utilisée: ${detectedLang}`);
+        }
+      }
+      
       console.log(`🔍 Google Translate - Détecté: ${detectedLang} pour "${text.substring(0, 30)}..."`);
       return {
         translatedText: data[0][0][0],
