@@ -1,7 +1,7 @@
 // Variables globales
 // Debug function - désactiver en production
-const DEBUG = true; // Mettre à true pour activer les logs
-const debug = (...args) => DEBUG && console.log(...args);
+const POPUP_DEBUG = true; // Mettre à true pour activer les logs
+const debug = (...args) => POPUP_DEBUG && console.log(...args);
 
 
 let userSettings = {};

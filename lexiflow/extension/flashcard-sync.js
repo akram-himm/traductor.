@@ -2,8 +2,8 @@
 
 // Fonction principale pour sauvegarder une flashcard
 // Debug function - désactiver en production
-const DEBUG = false; // Mettre à true pour activer les logs
-const debug = (...args) => DEBUG && console.log(...args);
+const SYNC_DEBUG = true; // Mettre à true pour activer les logs  
+const debug = (...args) => SYNC_DEBUG && console.log(...args);
 
 
 async function saveFlashcardToBackend(flashcardData) {
