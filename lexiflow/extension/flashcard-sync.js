@@ -2,7 +2,7 @@
 
 // Fonction principale pour sauvegarder une flashcard
 // Debug function - désactiver en production
-const SYNC_DEBUG = true; // Mettre à true pour activer les logs  
+const SYNC_DEBUG = false; // Mettre à true pour activer les logs  
 const syncDebug = (...args) => SYNC_DEBUG && console.log(...args);
 
 

@@ -1,6 +1,6 @@
 // Variables globales
 // Debug function - désactiver en production
-const POPUP_DEBUG = true; // Mettre à true pour activer les logs
+const POPUP_DEBUG = false; // Mettre à true pour activer les logs
 const debug = (...args) => POPUP_DEBUG && console.log(...args);
 
 
@@ -3937,6 +3937,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     // Rafraîchir périodiquement les stats uniquement
+    // Event listener pour le bouton Mode Pratique
+    const practiceBtn = document.getElementById('startPracticeBtn');
+    if (practiceBtn) {
+      practiceBtn.addEventListener('click', () => {
+        if (window.practiceSystem) {
+          window.practiceSystem.showPracticeMenu();
+        } else {
+          showNotification('Le système de pratique n\'est pas chargé', 'error');
+        }
+      });
+    }
+    
     // Ne pas recharger loadData() car cela peut écraser les flashcards en cours d'ajout
     setInterval(async () => {
       // await loadData(); // Commenté pour éviter l'écrasement des flashcards

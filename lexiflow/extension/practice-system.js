@@ -141,7 +141,7 @@ const practiceSystem = {
 
         <!-- Bouton pour commencer -->
         <div id="startPracticeBtn" style="display: none; text-align: center;">
-          <button class="btn btn-primary btn-lg" onclick="practiceSystem.startPractice()" style="font-size: 18px; padding: 12px 32px;">
+          <button class="btn btn-primary btn-lg" id="startPracticeSessionBtn" style="font-size: 18px; padding: 12px 32px;">
             🚀 Commencer la pratique
           </button>
         </div>
@@ -150,6 +150,12 @@ const practiceSystem = {
 
     // Ajouter les event listeners
     this.setupMenuListeners();
+    
+    // Event listener pour démarrer la pratique
+    const startBtn = document.getElementById('startPracticeSessionBtn');
+    if (startBtn) {
+      startBtn.addEventListener('click', () => this.startPractice());
+    }
   },
 
   setupMenuListeners() {
@@ -277,16 +283,32 @@ const practiceSystem = {
 
         <!-- Boutons d'action -->
         <div style="display: flex; gap: 12px; margin-top: 24px;">
-          <button class="btn btn-secondary" onclick="practiceSystem.skipCard()">
+          <button class="btn btn-secondary" id="skipCardBtn">
             Passer →
           </button>
-          <button class="btn btn-danger" onclick="practiceSystem.quitPractice()">
+          <button class="btn btn-danger" id="quitPracticeBtn">
             Quitter
           </button>
         </div>
       </div>
     `;
 
+    // Event listeners pour les boutons
+    const skipBtn = document.getElementById('skipCardBtn');
+    if (skipBtn) {
+      skipBtn.addEventListener('click', () => this.skipCard());
+    }
+    
+    const quitBtn = document.getElementById('quitPracticeBtn');
+    if (quitBtn) {
+      quitBtn.addEventListener('click', () => this.quitPractice());
+    }
+    
+    const checkBtn = document.getElementById('checkAnswerBtn');
+    if (checkBtn) {
+      checkBtn.addEventListener('click', () => this.checkAnswer());
+    }
+    
     // Focus sur l'input si mode typing
     if (session.mode === 'typing') {
       const input = document.getElementById('practiceInput');
@@ -298,6 +320,14 @@ const practiceSystem = {
           }
         });
       }
+    } else {
+      // Event listeners pour les boutons de choix multiples
+      document.querySelectorAll('.choice-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const choice = btn.getAttribute('data-choice');
+          this.selectChoice(choice);
+        });
+      });
     }
   },
 
@@ -314,7 +344,7 @@ const practiceSystem = {
             text-align: center;
             transition: all 0.2s;
           ">
-          <button class="btn btn-primary btn-block" onclick="practiceSystem.checkAnswer()" style="margin-top: 16px;">
+          <button class="btn btn-primary btn-block" id="checkAnswerBtn" style="margin-top: 16px;">
             Vérifier ✓
           </button>
         </div>
@@ -325,7 +355,7 @@ const practiceSystem = {
       return `
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           ${choices.map((choice, index) => `
-            <button class="choice-btn" onclick="practiceSystem.selectChoice('${choice.replace(/'/g, "\\'")}')" style="
+            <button class="choice-btn" data-choice="${choice.replace(/'/g, "&apos;")}" style="
               padding: 16px;
               border: 2px solid #e5e7eb;
               border-radius: 12px;
@@ -485,15 +515,26 @@ const practiceSystem = {
 
         <!-- Boutons d'action -->
         <div style="display: flex; gap: 12px; justify-content: center;">
-          <button class="btn btn-primary" onclick="practiceSystem.showPracticeMenu()">
+          <button class="btn btn-primary" id="newSessionBtn">
             Nouvelle session
           </button>
-          <button class="btn btn-secondary" onclick="updateFlashcards()">
+          <button class="btn btn-secondary" id="backToFlashcardsBtn">
             Retour aux flashcards
           </button>
         </div>
       </div>
     `;
+    
+    // Event listeners pour les boutons
+    const newSessionBtn = document.getElementById('newSessionBtn');
+    if (newSessionBtn) {
+      newSessionBtn.addEventListener('click', () => this.showPracticeMenu());
+    }
+    
+    const backBtn = document.getElementById('backToFlashcardsBtn');
+    if (backBtn) {
+      backBtn.addEventListener('click', () => updateFlashcards());
+    }
   },
 
   quitPractice() {
