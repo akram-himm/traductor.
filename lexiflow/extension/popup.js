@@ -1,6 +1,6 @@
 // Variables globales
 // Debug function - désactiver en production
-const POPUP_DEBUG = false; // Mettre à true pour activer les logs
+const POPUP_DEBUG = true; // Mettre à true pour activer les logs
 const debug = (...args) => POPUP_DEBUG && console.log(...args);
 
 
@@ -317,23 +317,31 @@ async function deleteFlashcardFolder(key) {
   
   if (!confirm(`Delete ${cards.length} flashcards from this folder?`)) return;
   
+  debug(`🗑️ Suppression du dossier ${key} avec ${cards.length} flashcards`);
+  
+  // Mémoriser que ce dossier a été supprimé
+  let deletedFolders = JSON.parse(localStorage.getItem('deletedFolders') || '[]');
+  if (!deletedFolders.includes(key)) {
+    deletedFolders.push(key);
+    localStorage.setItem('deletedFolders', JSON.stringify(deletedFolders));
+    debug(`📝 Dossier ${key} ajouté à la liste des dossiers supprimés`);
+  }
+  
   // Supprimer sur le serveur si connecté
   const token = await authAPI.getToken();
   if (token) {
     try {
-      // Supprimer toutes les cartes du dossier qui ont un serverId
+      // Supprimer toutes les cartes du dossier
       const deletePromises = cards
-        .filter(card => card.serverId)
+        .filter(card => card.id && !card.id.toString().startsWith('local_'))
         .map(card => 
-          fetch(`${API_BASE_URL}/flashcards/${card.serverId}`, {
-            method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
+          flashcardsAPI.delete(card.id).catch(err => {
+            console.error(`Erreur suppression ${card.id}:`, err);
           })
         );
       
       await Promise.allSettled(deletePromises);
+      debug(`✅ ${deletePromises.length} flashcards supprimées du serveur`);
     } catch (error) {
       console.error('Erreur lors de la suppression sur le serveur:', error);
       // Continuer même si l'erreur serveur
@@ -347,6 +355,8 @@ async function deleteFlashcardFolder(key) {
     // Pas de tri - utiliser l'ordre source->cible
     return `${fromLang}_${toLang}` !== key;
   });
+  
+  debug(`📊 Flashcards restantes: ${flashcards.length}`);
   
   await saveFlashcards();
   updateFlashcards();
@@ -375,6 +385,218 @@ function practiceFolder(key) {
   // Démarrer la pratique avec ces cartes spécifiques
   const [fromLang, toLang] = key.split('_');
   startPracticeWithConfig(cards, fromLang, toLang);
+}
+
+// Fonction pour activer le mode sélection sur les flashcards existantes
+function enablePracticeSelection() {
+  debug('🎯 Mode sélection activé');
+  
+  // Ajouter une barre de sélection en haut
+  const container = document.getElementById('flashcardsList');
+  if (!container) return;
+  
+  // Vérifier si on a des flashcards
+  if (flashcards.length === 0) {
+    showNotification('Aucune flashcard disponible', 'warning');
+    return;
+  }
+  
+  // Ajouter la barre de sélection
+  const selectionBar = document.createElement('div');
+  selectionBar.id = 'practiceSelectionBar';
+  selectionBar.style.cssText = `
+    position: sticky;
+    top: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 16px;
+    margin: -20px -20px 20px -20px;
+    border-radius: 0 0 16px 16px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  `;
+  
+  selectionBar.innerHTML = `
+    <div>
+      <h3 style="margin: 0; font-size: 18px;">🎯 Mode Sélection</h3>
+      <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9;">Choisissez une langue à pratiquer (minimum 5 mots)</p>
+    </div>
+    <button class="btn" id="cancelPracticeSelection" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white;">
+      ❌ Annuler
+    </button>
+  `;
+  
+  container.insertBefore(selectionBar, container.firstChild);
+  
+  // Grouper les flashcards par langue
+  const languageGroups = {};
+  flashcards.forEach(card => {
+    const fromLang = card.sourceLanguage && card.sourceLanguage !== 'auto' ? card.sourceLanguage : detectLanguage(card.front);
+    const toLang = card.language;
+    const key = `${fromLang}_${toLang}`;
+    
+    if (!languageGroups[key]) {
+      languageGroups[key] = {
+        cards: [],
+        fromLang,
+        toLang
+      };
+    }
+    languageGroups[key].cards.push(card);
+  });
+  
+  // Ajouter les checkboxes à chaque dossier
+  document.querySelectorAll('.language-folder').forEach(folder => {
+    const key = folder.dataset.key;
+    const group = languageGroups[key];
+    
+    if (group) {
+      const cardCount = group.cards.length;
+      const canPractice = cardCount >= 5;
+      
+      // Ajouter la checkbox
+      const checkbox = document.createElement('div');
+      checkbox.className = 'practice-checkbox';
+      checkbox.style.cssText = `
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        width: 24px;
+        height: 24px;
+        border: 2px solid ${canPractice ? '#3b82f6' : '#e5e7eb'};
+        border-radius: 6px;
+        background: white;
+        cursor: ${canPractice ? 'pointer' : 'not-allowed'};
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        z-index: 10;
+      `;
+      
+      if (!canPractice) {
+        checkbox.title = 'Minimum 5 mots requis pour pratiquer';
+        checkbox.innerHTML = '<span style="font-size: 12px; color: #9ca3af;">⚠️</span>';
+      }
+      
+      // Style du dossier
+      folder.style.position = 'relative';
+      folder.style.cursor = canPractice ? 'pointer' : 'default';
+      
+      if (canPractice) {
+        // Rendre tout le dossier cliquable
+        folder.addEventListener('click', (e) => {
+          // Ignorer si on clique sur d'autres boutons
+          if (e.target.closest('.folder-menu-btn') || e.target.closest('.folder-swap') || e.target.closest('.folder-toggle')) {
+            return;
+          }
+          
+          e.stopPropagation();
+          
+          // Désactiver tous les autres dossiers
+          document.querySelectorAll('.language-folder').forEach(f => {
+            if (f !== folder) {
+              f.style.opacity = '0.5';
+              f.style.pointerEvents = 'none';
+              const cb = f.querySelector('.practice-checkbox');
+              if (cb) cb.style.display = 'none';
+            }
+          });
+          
+          // Marquer comme sélectionné
+          folder.classList.add('practice-selected');
+          checkbox.style.background = '#10b981';
+          checkbox.style.borderColor = '#10b981';
+          checkbox.innerHTML = '<span style="color: white; font-size: 16px;">✓</span>';
+          
+          // Afficher le bouton pour continuer
+          showPracticeConfirmation(key, group);
+        });
+      }
+      
+      folder.querySelector('.folder-header').appendChild(checkbox);
+    }
+  });
+  
+  // Event listener pour annuler
+  document.getElementById('cancelPracticeSelection').addEventListener('click', () => {
+    disablePracticeSelection();
+  });
+}
+
+// Fonction pour désactiver le mode sélection
+function disablePracticeSelection() {
+  debug('🎯 Mode sélection désactivé');
+  
+  // Retirer la barre de sélection
+  const selectionBar = document.getElementById('practiceSelectionBar');
+  if (selectionBar) selectionBar.remove();
+  
+  // Retirer les checkboxes et réinitialiser les styles
+  document.querySelectorAll('.language-folder').forEach(folder => {
+    folder.style.opacity = '1';
+    folder.style.pointerEvents = 'auto';
+    folder.style.cursor = 'default';
+    folder.classList.remove('practice-selected');
+    
+    const checkbox = folder.querySelector('.practice-checkbox');
+    if (checkbox) checkbox.remove();
+  });
+  
+  // Retirer la confirmation si elle existe
+  const confirmBar = document.getElementById('practiceConfirmationBar');
+  if (confirmBar) confirmBar.remove();
+}
+
+// Fonction pour afficher la confirmation après sélection
+function showPracticeConfirmation(key, group) {
+  debug(`🎯 Langue sélectionnée: ${key}`, group);
+  
+  const container = document.getElementById('flashcardsList');
+  
+  // Ajouter la barre de confirmation
+  const confirmBar = document.createElement('div');
+  confirmBar.id = 'practiceConfirmationBar';
+  confirmBar.style.cssText = `
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 2px solid #e5e7eb;
+    padding: 16px;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+  `;
+  
+  confirmBar.innerHTML = `
+    <div style="font-weight: 600;">
+      ${getFlagEmoji(group.fromLang)} ${getLanguageName(group.fromLang)} → ${getFlagEmoji(group.toLang)} ${getLanguageName(group.toLang)}
+      <span style="color: #6b7280; font-weight: normal;">(${group.cards.length} mots)</span>
+    </div>
+    <button class="btn btn-primary" id="startSelectedPractice">
+      🚀 Commencer la pratique
+    </button>
+    <button class="btn btn-secondary" onclick="disablePracticeSelection()">
+      ❌ Annuler
+    </button>
+  `;
+  
+  document.body.appendChild(confirmBar);
+  
+  // Event listener pour commencer
+  document.getElementById('startSelectedPractice').addEventListener('click', () => {
+    debug('🎯 Démarrage de la pratique avec:', group);
+    disablePracticeSelection();
+    startPracticeWithConfig(group.cards, group.fromLang, group.toLang);
+  });
 }
 
 // Nouvelle fonction pour afficher les flashcards pour sélection de pratique
@@ -1965,11 +2187,18 @@ function updateFlashcards() {
     grouped[key].cards.push(normalizedCard);
   });
   
-  // Récupérer les directions sauvegardées
+  // Récupérer les directions sauvegardées et les dossiers supprimés
   const savedDirections = JSON.parse(localStorage.getItem('flashcardDirections') || '{}');
+  const deletedFolders = JSON.parse(localStorage.getItem('deletedFolders') || '[]');
   
   let html = '';
   Object.entries(grouped).forEach(([key, group]) => {
+    // Ignorer les dossiers supprimés
+    if (deletedFolders.includes(key)) {
+      debug(`🚫 Dossier ${key} ignoré car supprimé`);
+      return;
+    }
+    
     // Utiliser la direction sauvegardée si elle existe
     if (savedDirections[key]) {
       group.currentDirection = savedDirections[key];
@@ -4231,7 +4460,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const practiceBtn = document.getElementById('startPracticeBtn');
     if (practiceBtn) {
       practiceBtn.addEventListener('click', () => {
-        showFlashcardsForPractice();
+        debug('🎯 Activation du mode pratique avec sélection');
+        enablePracticeSelection();
       });
     }
     

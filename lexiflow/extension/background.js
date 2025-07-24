@@ -2,7 +2,7 @@
 
 // Gestion de l'installation
 // Debug function - désactiver en production
-const DEBUG = false; // Mettre à true pour activer les logs
+const DEBUG = true; // Mettre à true pour activer les logs
 const debug = (...args) => DEBUG && console.log(...args);
 
 
