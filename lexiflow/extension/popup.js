@@ -223,14 +223,28 @@ function showFolderMenu(event, key, type) {
       </div>
     `;
   } else if (type === 'flashcards') {
+    // Vérifier le nombre de flashcards dans ce dossier
+    const folderCards = flashcards.filter(card => {
+      const fromLang = card.sourceLanguage && card.sourceLanguage !== 'auto' ? card.sourceLanguage : detectLanguage(card.front);
+      const toLang = card.language;
+      return `${fromLang}_${toLang}` === key;
+    });
+    
+    const canPractice = folderCards.length >= 5;
+    
     menu.innerHTML = `
       <div class="menu-item js-delete-flashcard-folder" data-key="${key}" style="padding: 8px 16px; cursor: pointer; transition: background 0.2s;">
         <span style="margin-right: 8px;">🗑️</span>
         Delete this folder
       </div>
-      <div class="menu-item js-practice-folder" data-key="${key}" style="padding: 8px 16px; cursor: pointer; transition: background 0.2s;">
+      <div class="menu-item js-practice-folder" data-key="${key}" style="
+        padding: 8px 16px; 
+        cursor: ${canPractice ? 'pointer' : 'not-allowed'}; 
+        transition: background 0.2s;
+        opacity: ${canPractice ? '1' : '0.5'};
+      " ${canPractice ? '' : 'title="Minimum 5 mots requis pour pratiquer"'}>
         <span style="margin-right: 8px;">🎮</span>
-        Practice this folder
+        Practice this folder ${canPractice ? '' : '(⚠️ 5+ mots requis)'}
       </div>
     `;
   }
@@ -247,7 +261,17 @@ function showFolderMenu(event, key, type) {
     } else if (item.classList.contains('js-delete-flashcard-folder')) {
       deleteFlashcardFolder(item.dataset.key);
     } else if (item.classList.contains('js-practice-folder')) {
-      practiceFolder(item.dataset.key);
+      const folderCards = flashcards.filter(card => {
+        const fromLang = card.sourceLanguage && card.sourceLanguage !== 'auto' ? card.sourceLanguage : detectLanguage(card.front);
+        const toLang = card.language;
+        return `${fromLang}_${toLang}` === item.dataset.key;
+      });
+      
+      if (folderCards.length >= 5) {
+        practiceFolder(item.dataset.key);
+      } else {
+        showNotification('Cette langue nécessite au moins 5 mots pour pratiquer', 'warning');
+      }
     }
     
     menu.remove();
@@ -343,16 +367,282 @@ function practiceFolder(key) {
     return;
   }
   
-  practiceMode = {
-    active: true,
-    cards: cards.sort(() => Math.random() - 0.5),
-    currentIndex: 0,
-    score: { correct: 0, incorrect: 0 },
-    startTime: Date.now()
-  };
+  if (cards.length < 5) {
+    showNotification('Cette langue nécessite au moins 5 mots pour pratiquer', 'warning');
+    return;
+  }
   
-  switchTab('flashcards');
-  displayPracticeMode();
+  // Démarrer la pratique avec ces cartes spécifiques
+  const [fromLang, toLang] = key.split('_');
+  startPracticeWithConfig(cards, fromLang, toLang);
+}
+
+// Nouvelle fonction pour afficher les flashcards pour sélection de pratique
+function showFlashcardsForPractice() {
+  const container = document.getElementById('flashcardsList');
+  if (!container) return;
+  
+  if (flashcards.length === 0) {
+    showNotification('Aucune flashcard disponible pour pratiquer', 'warning');
+    return;
+  }
+  
+  // Grouper les flashcards par langue
+  const grouped = {};
+  flashcards.forEach(card => {
+    const fromLang = card.sourceLanguage && card.sourceLanguage !== 'auto' ? card.sourceLanguage : detectLanguage(card.front);
+    const toLang = card.language;
+    const key = `${fromLang}_${toLang}`;
+    
+    if (!grouped[key]) {
+      grouped[key] = {
+        fromLang,
+        toLang,
+        cards: [],
+        canPractice: false
+      };
+    }
+    grouped[key].cards.push(card);
+  });
+  
+  // Vérifier quelles langues peuvent être pratiquées
+  Object.values(grouped).forEach(group => {
+    group.canPractice = group.cards.length >= 5;
+  });
+  
+  container.innerHTML = `
+    <div style="padding: 20px;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <h2 style="font-size: 20px; margin-bottom: 8px;">🎯 Choisir une langue à pratiquer</h2>
+        <p style="color: #6b7280; font-size: 14px;">Sélectionnez une langue avec au moins 5 mots</p>
+      </div>
+      
+      <div style="display: grid; gap: 12px;">
+        ${Object.entries(grouped).map(([key, group]) => `
+          <div class="practice-lang-card" data-key="${key}" style="
+            background: ${group.canPractice ? 'white' : '#f9fafb'};
+            border: 2px solid ${group.canPractice ? '#e5e7eb' : '#f3f4f6'};
+            border-radius: 12px;
+            padding: 16px;
+            cursor: ${group.canPractice ? 'pointer' : 'not-allowed'};
+            transition: all 0.2s;
+            opacity: ${group.canPractice ? '1' : '0.7'};
+            position: relative;
+          " 
+          onmouseover="
+            if (${group.canPractice}) {
+              this.style.borderColor='#3b82f6';
+              this.style.transform='translateY(-2px)';
+              this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.15)';
+            } else {
+              this.querySelector('.warning-tooltip').style.display='block';
+            }
+          "
+          onmouseout="
+            this.style.borderColor='${group.canPractice ? '#e5e7eb' : '#f3f4f6'}';
+            this.style.transform='translateY(0)';
+            this.style.boxShadow='none';
+            const tooltip = this.querySelector('.warning-tooltip');
+            if (tooltip) tooltip.style.display='none';
+          ">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 24px;">${getFlagEmoji(group.fromLang)}</span>
+                <span style="font-size: 16px;">→</span>
+                <span style="font-size: 24px;">${getFlagEmoji(group.toLang)}</span>
+                <div>
+                  <div style="font-weight: 600; font-size: 14px;">
+                    ${getLanguageName(group.fromLang)} → ${getLanguageName(group.toLang)}
+                  </div>
+                  <div style="font-size: 12px; color: #6b7280;">
+                    ${group.cards.length} mot${group.cards.length > 1 ? 's' : ''}
+                  </div>
+                </div>
+              </div>
+              ${group.canPractice ? 
+                '<span style="font-size: 20px;">▶️</span>' : 
+                '<span style="font-size: 16px;">⚠️</span>'
+              }
+            </div>
+            ${!group.canPractice ? `
+              <div class="warning-tooltip" style="
+                display: none;
+                position: absolute;
+                bottom: -30px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #1f2937;
+                color: white;
+                padding: 6px 12px;
+                border-radius: 6px;
+                font-size: 12px;
+                white-space: nowrap;
+                z-index: 10;
+              ">
+                Minimum 5 mots requis pour pratiquer
+              </div>
+            ` : ''}
+          </div>
+        `).join('')}
+      </div>
+      
+      <div style="text-align: center; margin-top: 20px;">
+        <button class="btn btn-secondary" onclick="updateFlashcards()">
+          ← Retour aux flashcards
+        </button>
+      </div>
+    </div>
+  `;
+  
+  // Event listeners pour les cartes de langue
+  container.querySelectorAll('.practice-lang-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const key = card.dataset.key;
+      const group = grouped[key];
+      
+      if (group.canPractice) {
+        startPracticeWithConfig(group.cards, group.fromLang, group.toLang);
+      }
+    });
+  });
+}
+
+// Fonction pour démarrer la pratique avec une configuration
+function startPracticeWithConfig(cards, fromLang, toLang) {
+  const container = document.getElementById('flashcardsList');
+  if (!container) return;
+  
+  // Afficher l'interface de configuration rapide
+  container.innerHTML = `
+    <div style="padding: 20px; max-width: 400px; margin: 0 auto;">
+      <div style="background: linear-gradient(145deg, #f9fafb 0%, #f3f4f6 100%); border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="font-size: 32px; margin-bottom: 8px;">🎯</div>
+          <h3 style="font-size: 18px; margin-bottom: 4px;">Configuration rapide</h3>
+          <p style="font-size: 14px; color: #6b7280;">
+            ${getFlagEmoji(fromLang)} ${getLanguageName(fromLang)} ↔ ${getFlagEmoji(toLang)} ${getLanguageName(toLang)}
+          </p>
+        </div>
+        
+        <!-- Direction -->
+        <div style="margin-bottom: 16px;">
+          <label style="font-size: 12px; font-weight: 600; color: #374151; display: block; margin-bottom: 8px;">
+            Direction de pratique
+          </label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <button class="direction-opt selected" data-dir="forward" style="
+              padding: 12px;
+              border: 2px solid #3b82f6;
+              background: #eff6ff;
+              border-radius: 8px;
+              cursor: pointer;
+              transition: all 0.2s;
+              font-size: 12px;
+            ">
+              <div>${getFlagEmoji(fromLang)} → ${getFlagEmoji(toLang)}</div>
+              <div style="font-size: 10px; color: #6b7280; margin-top: 4px;">
+                ${getLanguageName(fromLang)} → ${getLanguageName(toLang)}
+              </div>
+            </button>
+            <button class="direction-opt" data-dir="reverse" style="
+              padding: 12px;
+              border: 2px solid #e5e7eb;
+              background: white;
+              border-radius: 8px;
+              cursor: pointer;
+              transition: all 0.2s;
+              font-size: 12px;
+            ">
+              <div>${getFlagEmoji(toLang)} → ${getFlagEmoji(fromLang)}</div>
+              <div style="font-size: 10px; color: #6b7280; margin-top: 4px;">
+                ${getLanguageName(toLang)} → ${getLanguageName(fromLang)}
+              </div>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Mode -->
+        <div style="margin-bottom: 20px;">
+          <label style="font-size: 12px; font-weight: 600; color: #374151; display: block; margin-bottom: 8px;">
+            Mode de réponse
+          </label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <button class="mode-opt selected" data-mode="typing" style="
+              padding: 12px;
+              border: 2px solid #3b82f6;
+              background: #eff6ff;
+              border-radius: 8px;
+              cursor: pointer;
+              transition: all 0.2s;
+            ">
+              <div style="font-size: 20px;">⌨️</div>
+              <div style="font-size: 12px; font-weight: 600;">Écriture</div>
+            </button>
+            <button class="mode-opt" data-mode="choice" style="
+              padding: 12px;
+              border: 2px solid #e5e7eb;
+              background: white;
+              border-radius: 8px;
+              cursor: pointer;
+              transition: all 0.2s;
+            ">
+              <div style="font-size: 20px;">🔤</div>
+              <div style="font-size: 12px; font-weight: 600;">Choix multiples</div>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Boutons d'action -->
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-primary" id="startPracticeNow" style="flex: 1;">
+            🚀 Commencer
+          </button>
+          <button class="btn btn-secondary" onclick="showFlashcardsForPractice()">
+            ← Retour
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Event listeners pour les options
+  let direction = 'forward';
+  let mode = 'typing';
+  
+  container.querySelectorAll('.direction-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      container.querySelectorAll('.direction-opt').forEach(b => {
+        b.classList.remove('selected');
+        b.style.borderColor = '#e5e7eb';
+        b.style.background = 'white';
+      });
+      btn.classList.add('selected');
+      btn.style.borderColor = '#3b82f6';
+      btn.style.background = '#eff6ff';
+      direction = btn.dataset.dir;
+    });
+  });
+  
+  container.querySelectorAll('.mode-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      container.querySelectorAll('.mode-opt').forEach(b => {
+        b.classList.remove('selected');
+        b.style.borderColor = '#e5e7eb';
+        b.style.background = 'white';
+      });
+      btn.classList.add('selected');
+      btn.style.borderColor = '#3b82f6';
+      btn.style.background = '#eff6ff';
+      mode = btn.dataset.mode;
+    });
+  });
+  
+  // Bouton pour démarrer
+  document.getElementById('startPracticeNow').addEventListener('click', () => {
+    if (window.practiceSystem) {
+      window.practiceSystem.startDirectPractice(cards, fromLang, toLang, direction, mode);
+    }
+  });
 }
 
 function exportFolderData(key, type) {
@@ -3941,11 +4231,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const practiceBtn = document.getElementById('startPracticeBtn');
     if (practiceBtn) {
       practiceBtn.addEventListener('click', () => {
-        if (window.practiceSystem) {
-          window.practiceSystem.showPracticeMenu();
-        } else {
-          showNotification('Le système de pratique n\'est pas chargé', 'error');
-        }
+        showFlashcardsForPractice();
       });
     }
     

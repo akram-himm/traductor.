@@ -475,6 +475,25 @@ const practiceSystem = {
 
     this.showPracticeCard();
   },
+  
+  // Nouvelle méthode pour démarrer directement avec des paramètres
+  startDirectPractice(cards, fromLang, toLang, direction, mode) {
+    // Réinitialiser la session
+    this.currentSession = {
+      cards: [...cards].sort(() => Math.random() - 0.5),
+      currentIndex: 0,
+      score: 0,
+      mode: mode,
+      language: direction === 'forward' ? toLang : fromLang,
+      direction: direction === 'forward' ? 'front-to-back' : 'back-to-front',
+      answers: [],
+      practiceMode: 'all',
+      fromLang: fromLang,
+      toLang: toLang
+    };
+    
+    this.showPracticeCard();
+  },
 
   showPracticeCard() {
     const container = document.getElementById('flashcardsList');
@@ -499,35 +518,41 @@ const practiceSystem = {
     }
 
     container.innerHTML = `
-      <div class="practice-container" style="max-width: 500px; margin: 0 auto; padding: 20px;">
+      <div class="practice-container" style="max-width: 400px; margin: 0 auto; padding: 12px; background: #f9fafb; min-height: 100vh;">
         <!-- Header avec progression -->
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 20px; margin-bottom: 24px; color: white;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 12px; margin-bottom: 16px; color: white; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
             <div>
-              <div style="font-size: 12px; opacity: 0.9;">Question</div>
-              <div style="font-size: 24px; font-weight: bold;">${session.currentIndex + 1} / ${session.cards.length}</div>
+              <div style="font-size: 10px; opacity: 0.9;">Question</div>
+              <div style="font-size: 18px; font-weight: bold;">${session.currentIndex + 1} / ${session.cards.length}</div>
             </div>
             <div style="text-align: right;">
-              <div style="font-size: 12px; opacity: 0.9;">Score</div>
-              <div style="font-size: 24px; font-weight: bold;">${session.score} ⭐</div>
+              <div style="font-size: 10px; opacity: 0.9;">Score</div>
+              <div style="font-size: 18px; font-weight: bold;">${session.score} ⭐</div>
             </div>
           </div>
-          <div style="background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; overflow: hidden;">
-            <div style="background: white; height: 100%; width: ${progress}%; transition: width 0.3s;"></div>
+          <div style="background: rgba(255,255,255,0.2); height: 6px; border-radius: 3px; overflow: hidden;">
+            <div style="background: white; height: 100%; width: ${progress}%; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);"></div>
           </div>
         </div>
 
         <!-- Carte de question -->
-        <div style="background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 40px; text-align: center; margin-bottom: 32px; position: relative; overflow: hidden;">
-          <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: #f0f9ff; border-radius: 50%; opacity: 0.5;"></div>
+        <div style="background: white; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); padding: 24px; text-align: center; margin-bottom: 20px; position: relative; overflow: hidden;">
+          <div style="position: absolute; top: -30px; right: -30px; width: 100px; height: 100px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 50%; opacity: 0.5;"></div>
           <div style="position: relative; z-index: 1;">
-            <div style="font-size: 32px; color: #1f2937; margin-bottom: 12px; font-weight: 600; line-height: 1.3;">
+            <div style="font-size: 22px; color: #1f2937; margin-bottom: 8px; font-weight: 600; line-height: 1.3;">
               ${escapeHtml(question)}
             </div>
             <div style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; color: #6b7280;">
-              <span>${session.direction === 'front-to-back' ? '🇫🇷' : this.getFlagEmoji(session.language)}</span>
+              <span>${session.fromLang && session.toLang ? 
+                (session.direction === 'front-to-back' ? this.getFlagEmoji(session.fromLang) : this.getFlagEmoji(session.toLang)) :
+                (session.direction === 'front-to-back' ? '🇫🇷' : this.getFlagEmoji(session.language))
+              }</span>
               <span>→</span>
-              <span>${session.direction === 'front-to-back' ? this.getFlagEmoji(session.language) : '🇫🇷'}</span>
+              <span>${session.fromLang && session.toLang ? 
+                (session.direction === 'front-to-back' ? this.getFlagEmoji(session.toLang) : this.getFlagEmoji(session.fromLang)) :
+                (session.direction === 'front-to-back' ? this.getFlagEmoji(session.language) : '🇫🇷')
+              }</span>
             </div>
           </div>
         </div>
@@ -686,21 +711,39 @@ const practiceSystem = {
   selectChoice(choice) {
     const card = this.currentSession.cards[this.currentSession.currentIndex];
     const correctAnswer = this.currentSession.direction === 'front-to-back' ? card.back : card.front;
+    const isCorrect = choice.toLowerCase() === correctAnswer.toLowerCase();
     
-    // Marquer visuellement le choix
+    // Marquer visuellement tous les boutons
     document.querySelectorAll('.choice-btn').forEach(btn => {
-      if (btn.textContent === choice) {
-        btn.style.background = '#eff6ff';
-        btn.style.borderColor = '#3b82f6';
+      const btnChoice = btn.getAttribute('data-choice');
+      if (btnChoice === choice) {
+        // Bouton sélectionné
+        if (isCorrect) {
+          btn.style.background = '#10b981';
+          btn.style.borderColor = '#10b981';
+          btn.style.color = 'white';
+        } else {
+          btn.style.background = '#ef4444';
+          btn.style.borderColor = '#ef4444';
+          btn.style.color = 'white';
+        }
+      } else if (btnChoice.toLowerCase() === correctAnswer.toLowerCase()) {
+        // Montrer la bonne réponse
+        btn.style.background = '#10b981';
+        btn.style.borderColor = '#10b981';
+        btn.style.color = 'white';
       }
+      // Désactiver tous les boutons
+      btn.style.pointerEvents = 'none';
     });
 
+    // Enregistrer et continuer après un délai
     setTimeout(() => {
-      this.evaluateAnswer(choice.toLowerCase(), correctAnswer.toLowerCase());
-    }, 300);
+      this.evaluateAnswer(choice.toLowerCase(), correctAnswer.toLowerCase(), true);
+    }, 1500);
   },
 
-  evaluateAnswer(userAnswer, correctAnswer) {
+  evaluateAnswer(userAnswer, correctAnswer, skipNotification = false) {
     const isCorrect = userAnswer === correctAnswer;
     const currentCard = this.currentSession.cards[this.currentSession.currentIndex];
     
@@ -714,11 +757,15 @@ const practiceSystem = {
 
     if (isCorrect) {
       this.currentSession.score++;
-      showNotification('Correct! 🎉', 'success');
+      if (!skipNotification) {
+        showNotification('Correct! 🎉', 'success');
+      }
       // Retirer de la liste des ratées si présent
       this.removeFromFailedCards(currentCard.id);
     } else {
-      showNotification(`Incorrect. La réponse était: ${correctAnswer}`, 'error');
+      if (!skipNotification) {
+        showNotification(`Incorrect. La réponse était: ${correctAnswer}`, 'error');
+      }
       // Ajouter à la liste des ratées
       this.addToFailedCards(currentCard.id);
     }
@@ -727,7 +774,7 @@ const practiceSystem = {
     setTimeout(() => {
       this.currentSession.currentIndex++;
       this.showPracticeCard();
-    }, 1500);
+    }, skipNotification ? 500 : 1500);
   },
 
   skipCard() {
@@ -751,7 +798,7 @@ const practiceSystem = {
     const percentage = Math.round((session.score / session.cards.length) * 100);
 
     container.innerHTML = `
-      <div class="results-container" style="max-width: 600px; margin: 0 auto; padding: 20px; text-align: center;">
+      <div class="results-container" style="max-width: 600px; margin: 0 auto; padding: 20px; text-align: center; background: #f9fafb; min-height: 100vh;">
         <div style="font-size: 64px; margin-bottom: 16px;">
           ${percentage >= 80 ? '🏆' : percentage >= 60 ? '👍' : '💪'}
         </div>
@@ -793,6 +840,18 @@ const practiceSystem = {
           `).join('')}
         </div>
 
+        <!-- Options pour continuer -->
+        ${this.getFailedCardsCount() > 0 ? `
+          <div style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+            <div style="font-weight: 600; color: #92400e; margin-bottom: 8px;">
+              💡 Vous avez ${this.getFailedCardsCount()} mot(s) raté(s)
+            </div>
+            <button class="btn" id="practiceFailedBtn" style="background: #f59e0b; color: white; border: none;">
+              🎯 Pratiquer les mots ratés
+            </button>
+          </div>
+        ` : ''}
+
         <!-- Boutons d'action -->
         <div style="display: flex; gap: 12px; justify-content: center;">
           <button class="btn btn-primary" id="newSessionBtn">
@@ -808,12 +867,49 @@ const practiceSystem = {
     // Event listeners pour les boutons
     const newSessionBtn = document.getElementById('newSessionBtn');
     if (newSessionBtn) {
-      newSessionBtn.addEventListener('click', () => this.showPracticeMenu());
+      newSessionBtn.addEventListener('click', () => {
+        // Revenir à la sélection de langue si on était en mode direct
+        if (window.showFlashcardsForPractice) {
+          window.showFlashcardsForPractice();
+        } else {
+          this.showPracticeMenu();
+        }
+      });
     }
     
     const backBtn = document.getElementById('backToFlashcardsBtn');
     if (backBtn) {
       backBtn.addEventListener('click', () => updateFlashcards());
+    }
+    
+    const practiceFailedBtn = document.getElementById('practiceFailedBtn');
+    if (practiceFailedBtn) {
+      practiceFailedBtn.addEventListener('click', () => {
+        // Pratiquer seulement les mots ratés
+        const failedIds = this.getFailedCardIds();
+        const failedCards = flashcards.filter(card => failedIds.includes(card.id));
+        
+        if (failedCards.length > 0) {
+          // Utiliser les langues de la session actuelle si disponibles
+          const fromLang = session.fromLang || 'fr';
+          const toLang = session.toLang || session.language;
+          
+          this.currentSession = {
+            cards: [...failedCards].sort(() => Math.random() - 0.5),
+            currentIndex: 0,
+            score: 0,
+            mode: session.mode,
+            language: session.language,
+            direction: session.direction,
+            answers: [],
+            practiceMode: 'failed',
+            fromLang: fromLang,
+            toLang: toLang
+          };
+          
+          this.showPracticeCard();
+        }
+      });
     }
   },
 
