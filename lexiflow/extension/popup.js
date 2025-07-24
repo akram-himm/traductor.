@@ -319,17 +319,6 @@ async function deleteFlashcardFolder(key) {
   
   debug(`🗑️ Suppression du dossier ${key} avec ${cards.length} flashcards`);
   
-  // Mémoriser que ce dossier a été supprimé (synchronisé entre appareils)
-  chrome.storage.sync.get(['deletedFolders'], (result) => {
-    let deletedFolders = result.deletedFolders || [];
-    if (!deletedFolders.includes(key)) {
-      deletedFolders.push(key);
-      chrome.storage.sync.set({ deletedFolders }, () => {
-        debug(`📝 Dossier ${key} ajouté à la liste des dossiers supprimés (sync)`);
-      });
-    }
-  });
-  
   // Supprimer sur le serveur si connecté
   const token = await authAPI.getToken();
   if (token) {
@@ -1352,6 +1341,9 @@ async function createFlashcardFromHistory(original, translated, language, source
       sourceLanguage: detectedSourceLang,
       targetLanguage: language
     });
+    
+    // Le dossier sera automatiquement créé avec la nouvelle flashcard
+    
     const response = await flashcardsAPI.create({
       originalText: original,
       translatedText: translated,
@@ -2193,19 +2185,8 @@ async function updateFlashcards() {
   // Récupérer les directions sauvegardées
   const savedDirections = JSON.parse(localStorage.getItem('flashcardDirections') || '{}');
   
-  // Récupérer les dossiers supprimés depuis chrome.storage.sync
-  const syncData = await new Promise(resolve => {
-    chrome.storage.sync.get(['deletedFolders'], resolve);
-  });
-  const deletedFolders = syncData.deletedFolders || [];
-  
   let html = '';
   Object.entries(grouped).forEach(([key, group]) => {
-    // Ignorer les dossiers supprimés
-    if (deletedFolders.includes(key)) {
-      debug(`🚫 Dossier ${key} ignoré car supprimé`);
-      return;
-    }
     
     // Utiliser la direction sauvegardée si elle existe
     if (savedDirections[key]) {
@@ -4039,6 +4020,11 @@ window.addEventListener('unhandledrejection', (e) => {
 document.addEventListener('DOMContentLoaded', async () => {
   debug('🚀 DOMContentLoaded fired');
   
+  // Nettoyer les anciennes données de dossiers supprimés
+  chrome.storage.sync.remove(['deletedFolders'], () => {
+    debug('🧹 Anciennes données de dossiers supprimés nettoyées');
+  });
+  
   // Réveiller le serveur dès le chargement
   if (API_CONFIG && API_CONFIG.wakeUpServer) {
     API_CONFIG.wakeUpServer().catch(() => {
@@ -4111,15 +4097,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.nav-tab').forEach(tab => {
       tab.addEventListener('click', () => switchTab(tab.dataset.tab));
     });
-    
-    // Bouton pour gérer les dossiers supprimés
-    const manageDeletedFoldersBtn = document.getElementById('manageDeletedFoldersBtn');
-    if (manageDeletedFoldersBtn) {
-      manageDeletedFoldersBtn.addEventListener('click', () => {
-        debug('📁 Clic sur le bouton de gestion des dossiers supprimés');
-        showDeletedFoldersManager();
-      });
-    }
     
     // Event listener pour les traductions récentes
     const recentContainer = document.getElementById('recentTranslationsList');
@@ -4556,89 +4533,6 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 });
 
 // Fonction pour gérer les dossiers supprimés
-function showDeletedFoldersManager() {
-  debug('📁 Ouverture du gestionnaire de dossiers supprimés');
-  
-  chrome.storage.sync.get(['deletedFolders'], (result) => {
-    const deletedFolders = result.deletedFolders || [];
-    
-    if (deletedFolders.length === 0) {
-      showNotification('Aucun dossier supprimé', 'info');
-      return;
-    }
-    
-    const container = document.getElementById('flashcardsList');
-    if (!container) return;
-    
-    container.innerHTML = `
-      <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 20px; margin-bottom: 24px; color: white;">
-          <h2 style="font-size: 24px; margin-bottom: 8px;">📁 Dossiers supprimés</h2>
-          <p style="opacity: 0.9;">Cliquez sur un dossier pour le restaurer</p>
-        </div>
-        
-        <div style="display: grid; gap: 12px;">
-          ${deletedFolders.map(key => {
-            const [fromLang, toLang] = key.split('_');
-            return `
-              <div class="deleted-folder-item" style="
-                background: white;
-                border: 2px solid #e5e7eb;
-                border-radius: 12px;
-                padding: 16px;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                transition: all 0.2s;
-                cursor: pointer;
-              " onmouseover="this.style.borderColor='#3b82f6'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.15)'" 
-                 onmouseout="this.style.borderColor='#e5e7eb'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                  <span style="font-size: 24px;">${getFlagEmoji(fromLang)}</span>
-                  <span style="font-size: 16px;">→</span>
-                  <span style="font-size: 24px;">${getFlagEmoji(toLang)}</span>
-                  <div>
-                    <div style="font-weight: 600;">
-                      ${getLanguageName(fromLang)} → ${getLanguageName(toLang)}
-                    </div>
-                    <div style="font-size: 12px; color: #6b7280;">
-                      Dossier supprimé
-                    </div>
-                  </div>
-                </div>
-                <button class="btn btn-primary restore-folder-btn" data-key="${key}" style="padding: 8px 16px;">
-                  ♻️ Restaurer
-                </button>
-              </div>
-            `;
-          }).join('')}
-        </div>
-        
-        <div style="margin-top: 24px; text-align: center;">
-          <button class="btn btn-secondary" onclick="updateFlashcards()">
-            ← Retour aux flashcards
-          </button>
-        </div>
-      </div>
-    `;
-    
-    // Event listeners pour restaurer
-    container.querySelectorAll('.restore-folder-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const key = btn.dataset.key;
-        
-        // Retirer de la liste des supprimés
-        const newDeletedFolders = deletedFolders.filter(k => k !== key);
-        chrome.storage.sync.set({ deletedFolders: newDeletedFolders }, () => {
-          debug(`♻️ Dossier ${key} restauré`);
-          showNotification('Dossier restauré avec succès', 'success');
-          updateFlashcards();
-        });
-      });
-    });
-  });
-}
 
 // Écouter les messages du background script pour OAuth
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
