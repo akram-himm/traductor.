@@ -7,8 +7,10 @@ const practiceSystem = {
     mode: 'typing', // 'typing' ou 'choice'
     language: null,
     direction: 'front-to-back', // ou 'back-to-front'
-    answers: []
+    answers: [],
+    practiceMode: 'all' // 'all' ou 'failed'
   },
+  failedCards: [], // Stocker les cartes ratées
 
   // Afficher le menu de sélection du mode pratique
   showPracticeMenu() {
@@ -31,69 +33,147 @@ const practiceSystem = {
       return;
     }
 
+    // Ajouter des styles pour les animations
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+      }
+      @keyframes sparkle {
+        0%, 100% { opacity: 0.5; }
+        50% { opacity: 1; }
+      }
+      .practice-menu { animation: fadeIn 0.3s ease-out; }
+      .mode-btn:hover { animation: pulse 0.3s ease-in-out; }
+      .language-warning { animation: pulse 1s infinite; }
+    `;
+    document.head.appendChild(style);
+
     container.innerHTML = `
-      <div class="practice-menu" style="max-width: 500px; margin: 0 auto; padding: 20px;">
-        <div style="text-align: center; margin-bottom: 32px;">
-          <div style="font-size: 48px; margin-bottom: 12px;">🎯</div>
-          <h2 style="font-size: 24px; margin-bottom: 8px; color: #1f2937;">Mode Pratique</h2>
-          <p style="color: #6b7280; font-size: 14px;">Pratiquez vos flashcards de façon interactive</p>
+      <div class="practice-menu" style="max-width: 400px; margin: 0 auto; padding: 12px;">
+        <div style="text-align: center; margin-bottom: 20px; position: relative;">
+          <div style="font-size: 32px; margin-bottom: 8px; position: relative; display: inline-block;">
+            🎯
+            <span style="position: absolute; top: -5px; right: -10px; font-size: 16px; animation: sparkle 2s infinite;">✨</span>
+          </div>
+          <h2 style="font-size: 18px; margin-bottom: 4px; color: #1f2937;">Mode Pratique</h2>
+          <p style="color: #6b7280; font-size: 12px;">Pratiquez vos flashcards</p>
         </div>
         
         <!-- Configuration tout en un -->
-        <div style="background: #f9fafb; border-radius: 16px; padding: 24px; margin-bottom: 24px;">
+        <div style="background: linear-gradient(145deg, #f9fafb 0%, #f3f4f6 100%); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
           
           <!-- Sélection de langue avec dropdown -->
-          <div style="margin-bottom: 20px;">
-            <label style="display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px;">
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px;">
               📚 Langue à pratiquer
             </label>
             <select id="languageSelect" style="
               width: 100%;
-              padding: 12px 16px;
+              padding: 10px 14px;
               border: 2px solid #e5e7eb;
-              border-radius: 12px;
-              font-size: 16px;
+              border-radius: 10px;
+              font-size: 14px;
               background: white;
               cursor: pointer;
               appearance: none;
               background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg"%3e%3cpath d="M1 1L7 7L13 1" stroke="%236B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/%3e%3c/svg%3e');
               background-repeat: no-repeat;
-              background-position: right 16px center;
-              padding-right: 40px;
-            ">
+              background-position: right 12px center;
+              padding-right: 36px;
+              transition: all 0.2s;
+            " onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor='#e5e7eb'">
               <option value="">Choisir une langue...</option>
               ${languages.map(lang => `
-                <option value="${lang.code}">${this.getFlagEmoji(lang.code)} ${lang.name} (${lang.count} mots)</option>
+                <option value="${lang.code}" ${lang.count < 5 ? 'disabled' : ''}>
+                  ${this.getFlagEmoji(lang.code)} ${lang.name} (${lang.count} mots) ${lang.count < 5 ? '⚠️' : ''}
+                </option>
               `).join('')}
             </select>
+            <div id="languageWarning" style="display: none; font-size: 11px; color: #dc2626; margin-top: 4px; animation: fadeIn 0.3s;">
+              ⚠️ Cette langue nécessite au moins 5 mots
+            </div>
+          </div>
+
+          <!-- Type de pratique -->
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px;">
+              🎮 Type de pratique
+            </label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <button class="practice-type-btn" data-type="all" style="
+                padding: 8px;
+                border: 2px solid #3b82f6;
+                border-radius: 8px;
+                background: #eff6ff;
+                cursor: pointer;
+                transition: all 0.2s;
+                font-size: 12px;
+                font-weight: 500;
+              ">
+                📚 Toutes
+              </button>
+              <button class="practice-type-btn" data-type="failed" style="
+                padding: 8px;
+                border: 2px solid #e5e7eb;
+                border-radius: 8px;
+                background: white;
+                cursor: pointer;
+                transition: all 0.2s;
+                font-size: 12px;
+                font-weight: 500;
+                position: relative;
+              ">
+                ❌ Ratées
+                <span id="failedCount" style="
+                  position: absolute;
+                  top: -6px;
+                  right: -6px;
+                  background: #dc2626;
+                  color: white;
+                  font-size: 10px;
+                  padding: 2px 6px;
+                  border-radius: 10px;
+                  display: ${this.getFailedCardsCount() > 0 ? 'inline-block' : 'none'};
+                ">${this.getFailedCardsCount()}</span>
+              </button>
+            </div>
           </div>
 
           <!-- Direction avec toggle switch -->
-          <div style="margin-bottom: 20px;">
-            <label style="display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px;">
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px;">
               🔄 Direction de pratique
             </label>
             <div style="
               background: white;
               border: 2px solid #e5e7eb;
-              border-radius: 12px;
-              padding: 4px;
+              border-radius: 10px;
+              padding: 3px;
               display: flex;
               position: relative;
+              box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+              transition: all 0.2s;
             ">
               <div id="directionSlider" style="
                 position: absolute;
                 width: 50%;
-                height: calc(100% - 8px);
-                background: #3b82f6;
-                border-radius: 8px;
-                transition: transform 0.3s;
-                top: 4px;
-                left: 4px;
+                height: calc(100% - 6px);
+                background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                border-radius: 7px;
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                top: 3px;
+                left: 3px;
+                box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
               "></div>
               <button class="direction-btn" data-direction="front-to-back" style="
                 flex: 1;
-                padding: 12px;
+                padding: 8px;
                 background: none;
                 border: none;
                 cursor: pointer;
@@ -102,12 +182,13 @@ const practiceSystem = {
                 transition: color 0.3s;
                 color: white;
                 font-weight: 600;
+                font-size: 12px;
               ">
                 🇫🇷 → <span id="targetLangIcon">🌍</span>
               </button>
               <button class="direction-btn" data-direction="back-to-front" style="
                 flex: 1;
-                padding: 12px;
+                padding: 8px;
                 background: none;
                 border: none;
                 cursor: pointer;
@@ -116,46 +197,49 @@ const practiceSystem = {
                 transition: color 0.3s;
                 color: #6b7280;
                 font-weight: 600;
+                font-size: 12px;
               ">
                 <span id="sourceLangIcon">🌍</span> → 🇫🇷
               </button>
             </div>
-            <p id="directionHint" style="font-size: 12px; color: #6b7280; margin-top: 6px;">
+            <p id="directionHint" style="font-size: 10px; color: #6b7280; margin-top: 4px;">
               Voir le français et deviner la traduction
             </p>
           </div>
 
           <!-- Mode de réponse avec icônes -->
           <div>
-            <label style="display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px;">
+            <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px;">
               ✍️ Mode de réponse
             </label>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
               <button class="mode-btn" data-mode="typing" style="
-                padding: 16px;
+                padding: 12px;
                 border: 2px solid #3b82f6;
-                border-radius: 12px;
+                border-radius: 10px;
                 background: #eff6ff;
                 cursor: pointer;
                 transition: all 0.2s;
                 text-align: center;
+                transform: scale(1);
               ">
-                <div style="font-size: 24px; margin-bottom: 4px;">⌨️</div>
-                <div style="font-size: 14px; font-weight: 600; color: #1f2937;">Écriture</div>
-                <div style="font-size: 11px; color: #6b7280;">Tapez la réponse</div>
+                <div style="font-size: 20px; margin-bottom: 2px;">⌨️</div>
+                <div style="font-size: 12px; font-weight: 600; color: #1f2937;">Écriture</div>
+                <div style="font-size: 10px; color: #6b7280;">Tapez la réponse</div>
               </button>
               <button class="mode-btn" data-mode="choice" style="
-                padding: 16px;
+                padding: 12px;
                 border: 2px solid #e5e7eb;
-                border-radius: 12px;
+                border-radius: 10px;
                 background: white;
                 cursor: pointer;
                 transition: all 0.2s;
                 text-align: center;
+                transform: scale(1);
               ">
-                <div style="font-size: 24px; margin-bottom: 4px;">🔤</div>
-                <div style="font-size: 14px; font-weight: 600; color: #1f2937;">Choix multiples</div>
-                <div style="font-size: 11px; color: #6b7280;">4 options</div>
+                <div style="font-size: 20px; margin-bottom: 2px;">🔤</div>
+                <div style="font-size: 12px; font-weight: 600; color: #1f2937;">Choix multiples</div>
+                <div style="font-size: 10px; color: #6b7280;">4 options</div>
               </button>
             </div>
           </div>
@@ -164,25 +248,34 @@ const practiceSystem = {
         <!-- Récapitulatif de la configuration -->
         <div id="configSummary" style="
           display: none;
-          background: #f0fdf4;
+          background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
           border: 1px solid #86efac;
-          border-radius: 12px;
-          padding: 16px;
-          margin-bottom: 20px;
+          border-radius: 10px;
+          padding: 12px;
+          margin-bottom: 16px;
+          animation: fadeIn 0.3s;
+          box-shadow: 0 2px 8px rgba(34, 197, 94, 0.1);
         ">
-          <div style="font-size: 14px; color: #166534; font-weight: 600; margin-bottom: 8px;">
+          <div style="font-size: 12px; color: #166534; font-weight: 600; margin-bottom: 4px;">
             ✅ Configuration prête !
           </div>
-          <div id="summaryText" style="font-size: 13px; color: #15803d;"></div>
+          <div id="summaryText" style="font-size: 11px; color: #15803d;"></div>
         </div>
 
         <!-- Bouton pour commencer -->
         <button class="btn btn-primary btn-block" id="startPracticeSessionBtn" disabled style="
-          font-size: 18px;
-          padding: 16px;
+          font-size: 16px;
+          padding: 14px;
           opacity: 0.5;
           cursor: not-allowed;
           transition: all 0.3s;
+          border-radius: 12px;
+          background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+          border: none;
+          color: white;
+          font-weight: 600;
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+          transform: scale(1);
         ">
           <span>🚀</span>
           <span>Commencer la pratique</span>
@@ -204,11 +297,13 @@ const practiceSystem = {
     const languageSelect = document.getElementById('languageSelect');
     const directionBtns = document.querySelectorAll('.direction-btn');
     const modeBtns = document.querySelectorAll('.mode-btn');
+    const practiceTypeBtns = document.querySelectorAll('.practice-type-btn');
     const startBtn = document.getElementById('startPracticeSessionBtn');
     const configSummary = document.getElementById('configSummary');
     const summaryText = document.getElementById('summaryText');
     const directionSlider = document.getElementById('directionSlider');
     const directionHint = document.getElementById('directionHint');
+    const languageWarning = document.getElementById('languageWarning');
     
     // Sélection de langue
     if (languageSelect) {
@@ -216,6 +311,17 @@ const practiceSystem = {
         this.currentSession.language = e.target.value;
         
         if (e.target.value) {
+          // Vérifier si la langue a assez de mots
+          const langCount = this.getLanguageCardCount(e.target.value);
+          if (langCount < 5) {
+            languageWarning.style.display = 'block';
+            this.currentSession.language = null;
+            languageSelect.value = '';
+            return;
+          } else {
+            languageWarning.style.display = 'none';
+          }
+          
           // Mettre à jour les icônes de direction
           const langFlag = this.getFlagEmoji(e.target.value);
           document.getElementById('targetLangIcon').textContent = langFlag;
@@ -249,20 +355,53 @@ const practiceSystem = {
       });
     });
     
+    // Type de pratique
+    practiceTypeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const type = btn.dataset.type;
+        this.currentSession.practiceMode = type;
+        
+        // Mise à jour visuelle
+        practiceTypeBtns.forEach(b => {
+          if (b.dataset.type === type) {
+            b.style.borderColor = '#3b82f6';
+            b.style.background = '#eff6ff';
+            b.style.transform = 'scale(1.05)';
+          } else {
+            b.style.borderColor = '#e5e7eb';
+            b.style.background = 'white';
+            b.style.transform = 'scale(1)';
+          }
+        });
+        
+        // Vérifier si on peut pratiquer les ratées
+        if (type === 'failed' && this.getFailedCardsCount() === 0) {
+          showNotification('Aucune flashcard ratée à pratiquer', 'info');
+          this.currentSession.practiceMode = 'all';
+          practiceTypeBtns[0].click();
+          return;
+        }
+        
+        this.checkIfReady();
+      });
+    });
+    
     // Mode de réponse
     modeBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         const mode = btn.dataset.mode;
         this.currentSession.mode = mode;
         
-        // Mise à jour visuelle
+        // Mise à jour visuelle avec animation
         modeBtns.forEach(b => {
           if (b.dataset.mode === mode) {
             b.style.borderColor = '#3b82f6';
             b.style.background = '#eff6ff';
+            b.style.transform = 'scale(1.05)';
           } else {
             b.style.borderColor = '#e5e7eb';
             b.style.background = 'white';
+            b.style.transform = 'scale(1)';
           }
         });
         
@@ -288,8 +427,13 @@ const practiceSystem = {
           ? `Français → ${langName}` 
           : `${langName} → Français`;
         const modeText = this.currentSession.mode === 'typing' ? 'Écriture' : 'Choix multiples';
+        const practiceText = this.currentSession.practiceMode === 'failed' ? 'Flashcards ratées' : 'Toutes les flashcards';
         
-        summaryText.textContent = `${directionText} • Mode ${modeText}`;
+        summaryText.textContent = `${directionText} • ${modeText} • ${practiceText}`;
+        
+        // Animation du bouton prêt
+        startBtn.style.transform = 'scale(1.05)';
+        setTimeout(() => startBtn.style.transform = 'scale(1)', 300);
       } else {
         startBtn.disabled = true;
         startBtn.style.opacity = '0.5';
@@ -300,15 +444,23 @@ const practiceSystem = {
     
     // Définir les valeurs par défaut
     this.currentSession.mode = 'typing';
+    this.currentSession.practiceMode = 'all';
     modeBtns[0].click();
+    practiceTypeBtns[0].click();
   },
 
   startPractice() {
     // Filtrer les flashcards pour la langue sélectionnée
-    const cards = flashcards.filter(card => 
+    let cards = flashcards.filter(card => 
       card.targetLanguage === this.currentSession.language || 
       card.sourceLanguage === this.currentSession.language
     );
+    
+    // Si mode 'failed', filtrer seulement les ratées
+    if (this.currentSession.practiceMode === 'failed') {
+      const failedIds = this.getFailedCardIds();
+      cards = cards.filter(card => failedIds.includes(card.id));
+    }
 
     if (cards.length === 0) {
       showNotification('Aucune flashcard pour cette langue', 'error');
@@ -550,10 +702,11 @@ const practiceSystem = {
 
   evaluateAnswer(userAnswer, correctAnswer) {
     const isCorrect = userAnswer === correctAnswer;
+    const currentCard = this.currentSession.cards[this.currentSession.currentIndex];
     
     // Enregistrer la réponse
     this.currentSession.answers.push({
-      card: this.currentSession.cards[this.currentSession.currentIndex],
+      card: currentCard,
       userAnswer,
       correctAnswer,
       isCorrect
@@ -562,8 +715,12 @@ const practiceSystem = {
     if (isCorrect) {
       this.currentSession.score++;
       showNotification('Correct! 🎉', 'success');
+      // Retirer de la liste des ratées si présent
+      this.removeFromFailedCards(currentCard.id);
     } else {
       showNotification(`Incorrect. La réponse était: ${correctAnswer}`, 'error');
+      // Ajouter à la liste des ratées
+      this.addToFailedCards(currentCard.id);
     }
 
     // Passer à la carte suivante après un délai
@@ -708,6 +865,40 @@ const practiceSystem = {
       'ru': 'Russe'
     };
     return names[code] || code.toUpperCase();
+  },
+  
+  // Méthodes pour gérer les flashcards ratées
+  getFailedCardIds() {
+    const stored = localStorage.getItem('failedFlashcards');
+    return stored ? JSON.parse(stored) : [];
+  },
+  
+  getFailedCardsCount() {
+    return this.getFailedCardIds().length;
+  },
+  
+  addToFailedCards(cardId) {
+    const failedIds = this.getFailedCardIds();
+    if (!failedIds.includes(cardId)) {
+      failedIds.push(cardId);
+      localStorage.setItem('failedFlashcards', JSON.stringify(failedIds));
+    }
+  },
+  
+  removeFromFailedCards(cardId) {
+    const failedIds = this.getFailedCardIds();
+    const index = failedIds.indexOf(cardId);
+    if (index > -1) {
+      failedIds.splice(index, 1);
+      localStorage.setItem('failedFlashcards', JSON.stringify(failedIds));
+    }
+  },
+  
+  getLanguageCardCount(languageCode) {
+    return flashcards.filter(card => 
+      card.targetLanguage === languageCode || 
+      card.sourceLanguage === languageCode
+    ).length;
   },
 
   getFlagEmoji(code) {
