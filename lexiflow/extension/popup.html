@@ -1221,47 +1221,78 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--gray-500);
         }
+        
+        /* User account styles */
+        #userAccountSection:hover {
+            background: rgba(255,255,255,0.2) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        #userAccountSection:hover #userEmailDisplay {
+            max-width: 200px !important;
+            margin-left: 8px !important;
+        }
+        
+        #userAccountSection.not-logged-in #loginText {
+            display: inline !important;
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="header-content">
-            <div style="position: absolute; top: 10px; right: 10px; z-index: 10; overflow: visible;">
-                <div style="display: flex; align-items: center; gap: 10px; position: relative; overflow: visible;">
-                <!-- Quota indicator -->
-                <div id="quotaIndicator" style="
-                    display: none;
+            <!-- User Account Section (top right) -->
+            <div style="position: absolute; top: 10px; right: 10px; z-index: 10;">
+                <div id="userAccountSection" style="
                     background: rgba(255,255,255,0.1);
                     backdrop-filter: blur(10px);
-                    padding: 4px 10px;
-                    border-radius: 15px;
-                    font-size: 11px;
-                    color: white;
-                    font-weight: 500;
-                    border: 1px solid rgba(255,255,255,0.2);
-                ">
-                    <span id="quotaText">0/50</span>
-                </div>
-                
-                <button id="loginButton" style="
-                    background: rgba(255,255,255,0.15); 
-                    color: white; 
-                    border: 1px solid rgba(255,255,255,0.25);
-                    padding: 6px 12px;
+                    padding: 8px 12px;
                     border-radius: 20px;
-                    font-size: 11px;
-                    font-weight: 600;
+                    border: 1px solid rgba(255,255,255,0.2);
                     cursor: pointer;
                     transition: all 0.3s ease;
-                    backdrop-filter: blur(10px);
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                    display: flex;
+                    display: inline-flex;
                     align-items: center;
-                    gap: 4px;
+                    min-width: 40px;
+                    justify-content: center;
+                    position: relative;
+                    overflow: hidden;
                 ">
-                    <span style="font-size: 12px;">👤</span>
-                    <span>Sign in</span>
-                </button>
+                    <!-- Avatar Letter (always visible) -->
+                    <span id="avatarLetter" style="
+                        font-size: 16px;
+                        font-weight: 700;
+                        color: white;
+                        text-transform: uppercase;
+                        transition: all 0.3s ease;
+                        display: inline-block;
+                    ">👤</span>
+                    
+                    <!-- User Email (hidden by default, shows on hover) -->
+                    <span id="userEmailDisplay" style="
+                        color: white;
+                        font-size: 13px;
+                        font-weight: 500;
+                        max-width: 0;
+                        overflow: hidden;
+                        white-space: nowrap;
+                        transition: max-width 0.3s ease, margin-left 0.3s ease;
+                        margin-left: 0;
+                    "></span>
+                    
+                    <!-- Login Text (for non-logged in state) -->
+                    <span id="loginText" style="
+                        color: white;
+                        font-size: 13px;
+                        font-weight: 600;
+                        display: none;
+                        margin-left: 8px;
+                    ">Se connecter</span>
+                </div>
+                
+                <!-- Hidden button for backward compatibility -->
+                <button id="loginButton" style="display: none;"></button>
                 
                 <!-- Menu utilisateur caché par défaut -->
                 <div id="userMenu" style="
@@ -1323,12 +1354,39 @@
                 </div>
                 </div>
             </div>
-            <div class="logo">🌐</div>
-            <div class="title">
-                <div>Quick Translator</div>
-                <div>Pro</div>
+            <!-- Logo and Title Section -->
+            <div style="position: absolute; top: 20px; left: 20px; display: flex; align-items: flex-start; gap: 12px;">
+                <!-- Logo -->
+                <div class="logo" style="font-size: 32px; line-height: 1; margin: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">🌐</div>
+                
+                <!-- Title in two lines -->
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <div style="font-size: 18px; font-weight: 700; color: white; line-height: 1; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">Quick Translator</div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 16px; font-weight: 600; color: white; opacity: 0.9;">Pro</span>
+                        <!-- Quota Badge -->
+                        <div id="quotaIndicator" style="
+                            display: none;
+                            background: rgba(255,255,255,0.2);
+                            backdrop-filter: blur(10px);
+                            padding: 4px 10px;
+                            border-radius: 12px;
+                            font-size: 11px;
+                            color: white;
+                            font-weight: 500;
+                            border: 1px solid rgba(255,255,255,0.25);
+                            transform: translateY(-2px);
+                        ">
+                            <span id="quotaText">0/50</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="subtitle">Advanced linguistic intelligence</div>
+            
+            <!-- Center content -->
+            <div style="margin-top: 60px;">
+                <div class="subtitle">Advanced linguistic intelligence</div>
+            </div>
             <div class="badges">
                 <div class="pro-badge" id="proBadge" style="display: none;">
                     <span>✨</span>

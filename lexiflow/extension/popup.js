@@ -1761,26 +1761,35 @@ async function initUI() {
 
 // Fonction pour s'assurer que l'interface reste interactive
 function enableUIInteractions() {
-  // S'assurer que le bouton de connexion est TOUJOURS cliquable
-  const loginButton = document.getElementById('loginButton');
-  if (loginButton) {
-    loginButton.classList.remove('disabled');
-    loginButton.disabled = false;
-    loginButton.style.pointerEvents = 'auto';
-    loginButton.style.opacity = '1';
-    loginButton.style.cursor = 'pointer';
-    
-    // Vérifier si l'utilisateur est connecté avant de définir le gestionnaire
-    if (!loginButton.onclick) {
-      // Si window.currentUser existe, afficher le menu utilisateur
+  // Gérer le clic sur la section utilisateur
+  const userAccountSection = document.getElementById('userAccountSection');
+  if (userAccountSection) {
+    userAccountSection.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
       if (window.currentUser) {
-        loginButton.onclick = (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          showUserMenu(window.currentUser);
-        };
+        // Toggle le menu utilisateur
+        const menu = document.getElementById('userMenu');
+        if (menu) {
+          if (menu.style.display === 'block') {
+            menu.style.display = 'none';
+          } else {
+            showUserMenu(window.currentUser);
+          }
+        }
       } else {
-        loginButton.onclick = () => showLoginWindow();
+        // Ouvrir la fenêtre de connexion
+        showLoginWindow();
+      }
+    };
+    
+    // Définir l'état initial
+    if (!window.currentUser) {
+      userAccountSection.classList.add('not-logged-in');
+      const loginText = document.getElementById('loginText');
+      if (loginText) {
+        loginText.style.display = 'inline';
       }
     }
   }
@@ -3262,15 +3271,11 @@ function updateUIAfterLogin(user) {
   
   debug('👤 Utilisateur connecté:', user.email || user.name);
   
-  // Mettre à jour l'interface
-  const loginButton = document.getElementById('loginButton');
-  if (loginButton) {
-    loginButton.style.background = 'rgba(255, 255, 255, 0.2)';
-    loginButton.style.color = 'white';
-  }
+  // Mettre à jour l'interface utilisateur
+  updateUserInterface(user);
   
-  // Afficher le menu utilisateur
-  showUserMenu(user);
+  // Mettre à jour le quota
+  updateUserQuota(user);
   
   // Fermer les modales
   const loginModal = document.getElementById('loginModal');
@@ -3295,9 +3300,59 @@ function updateUIAfterLogin(user) {
   updateStats();
 }
 
+// Fonction pour générer une couleur basée sur l'email
+function stringToColor(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = hash % 360;
+  return `hsl(${hue}, 70%, 50%)`;
+}
+
+// Fonction pour mettre à jour l'interface utilisateur
+function updateUserInterface(user) {
+  const avatarLetter = document.getElementById('avatarLetter');
+  const userEmailDisplay = document.getElementById('userEmailDisplay');
+  const loginText = document.getElementById('loginText');
+  const userAccountSection = document.getElementById('userAccountSection');
+  
+  if (user && user.email) {
+    // Afficher seulement la première lettre
+    if (avatarLetter) {
+      const firstLetter = user.email.charAt(0).toUpperCase();
+      avatarLetter.textContent = firstLetter;
+      avatarLetter.style.color = '#fff';
+      // Appliquer une couleur de fond basée sur l'email
+      if (userAccountSection) {
+        const bgColor = stringToColor(user.email);
+        userAccountSection.style.background = bgColor;
+      }
+    }
+    
+    // Préparer l'email pour l'affichage au hover
+    if (userEmailDisplay) {
+      userEmailDisplay.textContent = user.email;
+    }
+    
+    // Cacher le texte de connexion
+    if (loginText) {
+      loginText.style.display = 'none';
+    }
+    
+    // Retirer la classe not-logged-in
+    if (userAccountSection) {
+      userAccountSection.classList.remove('not-logged-in');
+    }
+  }
+}
+
 // Fonction pour afficher le menu utilisateur
 function showUserMenu(user) {
   debug('showUserMenu appelé avec:', user);
+  
+  // Mettre à jour l'interface avec la première lettre
+  updateUserInterface(user);
   
   // Utiliser le menu existant dans le HTML
   const menu = document.getElementById('userMenu');
@@ -3306,7 +3361,7 @@ function showUserMenu(user) {
     return;
   }
   
-  // Mettre à jour les informations de l'utilisateur
+  // Mettre à jour les informations de l'utilisateur dans le menu
   const userEmail = document.getElementById('userEmail');
   const userPlan = document.getElementById('userPlan');
   
@@ -3364,7 +3419,8 @@ function showUserMenu(user) {
   
   // Fermer le menu en cliquant ailleurs
   const closeMenu = (e) => {
-    if (!menu.contains(e.target) && !loginButton.contains(e.target)) {
+    const userAccountSection = document.getElementById('userAccountSection');
+    if (!menu.contains(e.target) && (!userAccountSection || !userAccountSection.contains(e.target))) {
       menu.style.display = 'none';
     }
   };
@@ -3493,32 +3549,27 @@ function resetUIAfterLogout() {
     startTime: null
   };
   
-  // 2. Reset login button UI
-  const loginButton = document.getElementById('loginButton');
-  if (loginButton) {
-    loginButton.innerHTML = '<span style="font-size: 14px;">🔒</span><span>Se connecter</span>';
-    loginButton.style.background = 'rgba(255,255,255,0.15)';
-    loginButton.style.borderColor = 'rgba(255,255,255,0.25)';
-    loginButton.style.cursor = 'pointer';
-    loginButton.style.pointerEvents = 'auto'; // S'assurer qu'il est cliquable
-    loginButton.disabled = false; // S'assurer qu'il n'est pas désactivé
-    loginButton.classList.remove('disabled'); // Retirer toute classe disabled
-    
-    // Restaurer le comportement original
-    loginButton.onclick = () => showLoginWindow();
-    
-    // Restaurer les effets hover
-    loginButton.addEventListener('mouseenter', () => {
-      loginButton.style.background = 'rgba(255,255,255,0.25)';
-      loginButton.style.transform = 'translateY(-1px)';
-      loginButton.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-    });
-    
-    loginButton.addEventListener('mouseleave', () => {
-      loginButton.style.background = 'rgba(255,255,255,0.15)';
-      loginButton.style.transform = 'translateY(0)';
-      loginButton.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-    });
+  // 2. Reset user interface
+  const userAccountSection = document.getElementById('userAccountSection');
+  const avatarLetter = document.getElementById('avatarLetter');
+  const userEmailDisplay = document.getElementById('userEmailDisplay');
+  const loginText = document.getElementById('loginText');
+  
+  if (userAccountSection) {
+    userAccountSection.classList.add('not-logged-in');
+    userAccountSection.style.background = 'rgba(255,255,255,0.1)';
+  }
+  
+  if (avatarLetter) {
+    avatarLetter.textContent = '👤';
+  }
+  
+  if (userEmailDisplay) {
+    userEmailDisplay.textContent = '';
+  }
+  
+  if (loginText) {
+    loginText.style.display = 'inline';
   }
   
   // 3. Hide quota indicator
