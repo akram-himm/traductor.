@@ -1230,8 +1230,8 @@
         }
         
         #userAccountSection:hover #userEmailDisplay {
-            max-width: 200px !important;
-            margin-left: 8px !important;
+            max-width: 150px !important;
+            margin-left: 6px !important;
         }
         
         #userAccountSection.not-logged-in #loginText {
@@ -1243,25 +1243,26 @@
     <div class="header">
         <div class="header-content">
             <!-- User Account Section (top right) -->
-            <div style="position: absolute; top: 10px; right: 10px; z-index: 10;">
+            <div style="position: absolute; top: 16px; right: 10px; z-index: 10;">
                 <div id="userAccountSection" style="
                     background: rgba(255,255,255,0.1);
                     backdrop-filter: blur(10px);
-                    padding: 8px 12px;
-                    border-radius: 20px;
+                    padding: 6px 10px;
+                    border-radius: 16px;
                     border: 1px solid rgba(255,255,255,0.2);
                     cursor: pointer;
                     transition: all 0.3s ease;
                     display: inline-flex;
                     align-items: center;
-                    min-width: 40px;
+                    min-width: 36px;
                     justify-content: center;
                     position: relative;
                     overflow: hidden;
+                    font-size: 12px;
                 ">
                     <!-- Avatar Letter (always visible) -->
                     <span id="avatarLetter" style="
-                        font-size: 16px;
+                        font-size: 14px;
                         font-weight: 700;
                         color: white;
                         text-transform: uppercase;
@@ -1272,7 +1273,7 @@
                     <!-- User Email (hidden by default, shows on hover) -->
                     <span id="userEmailDisplay" style="
                         color: white;
-                        font-size: 13px;
+                        font-size: 11px;
                         font-weight: 500;
                         max-width: 0;
                         overflow: hidden;
@@ -1284,10 +1285,10 @@
                     <!-- Login Text (for non-logged in state) -->
                     <span id="loginText" style="
                         color: white;
-                        font-size: 13px;
+                        font-size: 11px;
                         font-weight: 600;
                         display: none;
-                        margin-left: 8px;
+                        margin-left: 6px;
                     ">Se connecter</span>
                 </div>
                 
@@ -1355,7 +1356,7 @@
                 </div>
             </div>
             <!-- Logo and Title Section -->
-            <div style="position: absolute; top: 20px; left: 20px; display: flex; align-items: flex-start; gap: 12px;">
+            <div style="position: absolute; top: 28px; left: 20px; display: flex; align-items: flex-start; gap: 12px;">
                 <!-- Logo -->
                 <div class="logo" style="font-size: 32px; line-height: 1; margin: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">🌐</div>
                 
@@ -1384,7 +1385,7 @@
             </div>
             
             <!-- Center content -->
-            <div style="margin-top: 60px;">
+            <div style="margin-top: 68px;">
                 <div class="subtitle">Advanced linguistic intelligence</div>
             </div>
             <div class="badges">
