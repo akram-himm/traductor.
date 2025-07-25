@@ -84,7 +84,7 @@
         /* Header */
         .header {
             background: var(--gradient-primary);
-            padding: 20px;
+            padding: 16px 20px 20px 20px;
             text-align: center;
             color: white;
             position: relative;
@@ -1230,8 +1230,8 @@
         }
         
         #userAccountSection:hover #userEmailDisplay {
-            max-width: 150px !important;
-            margin-left: 6px !important;
+            max-width: 180px !important;
+            margin-left: 8px !important;
         }
         
         #userAccountSection.not-logged-in #loginText {
@@ -1243,26 +1243,25 @@
     <div class="header">
         <div class="header-content">
             <!-- User Account Section (top right) -->
-            <div style="position: absolute; top: 16px; right: 10px; z-index: 10;">
+            <div style="position: absolute; top: 12px; right: 16px; z-index: 10;">
                 <div id="userAccountSection" style="
-                    background: rgba(255,255,255,0.1);
+                    background: rgba(255,255,255,0.15);
                     backdrop-filter: blur(10px);
-                    padding: 6px 10px;
-                    border-radius: 16px;
-                    border: 1px solid rgba(255,255,255,0.2);
+                    padding: 8px 12px;
+                    border-radius: 20px;
+                    border: 1px solid rgba(255,255,255,0.25);
                     cursor: pointer;
                     transition: all 0.3s ease;
                     display: inline-flex;
                     align-items: center;
-                    min-width: 36px;
+                    min-width: 40px;
                     justify-content: center;
                     position: relative;
                     overflow: hidden;
-                    font-size: 12px;
                 ">
                     <!-- Avatar Letter (always visible) -->
                     <span id="avatarLetter" style="
-                        font-size: 14px;
+                        font-size: 15px;
                         font-weight: 700;
                         color: white;
                         text-transform: uppercase;
@@ -1273,7 +1272,7 @@
                     <!-- User Email (hidden by default, shows on hover) -->
                     <span id="userEmailDisplay" style="
                         color: white;
-                        font-size: 11px;
+                        font-size: 12px;
                         font-weight: 500;
                         max-width: 0;
                         overflow: hidden;
@@ -1285,10 +1284,10 @@
                     <!-- Login Text (for non-logged in state) -->
                     <span id="loginText" style="
                         color: white;
-                        font-size: 11px;
+                        font-size: 12px;
                         font-weight: 600;
                         display: none;
-                        margin-left: 6px;
+                        margin-left: 8px;
                     ">Se connecter</span>
                 </div>
                 
@@ -1356,39 +1355,38 @@
                 </div>
             </div>
             <!-- Logo and Title Section -->
-            <div style="position: absolute; top: 28px; left: 20px; display: flex; align-items: flex-start; gap: 12px;">
+            <div style="text-align: center; padding-top: 10px;">
                 <!-- Logo -->
-                <div class="logo" style="font-size: 32px; line-height: 1; margin: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">🌐</div>
+                <div class="logo" style="font-size: 40px; margin-bottom: 12px;">🌐</div>
                 
-                <!-- Title in two lines -->
-                <div style="display: flex; flex-direction: column; gap: 2px;">
-                    <div style="font-size: 18px; font-weight: 700; color: white; line-height: 1; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">Quick Translator</div>
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <span style="font-size: 16px; font-weight: 600; color: white; opacity: 0.9;">Pro</span>
-                        <!-- Quota Badge -->
-                        <div id="quotaIndicator" style="
-                            display: none;
-                            background: rgba(255,255,255,0.2);
-                            backdrop-filter: blur(10px);
-                            padding: 4px 10px;
-                            border-radius: 12px;
-                            font-size: 11px;
-                            color: white;
-                            font-weight: 500;
-                            border: 1px solid rgba(255,255,255,0.25);
-                            transform: translateY(-2px);
-                        ">
-                            <span id="quotaText">0/50</span>
-                        </div>
-                    </div>
+                <!-- Title -->
+                <div style="margin-bottom: 8px;">
+                    <div style="font-size: 20px; font-weight: 800; color: white; line-height: 1; text-shadow: 0 2px 4px rgba(0,0,0,0.2); letter-spacing: -0.5px;">Quick Translator Pro</div>
+                </div>
+                
+                <!-- Quota Badge -->
+                <div id="quotaIndicator" style="
+                    display: none;
+                    background: rgba(255,255,255,0.2);
+                    backdrop-filter: blur(10px);
+                    padding: 5px 12px;
+                    border-radius: 14px;
+                    font-size: 12px;
+                    color: white;
+                    font-weight: 600;
+                    border: 1px solid rgba(255,255,255,0.3);
+                    display: inline-block;
+                    margin-top: 4px;
+                ">
+                    <span id="quotaText">0/50</span>
                 </div>
             </div>
             
             <!-- Center content -->
-            <div style="margin-top: 68px;">
-                <div class="subtitle">Advanced linguistic intelligence</div>
+            <div style="margin-top: 12px;">
+                <div class="subtitle" style="font-size: 13px; opacity: 0.95;">Advanced linguistic intelligence</div>
             </div>
-            <div class="badges">
+            <div class="badges" style="margin-top: 16px;">
                 <div class="pro-badge" id="proBadge" style="display: none;">
                     <span>✨</span>
                     <span>PREMIUM</span>
