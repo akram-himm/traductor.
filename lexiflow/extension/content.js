@@ -178,6 +178,31 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 async function translateText(text, targetLang = 'fr', sourceLang = 'auto') {
   debug('🌐 Translation:', { text, from: sourceLang, to: targetLang });
   
+  // Vérifier les limitations du plan gratuit
+  const FREE_LANGUAGES = ['fr', 'en', 'es']; // 3 langues pour le plan gratuit
+  const result = await chrome.storage.local.get(['user']);
+  const isPremium = result.user && result.user.subscriptionStatus === 'premium';
+  
+  // Si pas Premium et langue cible non autorisée
+  if (!isPremium && !FREE_LANGUAGES.includes(targetLang)) {
+    showNotification('⭐ Langue Premium! Passez à Premium pour débloquer toutes les langues', 'warning');
+    return {
+      translatedText: '⭐ Langue Premium requise',
+      detectedLanguage: sourceLang,
+      confidence: 0
+    };
+  }
+  
+  // Vérifier la limite de caractères (150 pour gratuit, illimité pour Premium)
+  if (!isPremium && text.length > 150) {
+    showNotification('⚠️ Texte trop long! Limite gratuite: 150 caractères', 'warning');
+    return {
+      translatedText: '⚠️ Texte trop long (max 150 caractères)',
+      detectedLanguage: sourceLang,
+      confidence: 0
+    };
+  }
+  
   // Ne pas traduire si même langue
   if (sourceLang === targetLang && sourceLang !== 'auto') {
     return {
@@ -442,8 +467,13 @@ async function handleTranslation(event) {
 }
 
 // Afficher la traduction dans la bulle (style original exact du GitHub)
-function displayTranslation(bubble, result) {
+async function displayTranslation(bubble, result) {
   const { translatedText, detectedLanguage, confidence } = result;
+  
+  // Vérifier le statut Premium
+  const storageResult = await chrome.storage.local.get(['user']);
+  const isPremium = storageResult.user && storageResult.user.subscriptionStatus === 'premium';
+  const FREE_LANGUAGES = ['fr', 'en', 'es'];
   
   // Vérifier si le texte est déjà dans la langue cible
   const isAlreadyInTargetLanguage = detectedLanguage === userSettings.targetLanguage && 
@@ -468,15 +498,15 @@ function displayTranslation(bubble, result) {
           <select id="qt-lang-selector" style="font-size: 11px; padding: 2px 4px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
             <option value="fr" ${userSettings.targetLanguage === 'fr' ? 'selected' : ''}>🇫🇷 FR</option>
             <option value="en" ${userSettings.targetLanguage === 'en' ? 'selected' : ''}>🇺🇸 EN</option>
-            <option value="ar" ${userSettings.targetLanguage === 'ar' ? 'selected' : ''}>🇸🇦 AR</option>
             <option value="es" ${userSettings.targetLanguage === 'es' ? 'selected' : ''}>🇪🇸 ES</option>
-            <option value="de" ${userSettings.targetLanguage === 'de' ? 'selected' : ''}>🇩🇪 DE</option>
-            <option value="it" ${userSettings.targetLanguage === 'it' ? 'selected' : ''}>🇮🇹 IT</option>
-            <option value="pt" ${userSettings.targetLanguage === 'pt' ? 'selected' : ''}>🇵🇹 PT</option>
-            <option value="ru" ${userSettings.targetLanguage === 'ru' ? 'selected' : ''}>🇷🇺 RU</option>
-            <option value="ja" ${userSettings.targetLanguage === 'ja' ? 'selected' : ''}>🇯🇵 JA</option>
-            <option value="ko" ${userSettings.targetLanguage === 'ko' ? 'selected' : ''}>🇰🇷 KO</option>
-            <option value="zh" ${userSettings.targetLanguage === 'zh' ? 'selected' : ''}>🇨🇳 ZH</option>
+            <option value="ar" ${userSettings.targetLanguage === 'ar' ? 'selected' : ''} ${!isPremium ? 'disabled' : ''}>🇸🇦 AR${!isPremium ? ' ⭐' : ''}</option>
+            <option value="de" ${userSettings.targetLanguage === 'de' ? 'selected' : ''} ${!isPremium ? 'disabled' : ''}>🇩🇪 DE${!isPremium ? ' ⭐' : ''}</option>
+            <option value="it" ${userSettings.targetLanguage === 'it' ? 'selected' : ''} ${!isPremium ? 'disabled' : ''}>🇮🇹 IT${!isPremium ? ' ⭐' : ''}</option>
+            <option value="pt" ${userSettings.targetLanguage === 'pt' ? 'selected' : ''} ${!isPremium ? 'disabled' : ''}>🇵🇹 PT${!isPremium ? ' ⭐' : ''}</option>
+            <option value="ru" ${userSettings.targetLanguage === 'ru' ? 'selected' : ''} ${!isPremium ? 'disabled' : ''}>🇷🇺 RU${!isPremium ? ' ⭐' : ''}</option>
+            <option value="ja" ${userSettings.targetLanguage === 'ja' ? 'selected' : ''} ${!isPremium ? 'disabled' : ''}>🇯🇵 JA${!isPremium ? ' ⭐' : ''}</option>
+            <option value="ko" ${userSettings.targetLanguage === 'ko' ? 'selected' : ''} ${!isPremium ? 'disabled' : ''}>🇰🇷 KO${!isPremium ? ' ⭐' : ''}</option>
+            <option value="zh" ${userSettings.targetLanguage === 'zh' ? 'selected' : ''} ${!isPremium ? 'disabled' : ''}>🇨🇳 ZH${!isPremium ? ' ⭐' : ''}</option>
           </select>
         </div>
       </div>
@@ -539,6 +569,14 @@ function displayTranslation(bubble, result) {
     if (langSelector) {
       langSelector.addEventListener('change', async (e) => {
         const newLang = e.target.value;
+        
+        // Vérifier si l'utilisateur peut utiliser cette langue
+        if (!isPremium && !FREE_LANGUAGES.includes(newLang)) {
+          e.target.value = userSettings.targetLanguage; // Rétablir l'ancienne valeur
+          showNotification('⭐ Langue Premium! Passez à Premium pour débloquer toutes les langues', 'warning');
+          return;
+        }
+        
         userSettings.targetLanguage = newLang;
         
         if (chrome.storage && chrome.storage.sync) {

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { Op } = require('sequelize');
+const { Op, Sequelize } = require('sequelize');
+const sequelize = require('../config/database');
 const authMiddleware = require('../middleware/auth');
 const User = require('../models/User');
 const Flashcard = require('../models/Flashcard');
@@ -69,11 +70,11 @@ router.get('/usage', authMiddleware, async (req, res) => {
     
     // Flashcards
     const flashcardCount = await Flashcard.count({ where: { userId } });
-    const flashcardLimit = user.isPremium ? 200 : 50;
-    const flashcardUsage = (flashcardCount / flashcardLimit) * 100;
+    const flashcardLimit = user.isPremium ? null : 100; // null = illimité pour Premium
+    const flashcardUsage = flashcardLimit ? (flashcardCount / flashcardLimit) * 100 : 0;
     
     // Caractères
-    const characterLimit = user.isPremium ? 350 : 100;
+    const characterLimit = user.isPremium ? null : 150; // null = illimité pour Premium
     
     res.json({
       success: true,

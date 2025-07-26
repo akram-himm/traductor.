@@ -1422,11 +1422,11 @@ async function checkLimits(type = 'translation') {
   
   if (type === 'flashcard') {
     // Limite de flashcards selon le backend
-    const limit = isPremium ? 200 : 50;
+    const limit = isPremium ? Infinity : 100;
     const currentCount = user ? (user.flashcardsCount || 0) : flashcards.length;
     
     if (currentCount >= limit) {
-      showNotification(`Limite atteinte! ${isPremium ? '200' : '50'} flashcards max. ${!user ? 'Connectez-vous ou ' : ''}Passez à Premium pour plus!`, 'warning');
+      showNotification(`Limite atteinte! ${isPremium ? 'Illimitées' : '100'} flashcards max. ${!user ? 'Connectez-vous ou ' : ''}Passez à Premium pour plus!`, 'warning');
       if (!user) {
         showLoginWindow();
       } else {
@@ -1487,7 +1487,7 @@ function showPremiumPrompt() {
     <div style="text-align: left; margin-bottom: 32px; background: #f9fafb; padding: 20px; border-radius: 12px;">
       <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
         <span style="color: #10b981;">✅</span> 
-        <span>Flashcards illimitées (vs 50)</span>
+        <span>Flashcards illimitées (vs 100)</span>
       </div>
       <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
         <span style="color: #10b981;">✅</span>
@@ -1513,7 +1513,7 @@ function showPremiumPrompt() {
       <div class="pricing-card" style="border: 2px solid #e5e7eb; border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.2s;">
         <h3 style="font-size: 16px; margin-bottom: 8px; color: #374151;">Mensuel</h3>
         <div style="margin-bottom: 12px;">
-          <span style="font-size: 28px; font-weight: bold; color: #1f2937;">4,99€</span>
+          <span style="font-size: 28px; font-weight: bold; color: #1f2937;">7,99€</span>
           <span style="color: #6b7280; font-size: 14px;">/mois</span>
         </div>
         <button class="btn btn-secondary btn-block js-subscribe-monthly" style="font-size: 14px;">
@@ -1524,15 +1524,15 @@ function showPremiumPrompt() {
       <!-- Plan Annuel -->
       <div class="pricing-card" style="border: 2px solid #3b82f6; border-radius: 12px; padding: 20px; cursor: pointer; background: #eff6ff; position: relative;">
         <div style="position: absolute; top: -10px; right: 20px; background: #3b82f6; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">
-          -33%
+          -17%
         </div>
         <h3 style="font-size: 16px; margin-bottom: 8px; color: #374151;">Annuel</h3>
         <div style="margin-bottom: 4px;">
-          <span style="font-size: 28px; font-weight: bold; color: #1f2937;">39,99€</span>
+          <span style="font-size: 28px; font-weight: bold; color: #1f2937;">79,00€</span>
           <span style="color: #6b7280; font-size: 14px;">/an</span>
         </div>
         <div style="font-size: 12px; color: #10b981; margin-bottom: 12px;">
-          Économisez 19,89€!
+          Économisez 16,88€!
         </div>
         <button class="btn btn-primary btn-block js-subscribe-yearly" style="font-size: 14px;">
           Choisir Annuel
@@ -3603,17 +3603,17 @@ function updateUserQuota(user) {
   if (!quotaIndicator || !quotaText) return;
   
   const isPremium = user.subscriptionStatus === 'premium';
-  const flashcardsLimit = isPremium ? 200 : 50;
+  const flashcardsLimit = isPremium ? Infinity : 100;
   const flashcardsCount = user.flashcardsCount || 0;
   
   // Afficher l'indicateur
   quotaIndicator.style.display = 'block';
   
   // Mettre à jour le texte
-  quotaText.textContent = `${flashcardsCount}/${flashcardsLimit}`;
+  quotaText.textContent = isPremium ? `${flashcardsCount} (♾️ illimité)` : `${flashcardsCount}/${flashcardsLimit}`;
   
   // Changer la couleur selon le pourcentage d'utilisation
-  const percentage = (flashcardsCount / flashcardsLimit) * 100;
+  const percentage = isPremium ? 0 : (flashcardsCount / flashcardsLimit) * 100;
   if (percentage >= 90) {
     quotaIndicator.style.background = 'rgba(239, 68, 68, 0.2)'; // Rouge
     quotaIndicator.style.borderColor = 'rgba(239, 68, 68, 0.4)';

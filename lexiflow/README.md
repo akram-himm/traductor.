@@ -48,8 +48,8 @@ lexiflow/
 ### 🏆 Ce qui est fait
 - ✅ Extension Chrome 100% fonctionnelle (version gratuite)
 - ✅ Système de traduction instantanée (11 langues)
-- ✅ Flashcards avec limites (50/200)
-- ✅ Limites de caractères (100/350)
+- ✅ Flashcards avec limites (100/illimité)
+- ✅ Limites de caractères (150/illimité)
 - ✅ Architecture backend complète
 - ✅ Authentification JWT sécurisée
 - ✅ Intégration Stripe complète avec webhooks
@@ -77,16 +77,17 @@ lexiflow/
 
 ### 🎯 Prochaines priorités
 1. **Déployer le backend** en production
-2. **Lancer la campagne Early Bird** (2.99€/mois)
+2. **Lancer la campagne Early Bird** (4.99€/mois)
 
 ## 💰 Modèle économique
 
-| Fonctionnalité | Gratuit | Premium (4.99€/mois) |
+| Fonctionnalité | Gratuit | Premium (7.99€/mois) |
 |----------------|---------|----------------------|
 | Traductions instantanées | ✅ Illimitées | ✅ Illimitées |
-| Limite de caractères | 100 caractères | 350 caractères |
+| Limite de caractères | 150 caractères | Illimité |
+| Langues disponibles | 3 langues (FR, EN, ES) | 11 langues |
 | Services de traduction | Google, MyMemory | DeepSeek AI + tous |
-| Flashcards | 50 cartes | 200 cartes |
+| Flashcards | 100 cartes | Illimitées |
 | Mode Pratique | ❌ | ✅ |
 | Traduction longue | ❌ | ✅ |
 | Prononciation audio | ❌ | ✅ |
@@ -94,7 +95,7 @@ lexiflow/
 | Support | Communautaire | Prioritaire |
 
 ### 🐦 Offre Early Bird
-**2.99€/mois** à vie pour les 1000 premiers utilisateurs (au lieu de 4.99€)
+**4.99€/mois** à vie pour les 500 premiers utilisateurs (au lieu de 7.99€)
 
 ## 🎯 Stratégies de monétisation explorées
 
