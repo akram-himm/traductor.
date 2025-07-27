@@ -3,6 +3,13 @@ const API_CONFIG = {
   // URL du backend - Utiliser Render ou localhost
   BASE_URL: 'https://my-backend-api-cng7.onrender.com', // Backend sur Render
   
+  // Configuration DeepSeek (clé gérée côté serveur pour les Premium)
+  DEEPSEEK_CONFIG: {
+    // La clé sera utilisée côté backend uniquement pour les utilisateurs Premium
+    // Pas besoin de la stocker côté client pour des raisons de sécurité
+    endpoint: '/api/translate/deepseek'
+  },
+  
   // Fonction pour réveiller le serveur
   wakeUpServer: async function() {
     try {

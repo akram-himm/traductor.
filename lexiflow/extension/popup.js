@@ -1389,22 +1389,35 @@ function deleteTranslation(id) {
 
 // Vérifier le statut Premium
 async function checkPremiumStatus() {
-  // Vérifier si l'utilisateur a une clé DeepSeek valide
-  if (userSettings.deepSeekEnabled && userSettings.deepSeekApiKey) {
-    const isValid = await validateDeepSeekKey(userSettings.deepSeekApiKey);
-    userSettings.isPro = isValid;
+  const user = window.currentUser;
+  const isPremium = user && (user.isPremium || user.subscriptionStatus === 'premium');
+  
+  // Si l'utilisateur est Premium, activer automatiquement DeepSeek
+  if (isPremium) {
+    userSettings.isPro = true;
+    // Pas besoin de clé API pour les utilisateurs Premium - elle est gérée côté serveur
     
     // Mettre à jour les badges
     const proBadge = document.getElementById('proBadge');
     const deepSeekBadge = document.getElementById('deepSeekBadge');
     
-    if (proBadge) proBadge.style.display = isValid ? 'flex' : 'none';
-    if (deepSeekBadge) deepSeekBadge.style.display = isValid ? 'flex' : 'none';
+    if (proBadge) proBadge.style.display = 'flex';
+    if (deepSeekBadge && userSettings.deepSeekEnabled) {
+      deepSeekBadge.style.display = 'flex';
+    }
     
-    return isValid;
+    return true;
   }
   
   userSettings.isPro = false;
+  
+  // Masquer les badges si pas Premium
+  const proBadge = document.getElementById('proBadge');
+  const deepSeekBadge = document.getElementById('deepSeekBadge');
+  
+  if (proBadge) proBadge.style.display = 'none';
+  if (deepSeekBadge) deepSeekBadge.style.display = 'none';
+  
   return false;
 }
 
@@ -1451,6 +1464,25 @@ async function checkLimits(type = 'translation') {
   }
   
   return true;
+}
+
+// Gérer le clic sur "Passer à Premium"
+async function handleUpgradeToPremium() {
+  const user = window.currentUser;
+  
+  if (!user) {
+    showLoginWindow();
+    return;
+  }
+  
+  // Si déjà Premium, afficher un message
+  if (user.isPremium || user.subscriptionStatus === 'premium') {
+    showNotification('Vous êtes déjà un utilisateur Premium! 🎉', 'success');
+    return;
+  }
+  
+  // Afficher la fenêtre de choix du plan
+  showPremiumPrompt();
 }
 
 // Afficher la promotion Premium
@@ -1725,21 +1757,31 @@ async function initUI() {
   // Vérifier le statut Premium
   await checkPremiumStatus();
   
-  // Badges
+  // Badges et boutons
   const proBadge = document.getElementById('proBadge');
   const deepSeekBadge = document.getElementById('deepSeekBadge');
   const premiumBanner = document.getElementById('premiumBanner');
+  const upgradeToPremiumBtn = document.getElementById('upgradeToPremiumBtn');
+  
+  // Vérifier si l'utilisateur est connecté et son statut
+  const user = window.currentUser;
+  const isPremium = user && (user.isPremium || user.subscriptionStatus === 'premium');
   
   if (proBadge) {
-    proBadge.style.display = userSettings.isPro ? 'flex' : 'none';
+    proBadge.style.display = isPremium ? 'flex' : 'none';
   }
   
   if (deepSeekBadge) {
-    deepSeekBadge.style.display = userSettings.isPro ? 'flex' : 'none';
+    deepSeekBadge.style.display = isPremium && userSettings.deepSeekEnabled ? 'flex' : 'none';
   }
   
   if (premiumBanner) {
-    premiumBanner.style.display = userSettings.isPro ? 'none' : 'block';
+    premiumBanner.style.display = isPremium ? 'none' : 'block';
+  }
+  
+  // Afficher le bouton "Passer à Premium" si l'utilisateur n'est pas Premium
+  if (upgradeToPremiumBtn) {
+    upgradeToPremiumBtn.style.display = (!isPremium && user) ? 'block' : 'none';
   }
   
   // Statistiques
@@ -4251,6 +4293,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         case 'goToSettings':
           switchTab('settings');
           break;
+        case 'upgradeToPremium':
+          handleUpgradeToPremium();
+          break;
         case 'importData':
           importData();
           break;
@@ -4460,7 +4505,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       deepSeekToggle.addEventListener('click', async (e) => {
         // Récupérer l'état actuel de connexion
         const currentIsLoggedIn = !!window.currentUser;
-        const currentIsPremium = window.currentUser?.isPremium || false;
+        const currentIsPremium = window.currentUser?.isPremium || window.currentUser?.subscriptionStatus === 'premium';
         
         // Empêcher l'action si désactivé
         if (deepSeekToggle.classList.contains('disabled')) {
@@ -4469,15 +4514,27 @@ document.addEventListener('DOMContentLoaded', async () => {
           
           if (!currentIsLoggedIn) {
             showNotification('Vous devez vous connecter pour activer DeepSeek AI', 'warning');
+            showLoginWindow();
           } else if (!currentIsPremium) {
-            showNotification('Vous devez souscrire à Premium pour activer DeepSeek AI', 'warning');
+            showNotification('Passez à Premium pour activer DeepSeek AI', 'warning');
+            handleUpgradeToPremium();
           }
           return;
         }
         
-        // Logique normale si connecté et premium
+        // Logique normale si connecté et premium - pas besoin de clé API
         userSettings.deepSeekEnabled = !userSettings.deepSeekEnabled;
         deepSeekToggle.classList.toggle('active', userSettings.deepSeekEnabled);
+        
+        // Pour les utilisateurs Premium, pas besoin de vérifier la clé
+        if (currentIsPremium) {
+          if (deepSeekStatus) {
+            deepSeekStatus.className = userSettings.deepSeekEnabled ? 'deepseek-status active' : 'deepseek-status inactive';
+            deepSeekStatus.innerHTML = userSettings.deepSeekEnabled 
+              ? '<span>✅</span><span>DeepSeek AI activé (Premium)</span>'
+              : '<span>❌</span><span>DeepSeek AI désactivé</span>';
+          }
+        }
         
         saveSettings();
         await checkPremiumStatus();
