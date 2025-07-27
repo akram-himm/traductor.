@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
+const { Op } = require('sequelize');
 const User = require('../models/User');
-const { sendEmail } = require('../utils/email');
+const emailService = require('../utils/email');
 
 // Demander un reset de mot de passe
 router.post('/forgot-password', async (req, res) => {
@@ -29,26 +30,8 @@ router.post('/forgot-password', async (req, res) => {
       resetPasswordExpires: resetTokenExpiry
     });
     
-    // URL de reset (à adapter selon ton domaine)
-    const resetUrl = `https://lexiflow.app/reset-password?token=${resetToken}&email=${email}`;
-    
-    // Envoyer l'email
-    const emailContent = `
-      <h2>Réinitialisation de mot de passe</h2>
-      <p>Vous avez demandé une réinitialisation de mot de passe pour votre compte LexiFlow.</p>
-      <p>Cliquez sur le lien ci-dessous pour choisir un nouveau mot de passe :</p>
-      <a href="${resetUrl}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Réinitialiser mon mot de passe</a>
-      <p>Ce lien expirera dans 1 heure.</p>
-      <p>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
-      <br>
-      <p>L'équipe LexiFlow</p>
-    `;
-    
-    await sendEmail({
-      to: email,
-      subject: 'Réinitialisation de votre mot de passe LexiFlow',
-      html: emailContent
-    });
+    // Envoyer l'email avec le token
+    await emailService.sendPasswordResetEmail(user, resetToken);
     
     res.json({ 
       message: 'Si cet email existe, vous recevrez un lien de réinitialisation.' 
@@ -80,7 +63,7 @@ router.post('/reset-password', async (req, res) => {
       where: {
         email,
         resetPasswordToken: hashedToken,
-        resetPasswordExpires: { $gt: new Date() } // Token non expiré
+        resetPasswordExpires: { [Op.gt]: new Date() } // Token non expiré
       }
     });
     

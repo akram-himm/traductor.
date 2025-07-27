@@ -71,6 +71,7 @@ app.use('/api/', limiters.global);
 
 // Routes
 app.use('/api/auth', require('./routes/authWithTrial'));
+app.use('/api/auth', require('./routes/password-reset'));
 app.use('/api/user', require('./routes/user'));
 app.use('/api/subscription', require('./routes/subscription'));
 app.use('/api/flashcards', require('./routes/flashcards'));
