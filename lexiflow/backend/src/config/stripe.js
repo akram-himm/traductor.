@@ -8,6 +8,14 @@ const PRICES = {
   yearly: process.env.STRIPE_YEARLY_PRICE_ID || 'price_1RpQMQ2VEl7gdPoz3JtfaNEk',   // $49.90/year early bird
 };
 
+// Debug: Log les prix au démarrage
+console.log('🔧 Configuration Stripe PRICES:', {
+  monthly: PRICES.monthly,
+  yearly: PRICES.yearly,
+  env_monthly: process.env.STRIPE_MONTHLY_PRICE_ID,
+  env_yearly: process.env.STRIPE_YEARLY_PRICE_ID
+});
+
 // Configuration du portail client Stripe
 const PORTAL_CONFIG = {
   business_profile: {
