@@ -121,6 +121,49 @@ const emailService = {
     await transporter.sendMail(mailOptions);
   },
 
+  // Email de réinitialisation de mot de passe
+  async sendPasswordResetEmail(user, resetToken) {
+    const resetUrl = `https://lexiflow.app/reset-password?token=${resetToken}&email=${user.email}`;
+    
+    const mailOptions = {
+      from: '"LexiFlow" <noreply@lexiflow.com>',
+      to: user.email,
+      subject: 'Réinitialisation de votre mot de passe LexiFlow',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #3b82f6;">Réinitialisation de mot de passe</h1>
+          <p>Bonjour ${user.name || ''},</p>
+          
+          <p>Vous avez demandé une réinitialisation de mot de passe pour votre compte LexiFlow.</p>
+          
+          <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p>Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe :</p>
+            <p style="text-align: center;">
+              <a href="${resetUrl}" style="display: inline-block; background: #3b82f6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px;">
+                Réinitialiser mon mot de passe
+              </a>
+            </p>
+            <p style="font-size: 14px; color: #666;">Ce lien expirera dans 1 heure.</p>
+          </div>
+          
+          <p style="font-size: 14px; color: #666;">
+            Si vous n'avez pas demandé cette réinitialisation, ignorez simplement cet email.
+            Votre mot de passe restera inchangé.
+          </p>
+          
+          <p style="font-size: 14px; color: #666;">
+            Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :<br>
+            <a href="${resetUrl}" style="color: #3b82f6; word-break: break-all;">${resetUrl}</a>
+          </p>
+          
+          <p>L'équipe LexiFlow</p>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+  },
+
   // Email d'échec de paiement
   async sendPaymentFailedEmail(user) {
     const mailOptions = {
