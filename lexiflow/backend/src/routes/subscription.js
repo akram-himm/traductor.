@@ -25,6 +25,21 @@ router.post('/create-checkout-session', authMiddleware, async (req, res) => {
     // Sélectionner le prix
     const priceId = priceType === 'yearly' ? PRICES.yearly : PRICES.monthly;
     
+    // Debug: Log des informations
+    console.log('Creating checkout session with:', {
+      priceType,
+      priceId,
+      PRICES,
+      stripeCustomerId,
+      userEmail: user.email
+    });
+    
+    // Vérifier que le price ID existe
+    if (!priceId) {
+      console.error('Price ID is missing!', { priceType, PRICES });
+      return res.status(400).json({ error: 'Price ID configuration error' });
+    }
+    
     // Créer la session de checkout
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
@@ -39,7 +54,19 @@ router.post('/create-checkout-session', authMiddleware, async (req, res) => {
     res.json({ checkoutUrl: session.url, sessionId: session.id });
   } catch (error) {
     console.error('Error creating checkout session:', error);
-    res.status(500).json({ error: 'Error creating checkout session' });
+    console.error('Error details:', {
+      message: error.message,
+      type: error.type,
+      code: error.code,
+      statusCode: error.statusCode
+    });
+    
+    // Retourner une erreur plus spécifique
+    if (error.message && error.message.includes('No such price')) {
+      res.status(400).json({ error: 'Invalid price ID' });
+    } else {
+      res.status(500).json({ error: error.message || 'Error creating checkout session' });
+    }
   }
 });
 
