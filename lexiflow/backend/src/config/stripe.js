@@ -3,9 +3,10 @@ const Stripe = require('stripe');
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Prix Stripe (Early Bird)
+// TEMPORAIRE: Forcer les valeurs jusqu'à ce que les env vars soient configurées sur Render
 const PRICES = {
-  monthly: process.env.STRIPE_MONTHLY_PRICE_ID || 'price_1RpQMQ2VEl7gdPozfYJSzL6B', // $4.99/month early bird
-  yearly: process.env.STRIPE_YEARLY_PRICE_ID || 'price_1RpQMQ2VEl7gdPoz3JtfaNEk',   // $49.90/year early bird
+  monthly: 'price_1RpQMQ2VEl7gdPozfYJSzL6B', // $4.99/month early bird
+  yearly: 'price_1RpQMQ2VEl7gdPoz3JtfaNEk',   // $49.90/year early bird
 };
 
 // Debug: Log les prix au démarrage
