@@ -3398,7 +3398,7 @@ function showUserMenu(user) {
   }
   
   if (userPlan) {
-    const isPremium = user.subscriptionStatus === 'premium';
+    const isPremium = user.isPremium || user.subscriptionStatus === 'premium';
     userPlan.textContent = isPremium ? '⭐ Compte Premium' : '📦 Compte Gratuit';
     userPlan.style.color = isPremium ? '#f5576c' : '#6b7280';
   }
@@ -3630,8 +3630,8 @@ function updateUserQuota(user) {
   
   if (!quotaIndicator || !quotaText) return;
   
-  const isPremium = user.subscriptionStatus === 'premium';
-  const flashcardsLimit = isPremium ? Infinity : 100;
+  const isPremium = user.isPremium || user.subscriptionStatus === 'premium';
+  const flashcardsLimit = isPremium ? 999999 : 100; // Utiliser un grand nombre au lieu d'Infinity
   const flashcardsCount = user.flashcardsCount || 0;
   
   // Afficher l'indicateur
@@ -3655,7 +3655,7 @@ function updateUserQuota(user) {
   
   // Ajouter une icône premium si applicable
   if (isPremium) {
-    quotaText.innerHTML = `⭐ ${flashcardsCount}/${flashcardsLimit}`;
+    quotaText.innerHTML = `⭐ ${flashcardsCount} (illimité)`;
   }
 }
 
