@@ -5,26 +5,14 @@ const crypto = require('crypto');
 // Pour le développement, on utilise Ethereal Email (gratuit)
 // En production, utiliser Gmail, SendGrid, etc.
 const createTransporter = () => {
-  if (process.env.NODE_ENV === 'production') {
-    // Pour Gmail (nécessite mot de passe d'application)
-    return nodemailer.createTransporter({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER || 'lexiflow.contact@gmail.com',
-        pass: process.env.EMAIL_PASS // Mot de passe d'application Gmail
-      }
-    });
-  } else {
-    // Pour le développement - Email de test
-    return nodemailer.createTransporter({
-      host: 'smtp.ethereal.email',
-      port: 587,
-      auth: {
-        user: 'test@ethereal.email',
-        pass: 'test'
-      }
-    });
-  }
+  // Utiliser Gmail pour tous les environnements
+  return nodemailer.createTransporter({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER || 'lexiflow.contact@gmail.com',
+      pass: process.env.EMAIL_PASS // Mot de passe d'application Gmail
+    }
+  });
 };
 
 const emailService = {

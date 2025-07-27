@@ -9,35 +9,34 @@ const Subscription = require('../models/Subscription');
 router.post('/create-checkout-session', authMiddleware, async (req, res) => {
   try {
     const { priceType } = req.body; // 'monthly' ou 'yearly'
-
-    // Mock response for testing without Stripe API
-    res.json({
-      checkoutUrl: 'https://checkout.stripe.com/test_session_123',
-      sessionId: 'cs_test_mock123'
+    const user = req.user;
+    
+    // Créer ou récupérer le client Stripe
+    let stripeCustomerId = user.stripeCustomerId;
+    if (!stripeCustomerId) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        metadata: { userId: user.id }
+      });
+      stripeCustomerId = customer.id;
+      await user.update({ stripeCustomerId });
+    }
+    
+    // Sélectionner le prix
+    const priceId = priceType === 'yearly' ? PRICES.yearly : PRICES.monthly;
+    
+    // Créer la session de checkout
+    const session = await stripe.checkout.sessions.create({
+      customer: stripeCustomerId,
+      payment_method_types: ['card'],
+      mode: 'subscription',
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `${process.env.FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL}/pricing`,
+      metadata: { userId: user.id }
     });
-
-    // Commented out Stripe API calls
-    // const user = req.user;
-    // let stripeCustomerId = user.stripeCustomerId;
-    // if (!stripeCustomerId) {
-    //   const customer = await stripe.customers.create({
-    //     email: user.email,
-    //     metadata: { userId: user.id }
-    //   });
-    //   stripeCustomerId = customer.id;
-    //   await user.update({ stripeCustomerId });
-    // }
-    // const priceId = priceType === 'yearly' ? PRICES.yearly : PRICES.monthly;
-    // const session = await stripe.checkout.sessions.create({
-    //   customer: stripeCustomerId,
-    //   payment_method_types: ['card'],
-    //   mode: 'subscription',
-    //   line_items: [{ price: priceId, quantity: 1 }],
-    //   success_url: `${process.env.FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-    //   cancel_url: `${process.env.FRONTEND_URL}/pricing`,
-    //   metadata: { userId: user.id }
-    // });
-    // res.json({ checkoutUrl: session.url, sessionId: session.id });
+    
+    res.json({ checkoutUrl: session.url, sessionId: session.id });
   } catch (error) {
     console.error('Error creating checkout session:', error);
     res.status(500).json({ error: 'Error creating checkout session' });
@@ -75,7 +74,8 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       break;
       
     case 'invoice.payment_failed':
-      await handlePaymentFailed(event.data.object);
+      // await handlePaymentFailed(event.data.object);
+      console.log('Payment failed for invoice:', event.data.object.id);
       break;
       
     default:
@@ -249,7 +249,7 @@ router.get('/status', authMiddleware, async (req, res) => {
       return res.json({
         hasSubscription: false,
         isPremium: false,
-        flashcardLimit: 50
+        flashcardLimit: 100
       });
     }
     
@@ -262,7 +262,7 @@ router.get('/status', authMiddleware, async (req, res) => {
         cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
         isEarlyBird: subscription.isEarlyBird
       },
-      flashcardLimit: 200
+      flashcardLimit: -1 // -1 = illimité
     });
     
   } catch (error) {

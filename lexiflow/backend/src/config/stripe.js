@@ -2,10 +2,10 @@ const Stripe = require('stripe');
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
-// Prix Stripe (à créer dans le dashboard Stripe)
+// Prix Stripe (Early Bird)
 const PRICES = {
-  monthly: process.env.STRIPE_PRICE_ID_MONTHLY, // 2.99€/mois early bird
-  yearly: process.env.STRIPE_PRICE_ID_YEARLY,   // 29.99€/an early bird
+  monthly: process.env.STRIPE_MONTHLY_PRICE_ID || 'price_1RpQMQ2VEl7gdPozfYJSzL6B', // $4.99/month early bird
+  yearly: process.env.STRIPE_YEARLY_PRICE_ID || 'price_1RpQMQ2VEl7gdPoz3JtfaNEk',   // $49.90/year early bird
 };
 
 // Configuration du portail client Stripe

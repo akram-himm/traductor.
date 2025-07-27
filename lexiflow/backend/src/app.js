@@ -70,7 +70,7 @@ app.use('/api/deepseek', limiters.deepseek);
 app.use('/api/', limiters.global);
 
 // Routes
-app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth', require('./routes/authWithTrial'));
 app.use('/api/user', require('./routes/user'));
 app.use('/api/subscription', require('./routes/subscription'));
 app.use('/api/flashcards', require('./routes/flashcards'));
@@ -107,6 +107,8 @@ app.use((err, req, res, next) => {
 });
 
 // Démarrage du serveur
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 LexiFlow Backend running on port ${PORT}`);
+  console.log(`📱 Accessible depuis: http://${require('os').hostname()}:${PORT}`);
+  console.log(`🌐 Ou via IP: http://10.0.2.15:${PORT}`);
 });
