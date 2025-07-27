@@ -248,12 +248,14 @@ router.post('/login', async (req, res) => {
     }
 
     // Vérifier si l'email est vérifié
-    if (!user.emailVerified) {
-      return res.status(403).json({ 
-        error: 'Please verify your email first',
-        requiresVerification: true 
-      });
-    }
+    // TODO: Réactiver après configuration email
+    // if (!user.emailVerified) {
+    //   return res.status(403).json({ 
+    //     error: 'Please verify your email first',
+    //     requiresVerification: true 
+    //   });
+    // }
+    console.log('⚠️ Vérification email désactivée temporairement');
 
     // Vérifier le statut du trial/premium
     const subscriptionStatus = user.isTrialActive() ? 'trial' : 

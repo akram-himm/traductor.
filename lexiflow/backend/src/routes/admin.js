@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { sequelize } = require('../config/database');
+const User = require('../models/User');
 
 // Route temporaire pour initialiser la base de données
 // À SUPPRIMER après utilisation !
@@ -38,6 +39,41 @@ router.get('/init-db', async (req, res) => {
       error: 'Erreur lors de l\'initialisation',
       details: error.message 
     });
+  }
+});
+
+// Route temporaire pour vérifier un email manuellement
+router.post('/verify-email-manual', async (req, res) => {
+  try {
+    const { email, token } = req.body;
+    
+    if (token !== 'lexiflow-init-2025') {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+    
+    const user = await User.findOne({ where: { email } });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    await user.update({
+      emailVerified: true,
+      emailVerificationToken: null,
+      emailVerificationExpires: null
+    });
+    
+    res.json({ 
+      message: 'Email verified successfully',
+      user: {
+        email: user.email,
+        emailVerified: user.emailVerified
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error verifying email:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
