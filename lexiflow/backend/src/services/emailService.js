@@ -1,101 +1,147 @@
 const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 
-// Configuration du transporteur
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: process.env.EMAIL_PORT,
-  secure: process.env.EMAIL_PORT == 465,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
+// Configuration du transporteur email
+// Pour le développement, on utilise Ethereal Email (gratuit)
+// En production, utiliser Gmail, SendGrid, etc.
+const createTransporter = () => {
+  if (process.env.NODE_ENV === 'production') {
+    // Pour Gmail (nécessite mot de passe d'application)
+    return nodemailer.createTransporter({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER || 'lexiflow.contact@gmail.com',
+        pass: process.env.EMAIL_PASS // Mot de passe d'application Gmail
+      }
+    });
+  } else {
+    // Pour le développement - Email de test
+    return nodemailer.createTransporter({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      auth: {
+        user: 'test@ethereal.email',
+        pass: 'test'
+      }
+    });
   }
-});
+};
 
 const emailService = {
-  // Email de bienvenue après inscription
-  async sendWelcome(email, name) {
+  // Générer un token de vérification unique
+  generateVerificationToken: () => {
+    return crypto.randomBytes(32).toString('hex');
+  },
+
+  // Envoyer l'email de vérification
+  sendVerificationEmail: async (user, verificationToken) => {
+    const transporter = createTransporter();
+    
+    // URL de vérification
+    const verificationUrl = process.env.NODE_ENV === 'production'
+      ? `https://lexiflow.onrender.com/api/auth/verify-email?token=${verificationToken}`
+      : `http://localhost:3001/api/auth/verify-email?token=${verificationToken}`;
+    
     const mailOptions = {
       from: '"LexiFlow" <noreply@lexiflow.com>',
-      to: email,
-      subject: 'Bienvenue sur LexiFlow ! 🌐',
+      to: user.email,
+      subject: 'Verify your LexiFlow account',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #3b82f6;">Bienvenue ${name || ''} !</h1>
-          <p>Merci de rejoindre LexiFlow, votre compagnon linguistique intelligent.</p>
+          <h1 style="color: #3b82f6; text-align: center;">Welcome to LexiFlow! 🌐</h1>
           
-          <h2>🎯 Pour bien démarrer :</h2>
-          <ul>
-            <li>Installez l'extension depuis le Chrome Web Store</li>
-            <li>Sélectionnez n'importe quel mot sur une page web</li>
-            <li>Créez vos premières flashcards (limite : 50 en gratuit)</li>
-          </ul>
+          <p>Hi ${user.name || 'there'},</p>
           
-          <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3>🎁 Offre Early Bird Exclusive</h3>
-            <p>Passez à Premium pour seulement <strong>2.99€/mois</strong> et débloquez :</p>
-            <ul>
-              <li>✨ Traductions DeepSeek AI</li>
-              <li>📚 200 flashcards (4x plus !)</li>
-              <li>🎮 Mode Pratique interactif</li>
-              <li>🔊 Prononciation audio</li>
-            </ul>
-            <a href="${process.env.FRONTEND_URL}/pricing" 
-               style="display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
-               Découvrir Premium
+          <p>Thanks for signing up! Please verify your email address to activate your account and start your 7-day free trial.</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${verificationUrl}" 
+               style="background-color: #3b82f6; color: white; padding: 12px 30px; 
+                      text-decoration: none; border-radius: 5px; display: inline-block;">
+              Verify Email & Start Free Trial
             </a>
           </div>
           
-          <p>Des questions ? Répondez simplement à cet email.</p>
-          <p>L'équipe LexiFlow</p>
+          <p>Or copy this link: ${verificationUrl}</p>
+          
+          <h3>What you get with your 7-day free trial:</h3>
+          <ul>
+            <li>✅ Unlimited translations</li>
+            <li>✅ Access to all 11 languages</li>
+            <li>✅ Unlimited flashcards</li>
+            <li>✅ DeepSeek AI translations</li>
+            <li>✅ Cloud synchronization</li>
+          </ul>
+          
+          <p style="color: #666; font-size: 14px;">
+            This link expires in 24 hours. If you didn't create an account, please ignore this email.
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+          
+          <p style="color: #999; font-size: 12px; text-align: center;">
+            LexiFlow - Break Language Barriers<br>
+            © 2025 LexiFlow. All rights reserved.
+          </p>
         </div>
       `
     };
     
     try {
-      await transporter.sendMail(mailOptions);
-      console.log('Email de bienvenue envoyé à:', email);
+      const info = await transporter.sendMail(mailOptions);
+      console.log('Verification email sent:', info.messageId);
+      return { success: true, messageId: info.messageId };
     } catch (error) {
-      console.error('Erreur envoi email:', error);
+      console.error('Error sending verification email:', error);
+      return { success: false, error: error.message };
     }
   },
-  
-  // Email de bienvenue Premium
-  async sendWelcomePremium(email, name) {
+
+  // Email de bienvenue après vérification
+  sendWelcomeEmail: async (user) => {
+    const transporter = createTransporter();
+    
     const mailOptions = {
       from: '"LexiFlow" <noreply@lexiflow.com>',
-      to: email,
-      subject: '🎉 Bienvenue dans LexiFlow Premium !',
+      to: user.email,
+      subject: 'Welcome to LexiFlow - Your 7-day trial has started! 🎉',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #3b82f6;">Félicitations ${name || ''} !</h1>
-          <p>Vous êtes maintenant membre Premium de LexiFlow.</p>
+          <h1 style="color: #3b82f6; text-align: center;">Your Free Trial Has Started! 🚀</h1>
           
-          <h2>✨ Vos avantages Premium :</h2>
-          <div style="background: #f3f4f6; padding: 20px; border-radius: 8px;">
-            <ul style="list-style: none; padding: 0;">
-              <li>🤖 <strong>DeepSeek AI</strong> - Traductions ultra-précises</li>
-              <li>📚 <strong>200 flashcards</strong> - 4x plus qu'en gratuit</li>
-              <li>🎮 <strong>Mode Pratique</strong> - Apprenez en jouant</li>
-              <li>🔊 <strong>Prononciation audio</strong> - Parlez comme un natif</li>
-              <li>☁️ <strong>Synchronisation</strong> - Vos données partout</li>
-              <li>🎯 <strong>Support prioritaire</strong> - Réponse en 24h</li>
-            </ul>
+          <p>Hi ${user.name || 'there'},</p>
+          
+          <p>Great news! Your email is verified and your 7-day Premium trial is now active.</p>
+          
+          <div style="background: #f3f4f6; padding: 20px; border-radius: 10px; margin: 20px 0;">
+            <h3 style="margin-top: 0;">Trial Details:</h3>
+            <p><strong>Start date:</strong> ${new Date().toLocaleDateString()}</p>
+            <p><strong>End date:</strong> ${new Date(user.trialEndsAt).toLocaleDateString()}</p>
+            <p><strong>Status:</strong> Premium features unlocked ✨</p>
           </div>
           
-          <h3>💡 Conseils pour profiter au maximum :</h3>
+          <h3>Quick Start Guide:</h3>
           <ol>
-            <li>Activez DeepSeek AI dans les paramètres</li>
-            <li>Essayez le Mode Pratique avec vos flashcards</li>
-            <li>Utilisez la prononciation audio pour améliorer votre accent</li>
+            <li>Visit any website in your browser</li>
+            <li>Select any text you want to translate</li>
+            <li>Click the 🌐 icon that appears</li>
+            <li>Save translations as flashcards for learning</li>
           </ol>
           
-          <p>Merci de nous faire confiance !</p>
-          <p>L'équipe LexiFlow</p>
+          <p>Need help? Reply to this email or check our <a href="#">support page</a>.</p>
           
-          <hr style="margin: 30px 0;">
-          <p style="font-size: 12px; color: #666;">
-            Votre abonnement sera renouvelé automatiquement. 
-            Vous pouvez l'annuler à tout moment depuis votre compte.
+          <p style="text-align: center; margin-top: 30px;">
+            <a href="#" style="background-color: #10b981; color: white; padding: 12px 30px; 
+                           text-decoration: none; border-radius: 5px; display: inline-block;">
+              Open LexiFlow Extension
+            </a>
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+          
+          <p style="color: #999; font-size: 12px; text-align: center;">
+            You're receiving this because you signed up for LexiFlow.<br>
+            © 2025 LexiFlow. All rights reserved.
           </p>
         </div>
       `
@@ -103,51 +149,54 @@ const emailService = {
     
     try {
       await transporter.sendMail(mailOptions);
-      console.log('Email Premium envoyé à:', email);
+      console.log('Welcome email sent to:', user.email);
     } catch (error) {
-      console.error('Erreur envoi email:', error);
+      console.error('Error sending welcome email:', error);
     }
   },
-  
-  // Email de rappel limite atteinte
-  async sendLimitReached(email, name, currentCount, limit) {
+
+  // Email de rappel avant fin du trial
+  sendTrialEndingReminder: async (user, daysLeft) => {
+    const transporter = createTransporter();
+    
     const mailOptions = {
       from: '"LexiFlow" <noreply@lexiflow.com>',
-      to: email,
-      subject: '⚠️ Limite de flashcards atteinte',
+      to: user.email,
+      subject: `Your LexiFlow trial ends in ${daysLeft} days ⏰`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #f59e0b;">Limite atteinte !</h1>
-          <p>Bonjour ${name || ''},</p>
+          <h1 style="color: #f59e0b; text-align: center;">Your Trial Ends Soon!</h1>
           
-          <p>Vous avez atteint votre limite de <strong>${limit} flashcards</strong> en version gratuite.</p>
+          <p>Hi ${user.name || 'there'},</p>
           
-          <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3>🚀 Passez à Premium pour continuer !</h3>
-            <p>Avec Premium, vous pouvez créer jusqu'à <strong>200 flashcards</strong> et profiter de :</p>
-            <ul>
-              <li>Traductions DeepSeek AI ultra-précises</li>
-              <li>Mode Pratique pour réviser efficacement</li>
-              <li>Prononciation audio native</li>
-            </ul>
-            <p><strong>Offre spéciale : 2.99€/mois seulement !</strong></p>
-            <a href="${process.env.FRONTEND_URL}/pricing" 
-               style="display: inline-block; background: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
-               Passer à Premium
+          <p>Your 7-day free trial ends in <strong>${daysLeft} days</strong>.</p>
+          
+          <p>Don't lose access to:</p>
+          <ul>
+            <li>🌍 All 11 languages</li>
+            <li>🧠 DeepSeek AI translations</li>
+            <li>📚 Unlimited flashcards</li>
+            <li>☁️ Cloud synchronization</li>
+          </ul>
+          
+          <p style="text-align: center; margin: 30px 0;">
+            <a href="#" style="background-color: #3b82f6; color: white; padding: 12px 30px; 
+                           text-decoration: none; border-radius: 5px; display: inline-block;">
+              Upgrade to Premium - $4.99/month
             </a>
-          </div>
+          </p>
           
-          <p>Continuez votre apprentissage sans limites !</p>
-          <p>L'équipe LexiFlow</p>
+          <p style="text-align: center; color: #666;">
+            Early Bird offer: Save 37.5% forever!
+          </p>
         </div>
       `
     };
     
     try {
       await transporter.sendMail(mailOptions);
-      console.log('Email limite atteinte envoyé à:', email);
     } catch (error) {
-      console.error('Erreur envoi email:', error);
+      console.error('Error sending trial reminder:', error);
     }
   }
 };

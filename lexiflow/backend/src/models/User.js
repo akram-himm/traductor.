@@ -46,6 +46,28 @@ const User = sequelize.define('User', {
     type: DataTypes.DATE,
     allowNull: true
   },
+  // Free Trial
+  trialStartedAt: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
+  trialEndsAt: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
+  // Email Verification
+  emailVerified: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  emailVerificationToken: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  emailVerificationExpires: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
   flashcardCount: {
     type: DataTypes.INTEGER,
     defaultValue: 0
@@ -78,13 +100,27 @@ User.prototype.validatePassword = async function(password) {
 };
 
 User.prototype.checkPremiumStatus = function() {
+  // Vérifier d'abord le free trial
+  if (this.trialEndsAt && new Date() < new Date(this.trialEndsAt)) {
+    return true; // Trial actif = accès Premium
+  }
+  
+  // Ensuite vérifier le statut Premium normal
   if (!this.isPremium) return false;
   if (!this.premiumUntil) return true;
   return new Date() < new Date(this.premiumUntil);
 };
 
 User.prototype.getFlashcardLimit = function() {
-  return this.checkPremiumStatus() ? 200 : 50;
+  return this.checkPremiumStatus() ? Infinity : 100;
+};
+
+User.prototype.isTrialActive = function() {
+  return this.trialEndsAt && new Date() < new Date(this.trialEndsAt);
+};
+
+User.prototype.isEmailVerified = function() {
+  return this.emailVerified === true;
 };
 
 module.exports = User;
