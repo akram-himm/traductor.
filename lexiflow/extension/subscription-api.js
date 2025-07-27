@@ -1,7 +1,7 @@
 // API pour gérer les abonnements Stripe
 const subscriptionAPI = {
   // Créer une session de paiement
-  async createCheckoutSession(priceId, billingPeriod) {
+  async createCheckoutSession(priceId, priceType) {
     try {
       const token = await authAPI.getToken();
       if (!token) {
@@ -11,8 +11,7 @@ const subscriptionAPI = {
       const response = await apiRequest('/api/subscription/create-checkout-session', {
         method: 'POST',
         body: JSON.stringify({
-          priceId,
-          billingPeriod
+          priceType // 'monthly' ou 'yearly'
         })
       });
 
@@ -69,17 +68,17 @@ const subscriptionAPI = {
     }
   },
 
-  // Prix des abonnements (à configurer selon votre Stripe)
+  // Prix des abonnements (configurés avec Stripe)
   prices: {
     monthly: {
-      id: 'price_monthly', // À remplacer par votre vrai price ID
+      id: 'price_1RpQMQ2VEl7gdPozfYJSzL6B',
       amount: 499, // 4,99€ en centimes
       currency: 'eur',
       interval: 'month'
     },
     yearly: {
-      id: 'price_yearly', // À remplacer par votre vrai price ID
-      amount: 3999, // 39,99€ en centimes
+      id: 'price_1RpQMQ2VEl7gdPoz3JtfaNEk',
+      amount: 4990, // 49,90€ en centimes
       currency: 'eur',
       interval: 'year'
     }

@@ -1570,8 +1570,7 @@ function showPremiumPrompt() {
   prompt.querySelector('.js-subscribe-monthly').onclick = async () => {
     try {
       showNotification('Redirection vers le paiement...', 'info');
-      // TODO: Remplacer par les vrais price IDs de Stripe
-      await subscriptionAPI.createCheckoutSession('price_monthly', 'monthly');
+      await subscriptionAPI.createCheckoutSession(subscriptionAPI.prices.monthly.id, 'monthly');
     } catch (error) {
       showNotification('Erreur lors de la création de la session de paiement', 'error');
     }
@@ -1580,8 +1579,7 @@ function showPremiumPrompt() {
   prompt.querySelector('.js-subscribe-yearly').onclick = async () => {
     try {
       showNotification('Redirection vers le paiement...', 'info');
-      // TODO: Remplacer par les vrais price IDs de Stripe
-      await subscriptionAPI.createCheckoutSession('price_yearly', 'yearly');
+      await subscriptionAPI.createCheckoutSession(subscriptionAPI.prices.yearly.id, 'yearly');
     } catch (error) {
       showNotification('Erreur lors de la création de la session de paiement', 'error');
     }
