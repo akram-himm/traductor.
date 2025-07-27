@@ -77,4 +77,44 @@ router.post('/verify-email-manual', async (req, res) => {
   }
 });
 
+// Route temporaire pour forcer le statut Premium
+router.post('/force-premium', async (req, res) => {
+  try {
+    const { email, token } = req.body;
+    
+    if (token !== 'lexiflow-init-2025') {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+    
+    const user = await User.findOne({ where: { email } });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Mettre à jour en Premium pour 1 mois
+    const premiumUntil = new Date();
+    premiumUntil.setMonth(premiumUntil.getMonth() + 1);
+    
+    await user.update({
+      isPremium: true,
+      premiumUntil: premiumUntil,
+      emailVerified: true // Au cas où
+    });
+    
+    res.json({ 
+      message: 'User upgraded to Premium',
+      user: {
+        email: user.email,
+        isPremium: user.isPremium,
+        premiumUntil: user.premiumUntil
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error forcing premium:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
