@@ -257,31 +257,54 @@ router.post('/login', async (req, res) => {
     // }
     console.log('⚠️ Vérification email désactivée temporairement');
 
-    // Vérifier le statut du trial/premium
-    const subscriptionStatus = user.isTrialActive() ? 'trial' : 
-                             user.checkPremiumStatus() ? 'premium' : 'free';
+    try {
+      // Vérifier le statut du trial/premium
+      const subscriptionStatus = user.isTrialActive ? user.isTrialActive() : false;
+      const isPremium = user.checkPremiumStatus ? user.checkPremiumStatus() : user.isPremium;
+      const status = subscriptionStatus ? 'trial' : (isPremium ? 'premium' : 'free');
 
-    // Générer le token JWT
-    const token = jwt.sign(
-      { id: user.id, email: user.email },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '30d' }
-    );
+      // Générer le token JWT
+      const token = jwt.sign(
+        { id: user.id, email: user.email },
+        process.env.JWT_SECRET || 'your-secret-key',
+        { expiresIn: '30d' }
+      );
 
-    res.json({
-      message: 'Login successful',
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        emailVerified: user.emailVerified,
-        subscriptionStatus,
-        isTrialActive: user.isTrialActive(),
-        trialEndsAt: user.trialEndsAt,
-        flashcardLimit: user.getFlashcardLimit()
-      }
-    });
+      res.json({
+        message: 'Login successful',
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          emailVerified: user.emailVerified,
+          subscriptionStatus: status,
+          isPremium: user.isPremium,
+          isTrialActive: subscriptionStatus,
+          trialEndsAt: user.trialEndsAt,
+          flashcardLimit: user.getFlashcardLimit ? user.getFlashcardLimit() : 100
+        }
+      });
+    } catch (error) {
+      console.error('Login response error:', error);
+      // Réponse minimale en cas d'erreur
+      const token = jwt.sign(
+        { id: user.id, email: user.email },
+        process.env.JWT_SECRET || 'your-secret-key',
+        { expiresIn: '30d' }
+      );
+      
+      res.json({
+        message: 'Login successful',
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          isPremium: user.isPremium || false
+        }
+      });
+    }
 
   } catch (error) {
     console.error('Login error:', error);
