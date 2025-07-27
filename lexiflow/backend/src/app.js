@@ -9,6 +9,9 @@ const limiters = require('./middleware/rateLimiter');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy for Render (nécessaire pour express-rate-limit)
+app.set('trust proxy', 1);
+
 // Stripe webhook needs raw body
 app.use('/api/subscription/webhook', express.raw({ type: 'application/json' }));
 
@@ -79,6 +82,7 @@ app.use('/api/translations', require('./routes/translations'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/sync', require('./routes/sync'));
 app.use('/api/waitlist', require('./routes/waitlist'));
+app.use('/api/admin', require('./routes/admin'));
 app.use('/api', require('./routes/health'));
 
 // Legal pages (privacy, terms)
