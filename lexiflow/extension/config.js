@@ -1,7 +1,8 @@
 // Configuration API Backend
 const API_CONFIG = {
   // URL du backend - Utiliser Render ou localhost
-  BASE_URL: 'https://my-backend-api-cng7.onrender.com', // Backend sur Render
+  // BASE_URL: 'https://my-backend-api-cng7.onrender.com', // Backend sur Render
+  BASE_URL: 'http://localhost:3001', // Backend local pour les tests
   
   // Configuration DeepSeek (clé gérée côté serveur pour les Premium)
   DEEPSEEK_CONFIG: {
