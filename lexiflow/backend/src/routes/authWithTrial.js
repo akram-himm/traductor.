@@ -2,7 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
-const emailService = require('../services/emailService');
+const emailService = require('../utils/email');
 const router = express.Router();
 
 // Inscription avec Free Trial et vérification email
@@ -36,7 +36,8 @@ router.post('/register', async (req, res) => {
     }
 
     // Générer le token de vérification
-    const verificationToken = emailService.generateVerificationToken();
+    // const verificationToken = emailService.generateVerificationToken();
+    const verificationToken = require('crypto').randomBytes(32).toString('hex');
     const verificationExpires = new Date();
     verificationExpires.setHours(verificationExpires.getHours() + 24); // Expire dans 24h
 
@@ -54,7 +55,9 @@ router.post('/register', async (req, res) => {
     });
 
     // Envoyer l'email de vérification
-    await emailService.sendVerificationEmail(user, verificationToken);
+    // TODO: Réactiver après configuration email
+    // await emailService.sendVerificationEmail(user, verificationToken);
+    console.log('📧 Email de vérification désactivé temporairement');
 
     res.status(201).json({
       message: 'Registration successful! Please check your email to verify your account.',
@@ -303,7 +306,8 @@ router.post('/resend-verification', async (req, res) => {
     }
 
     // Générer un nouveau token
-    const verificationToken = emailService.generateVerificationToken();
+    // const verificationToken = emailService.generateVerificationToken();
+    const verificationToken = require('crypto').randomBytes(32).toString('hex');
     const verificationExpires = new Date();
     verificationExpires.setHours(verificationExpires.getHours() + 24);
 
@@ -313,7 +317,9 @@ router.post('/resend-verification', async (req, res) => {
     });
 
     // Renvoyer l'email
-    await emailService.sendVerificationEmail(user, verificationToken);
+    // TODO: Réactiver après configuration email
+    // await emailService.sendVerificationEmail(user, verificationToken);
+    console.log('📧 Email de vérification désactivé temporairement');
 
     res.json({ 
       message: 'Verification email sent! Please check your inbox.' 
