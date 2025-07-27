@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Force Premium - LexiFlow</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body>
+    <h1>Activer Premium pour LexiFlow</h1>
+    <p>Email : akramhimmich00@gmail.com</p>
+    
+    <button onclick="forcePremium()">🌟 Activer Premium</button>
+    
+    <div id="result"></div>
+
+    <script>
+        async function forcePremium() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Activation en cours...</p>';
+            
+            try {
+                const response = await fetch('https://my-backend-api-cng7.onrender.com/api/admin/force-premium', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'akramhimmich00@gmail.com',
+                        token: 'lexiflow-init-2025'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <h3>✅ Premium activé avec succès !</h3>
+                            <p>${data.message}</p>
+                            <p><strong>Prochaines étapes :</strong></p>
+                            <ol>
+                                <li>Retourne dans l'extension LexiFlow</li>
+                                <li>Déconnecte-toi</li>
+                                <li>Reconnecte-toi</li>
+                                <li>Tu seras Premium ! 🎉</li>
+                            </ol>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h3>❌ Erreur</h3>
+                            <p>${data.error || 'Une erreur est survenue'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Erreur réseau</h3>
+                        <p>${error.message}</p>
+                        <p>Vérifiez que le backend est en ligne.</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
