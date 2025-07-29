@@ -312,6 +312,45 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Vérifier la validité du token JWT
+router.get('/verify', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ valid: false, error: 'No token provided' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findByPk(decoded.userId);
+      
+      if (!user) {
+        return res.status(401).json({ valid: false, error: 'User not found' });
+      }
+
+      return res.json({ 
+        valid: true, 
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          isPremium: user.isPremium,
+          subscriptionStatus: user.subscriptionStatus,
+          subscriptionPlan: user.subscriptionPlan,
+          billingCycle: user.billingCycle
+        }
+      });
+    } catch (error) {
+      return res.status(401).json({ valid: false, error: 'Invalid token' });
+    }
+  } catch (error) {
+    console.error('Token verification error:', error);
+    res.status(500).json({ valid: false, error: error.message });
+  }
+});
+
 // Renvoyer l'email de vérification
 router.post('/resend-verification', async (req, res) => {
   try {
