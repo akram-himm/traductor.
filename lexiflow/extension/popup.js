@@ -1475,14 +1475,112 @@ async function handleUpgradeToPremium() {
     return;
   }
   
-  // Si déjà Premium, afficher un message
+  // Si déjà Premium, vérifier le type d'abonnement
   if (user.isPremium || user.subscriptionStatus === 'premium') {
-    showNotification('Vous êtes déjà un utilisateur Premium! 🎉', 'success');
+    // Si abonnement mensuel, proposer l'upgrade vers annuel
+    if (user.subscriptionPlan === 'monthly' || user.billingCycle === 'monthly') {
+      showUpgradeToAnnualPrompt();
+    } else {
+      showNotification('Vous avez déjà le meilleur plan Premium annuel! 🎉', 'success');
+    }
     return;
   }
   
   // Afficher la fenêtre de choix du plan
   showPremiumPrompt();
+}
+
+// Afficher la promotion pour upgrade vers annuel
+function showUpgradeToAnnualPrompt() {
+  const container = document.getElementById('dashboard');
+  if (!container) return;
+  
+  const prompt = document.createElement('div');
+  prompt.className = 'premium-prompt';
+  prompt.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    z-index: 10000;
+    max-width: 480px;
+    width: 90%;
+    text-align: center;
+  `;
+  
+  prompt.innerHTML = `
+    <div style="font-size: 48px; margin-bottom: 16px;">💎</div>
+    <h2 style="font-size: 24px; margin-bottom: 16px; color: #1f2937;">Économisez avec le plan annuel!</h2>
+    <p style="margin-bottom: 24px; color: #6b7280; font-size: 14px;">
+      Passez au plan annuel et économisez 16,88€ par an!
+    </p>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+      <!-- Plan Mensuel Actuel -->
+      <div style="border: 2px solid #e5e7eb; border-radius: 12px; padding: 20px; opacity: 0.7;">
+        <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">Plan actuel</div>
+        <h3 style="font-size: 16px; margin-bottom: 8px; color: #374151;">Mensuel</h3>
+        <div style="font-size: 24px; font-weight: bold; color: #6b7280;">7,99€<span style="font-size: 14px; font-weight: normal;">/mois</span></div>
+        <div style="font-size: 12px; color: #9ca3af; margin-top: 8px;">95,88€/an</div>
+      </div>
+      
+      <!-- Plan Annuel -->
+      <div style="border: 2px solid #3b82f6; border-radius: 12px; padding: 20px; background: #eff6ff;">
+        <div style="font-size: 12px; color: #3b82f6; margin-bottom: 8px;">Économisez 17%</div>
+        <h3 style="font-size: 16px; margin-bottom: 8px; color: #374151;">Annuel</h3>
+        <div style="font-size: 24px; font-weight: bold; color: #1e40af;">79,00€<span style="font-size: 14px; font-weight: normal;">/an</span></div>
+        <div style="font-size: 12px; color: #10b981; margin-top: 8px;">Économisez 16,88€!</div>
+      </div>
+    </div>
+    
+    <button class="btn btn-primary btn-block js-upgrade-annual" style="margin-bottom: 16px;">
+      Passer au plan annuel
+    </button>
+    
+    <button class="btn btn-secondary js-close-prompt" style="font-size: 14px;">
+      Garder le plan mensuel
+    </button>
+  `;
+  
+  document.body.appendChild(prompt);
+  
+  // Event listeners
+  const upgradeBtn = prompt.querySelector('.js-upgrade-annual');
+  const closeBtn = prompt.querySelector('.js-close-prompt');
+  
+  if (upgradeBtn) {
+    upgradeBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      debug('💳 Upgrade vers plan annuel');
+      try {
+        showNotification('Redirection vers la mise à niveau...', 'info');
+        
+        // Appeler l'API d'upgrade
+        const response = await apiRequest('/api/subscription/upgrade-to-annual', {
+          method: 'POST'
+        });
+
+        if (response.checkoutUrl || response.url) {
+          window.open(response.checkoutUrl || response.url, '_blank');
+        } else {
+          throw new Error(response.error || 'Failed to create upgrade session');
+        }
+      } catch (error) {
+        console.error('Erreur upgrade:', error);
+        showNotification('Erreur lors de la mise à niveau', 'error');
+      }
+    });
+  }
+  
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      prompt.remove();
+    });
+  }
 }
 
 // Afficher la promotion Premium
