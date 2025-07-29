@@ -939,14 +939,14 @@ function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
                 }, 2000);
               } else {
                 // Feedback pour succès
-                btn.textContent = 'Saving...';
+                btn.innerHTML = '<span style="font-size: 13px;">⏳</span> Saving...';
                 btn.style.background = '#059669';
                 
                 setTimeout(() => {
-                  btn.textContent = 'Saved!';
+                  btn.innerHTML = '<span style="font-size: 13px;">✅</span> Saved!';
                   
                   setTimeout(() => {
-                    btn.textContent = 'Save';
+                    btn.innerHTML = '<span style="font-size: 13px;">💾</span> Save';
                     btn.style.background = '#3b82f6';
                   }, 1500);
                 }, 500);

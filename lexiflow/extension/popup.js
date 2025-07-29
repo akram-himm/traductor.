@@ -1475,19 +1475,9 @@ async function handleUpgradeToPremium() {
     return;
   }
   
-  // Si déjà Premium, vérifier le type d'abonnement
-  if (user.isPremium || user.subscriptionStatus === 'premium') {
-    // Si abonnement mensuel, proposer l'upgrade vers annuel
-    if (user.subscriptionPlan === 'monthly' || user.billingCycle === 'monthly') {
-      showUpgradeToAnnualPrompt();
-    } else {
-      showNotification('Vous avez déjà le meilleur plan Premium annuel! 🎉', 'success');
-    }
-    return;
-  }
-  
-  // Afficher la fenêtre de choix du plan
-  showPremiumPrompt();
+  // Ouvrir la page de gestion d'abonnement
+  // Même pour les utilisateurs Premium pour qu'ils puissent gérer leur abonnement
+  chrome.tabs.create({ url: chrome.runtime.getURL('subscription.html') });
 }
 
 // Afficher la promotion pour upgrade vers annuel
@@ -1933,10 +1923,36 @@ async function initUI() {
     premiumBanner.style.display = isPremium ? 'none' : 'block';
   }
   
-  // Afficher le bouton "Passer à Premium" seulement si l'utilisateur n'est pas Premium
+  // Gérer l'affichage du bouton upgrade dans le header
   if (upgradeToPremiumBtn) {
-    // Si pas d'utilisateur connecté ou pas Premium, afficher le bouton
-    upgradeToPremiumBtn.style.display = (!user || !isPremium) ? 'inline-block' : 'none';
+    // Cacher le bouton dans le header si l'utilisateur est Premium
+    upgradeToPremiumBtn.style.display = isPremium ? 'none' : 'inline-block';
+  }
+  
+  // Ajouter/modifier le bouton dans les paramètres pour les utilisateurs Premium
+  const settingsTab = document.getElementById('settings');
+  if (settingsTab && isPremium) {
+    // Chercher ou créer la section de gestion d'abonnement
+    let subscriptionSection = document.getElementById('subscriptionManagement');
+    if (!subscriptionSection) {
+      subscriptionSection = document.createElement('div');
+      subscriptionSection.id = 'subscriptionManagement';
+      subscriptionSection.style.cssText = 'margin-top: 20px; padding: 16px; background: #f3f4f6; border-radius: 8px;';
+      subscriptionSection.innerHTML = `
+        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">Subscription</h3>
+        <button class="btn btn-primary" data-action="managePremium" style="width: 100%;">
+          Manage Premium
+        </button>
+      `;
+      
+      // Ajouter après la section des paramètres d'import/export
+      const importExportSection = settingsTab.querySelector('.settings-group:last-child');
+      if (importExportSection) {
+        importExportSection.after(subscriptionSection);
+      } else {
+        settingsTab.appendChild(subscriptionSection);
+      }
+    }
   }
   
   // Statistiques
@@ -4465,6 +4481,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           break;
         case 'upgradeToPremium':
           handleUpgradeToPremium();
+          break;
+        case 'managePremium':
+          handleUpgradeToPremium(); // Même fonction, ouvre la page de gestion
           break;
         case 'importData':
           importData();

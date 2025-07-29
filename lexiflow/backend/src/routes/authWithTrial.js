@@ -323,8 +323,9 @@ router.get('/verify', async (req, res) => {
     const token = authHeader.split(' ')[1];
     
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const user = await User.findByPk(decoded.userId);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+      // Le token utilise 'id' et non 'userId'
+      const user = await User.findByPk(decoded.id);
       
       if (!user) {
         return res.status(401).json({ valid: false, error: 'User not found' });

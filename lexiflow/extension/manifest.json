@@ -46,5 +46,11 @@
       },
       "description": "Translate selected text"
     }
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["subscription.html", "subscription.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }
