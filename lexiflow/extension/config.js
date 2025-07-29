@@ -84,7 +84,10 @@ async function apiRequest(endpoint, options = {}) {
           if (response.status === 401) {
             // Token expiré ou invalide - mais ne pas supprimer automatiquement
             console.log('Erreur 401 - vérification nécessaire');
-            throw new Error('Authentication required');
+            // Ne pas lancer d'erreur immédiatement, laisser l'appelant gérer
+            const error = new Error('Authentication required');
+            error.status = 401;
+            throw error;
           }
           
           const errorText = await response.text();

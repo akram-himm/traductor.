@@ -41,9 +41,9 @@ function displaySubscriptionPlans(userData) {
   
   // Déterminer le statut actuel
   const isPremium = userData.isPremium || userData.subscriptionStatus === 'premium';
-  const subscriptionPlan = userData.subscriptionPlan || userData.billingCycle;
-  const isMonthly = subscriptionPlan === 'monthly' || subscriptionPlan === 'month';
-  const isAnnual = subscriptionPlan === 'yearly' || subscriptionPlan === 'annual' || subscriptionPlan === 'year';
+  const subscriptionPlan = (userData.subscriptionPlan || userData.billingCycle || '').toLowerCase().trim();
+  const isMonthly = subscriptionPlan === 'monthly' || subscriptionPlan === 'month' || subscriptionPlan === 'mensuel';
+  const isAnnual = subscriptionPlan === 'yearly' || subscriptionPlan === 'annual' || subscriptionPlan === 'year' || subscriptionPlan === 'annuel';
   
   console.log('📊 Statut:', { isPremium, subscriptionPlan, isMonthly, isAnnual });
   
@@ -134,9 +134,9 @@ async function selectPlan(planType) {
     
     // Vérifier d'abord si l'utilisateur a déjà ce plan
     if (currentUserData) {
-      const subscriptionPlan = currentUserData.subscriptionPlan || currentUserData.billingCycle;
-      const isMonthly = subscriptionPlan === 'monthly' || subscriptionPlan === 'month';
-      const isAnnual = subscriptionPlan === 'yearly' || subscriptionPlan === 'annual' || subscriptionPlan === 'year';
+      const subscriptionPlan = (currentUserData.subscriptionPlan || currentUserData.billingCycle || '').toLowerCase().trim();
+      const isMonthly = subscriptionPlan === 'monthly' || subscriptionPlan === 'month' || subscriptionPlan === 'mensuel';
+      const isAnnual = subscriptionPlan === 'yearly' || subscriptionPlan === 'annual' || subscriptionPlan === 'year' || subscriptionPlan === 'annuel';
       
       // Si l'utilisateur essaie de sélectionner le plan qu'il a déjà
       if ((planType === 'monthly' && isMonthly) || (planType === 'yearly' && isAnnual)) {

@@ -9,7 +9,7 @@ let translations = [];
 let flashcards = [];
 let isAddingFlashcard = false; // Flag pour éviter les conflits lors de l'ajout
 let flashcardsBackup = []; // Backup pour éviter la perte de données
-let lastAuthCheck = 0; // Pour éviter de vérifier l'auth trop souvent
+// Cette variable sera récupérée depuis chrome.storage pour persister entre les sessions
 let oauthTimeoutId = null; // Pour stocker le timeout OAuth
 let isFlippingCard = false; // Pour éviter le rafraîchissement lors du flip
 let updateHistoryDebounce = null; // Pour éviter les rafraîchissements multiples
@@ -4335,21 +4335,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
     
-    // Vérifier l'authentification au démarrage (en arrière-plan pour ne pas bloquer)
-    // Mais pas trop souvent pour éviter les erreurs répétées
-    const now = Date.now();
-    if (now - lastAuthCheck > 30000) { // Vérifier max toutes les 30 secondes
-      lastAuthCheck = now;
+    // Récupérer lastAuthCheck depuis le storage
+    chrome.storage.local.get(['lastAuthCheck'], async (result) => {
+      const lastAuthCheck = result.lastAuthCheck || 0;
+      const now = Date.now();
       
-      setTimeout(async () => {
-        const token = await authAPI.getToken();
-        if (token && !window.currentUser) { // Ne vérifier que si pas déjà connecté
-          try {
-            // Vérifier la validité du token et récupérer les infos utilisateur
-            const response = await apiRequest('/api/user/profile');
-            if (response && response.user) {
-              debug('Utilisateur connecté:', response.user);
-              updateUIAfterLogin(response.user);
+      // Vérifier l'authentification seulement si nécessaire
+      if (now - lastAuthCheck > 60000 && !window.currentUser) { // Vérifier max toutes les 60 secondes
+        chrome.storage.local.set({ lastAuthCheck: now });
+        
+        setTimeout(async () => {
+          const token = await authAPI.getToken();
+          if (token && !window.currentUser) { // Ne vérifier que si pas déjà connecté
+            try {
+              // Vérifier la validité du token et récupérer les infos utilisateur
+              const response = await apiRequest('/api/user/profile');
+              if (response && response.user) {
+                debug('Utilisateur connecté:', response.user);
+                updateUIAfterLogin(response.user);
               
               // Vérifier si c'est le même utilisateur
               const previousUserId = localStorage.getItem('lastUserId') || localStorage.getItem('lastDisconnectedUserId');
@@ -4378,19 +4381,25 @@ document.addEventListener('DOMContentLoaded', async () => {
               return;
             }
             
-            // Seulement si pas d'utilisateur ET erreur 401
-            if (!window.currentUser && error.message && error.message.includes('Authentication required')) {
-              debug('Pas d\'utilisateur connecté');
-              const loginButton = document.getElementById('loginButton');
-              if (loginButton) {
-                loginButton.innerHTML = '<span style="font-size: 14px;">🔒</span><span>Se connecter</span>';
-                loginButton.onclick = () => showLoginWindow();
+            // Seulement si pas d'utilisateur ET erreur 401 ET le token est vraiment invalide
+            if (!window.currentUser && error.status === 401) {
+              // Vérifier une dernière fois si le token existe
+              const token = await authAPI.getToken();
+              if (!token) {
+                debug('Pas de token, affichage du bouton de connexion');
+                const loginButton = document.getElementById('loginButton');
+                if (loginButton) {
+                  loginButton.innerHTML = '<span style="font-size: 14px;">🔒</span><span>Se connecter</span>';
+                  loginButton.onclick = () => showLoginWindow();
+                }
+              } else {
+                debug('Token présent malgré 401, on garde la session');
               }
             }
           }
         }
-      }, 0); // Exécuter après l'initialisation de l'UI
-    }
+      }, 1000); // Délai plus long pour éviter les vérifications trop rapides
+    });
     
     // Navigation
     document.querySelectorAll('.nav-tab').forEach(tab => {
