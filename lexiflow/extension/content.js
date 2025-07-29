@@ -323,9 +323,7 @@ function createIcon() {
     font-size: 16px;
   `;
   
-  qtIcon.textContent = 'T';
-  qtIcon.style.fontWeight = '600';
-  qtIcon.style.fontSize = '14px';
+  qtIcon.innerHTML = '<span style="font-size: 16px;">🌐</span>';
   qtIcon.title = 'Translate';
   
   // Effet hover
@@ -531,7 +529,7 @@ async function displayTranslation(bubble, result) {
         Copy
       </button>
       <button id="qt-save-flashcard" style="flex: 1; background: #3b82f6; color: white; border: none; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s ease; transform-origin: center; font-weight: 500;">
-        Save
+        <span style="font-size: 13px;">💾</span> Save
       </button>
     </div>
     
@@ -936,7 +934,7 @@ function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
                 btn.textContent = 'Already exists';
                 btn.style.background = '#f59e0b';
                 setTimeout(() => {
-                  btn.textContent = 'Save';
+                  btn.innerHTML = '<span style="font-size: 13px;">💾</span> Save';
                   btn.style.background = '#3b82f6';
                 }, 2000);
               } else {
