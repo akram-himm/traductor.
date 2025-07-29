@@ -525,13 +525,25 @@ async function displayTranslation(bubble, result) {
     </div>
     
     <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-      <button id="qt-copy-translation" style="flex: 1; background: #6b7280; color: white; border: none; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
-        📋 Copier
+      <button id="qt-copy-translation" style="flex: 1; background: #6b7280; color: white; border: none; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; transition: all 0.3s ease;">
+        📋 Copy
       </button>
-      <button id="qt-save-flashcard" style="flex: 1; background: #10b981; color: white; border: none; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+      <button id="qt-save-flashcard" style="flex: 1; background: #10b981; color: white; border: none; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; transition: all 0.3s ease; transform-origin: center;">
         💾 Flashcard
       </button>
     </div>
+    
+    <style>
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+    </style>
     
     <div style="text-align: center; padding-top: 8px; border-top: 1px solid #e5e7eb;">
       <div style="font-size: 10px; color: #9ca3af;">
@@ -918,21 +930,34 @@ function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
             const btn = document.getElementById('qt-save-flashcard');
             if (btn) {
               if (response.duplicate) {
-                // Feedback pour doublon
-                btn.textContent = '⚠️ Existe déjà';
+                // Feedback pour doublon avec animation
+                btn.innerHTML = '⚠️ Already exists';
                 btn.style.background = '#f59e0b';
+                btn.style.animation = 'pulse 0.5s ease-out';
+                btn.style.transform = 'scale(1.05)';
                 setTimeout(() => {
                   btn.textContent = '💾 Flashcard';
                   btn.style.background = '#10b981';
+                  btn.style.animation = 'none';
+                  btn.style.transform = 'scale(1)';
                 }, 2000);
               } else {
-                // Feedback pour succès
-                btn.textContent = '✅ Ajouté!';
+                // Feedback pour succès avec animation
+                btn.innerHTML = '<span style="animation: spin 0.5s ease-out">⏳</span> Adding...';
                 btn.style.background = '#059669';
+                
                 setTimeout(() => {
-                  btn.textContent = '💾 Flashcard';
-                  btn.style.background = '#10b981';
-                }, 2000);
+                  btn.innerHTML = '✅ Added!';
+                  btn.style.transform = 'scale(1.05)';
+                  btn.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.4)';
+                  
+                  setTimeout(() => {
+                    btn.textContent = '💾 Flashcard';
+                    btn.style.background = '#10b981';
+                    btn.style.transform = 'scale(1)';
+                    btn.style.boxShadow = 'none';
+                  }, 1500);
+                }, 500);
               }
             }
           }

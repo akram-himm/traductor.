@@ -3634,29 +3634,40 @@ function updateUserQuota(user) {
   const flashcardsLimit = isPremium ? 999999 : 100; // Utiliser un grand nombre au lieu d'Infinity
   const flashcardsCount = user.flashcardsCount || 0;
   
-  // Afficher l'indicateur
-  quotaIndicator.style.display = 'block';
+  // Afficher l'indicateur avec une animation
+  quotaIndicator.style.display = 'inline-flex';
+  quotaIndicator.style.opacity = '0';
+  setTimeout(() => {
+    quotaIndicator.style.opacity = '1';
+  }, 100);
   
-  // Mettre à jour le texte
-  quotaText.textContent = isPremium ? `${flashcardsCount} (♾️ illimité)` : `${flashcardsCount}/${flashcardsLimit}`;
-  
-  // Changer la couleur selon le pourcentage d'utilisation
-  const percentage = isPremium ? 0 : (flashcardsCount / flashcardsLimit) * 100;
-  if (percentage >= 90) {
-    quotaIndicator.style.background = 'rgba(239, 68, 68, 0.2)'; // Rouge
-    quotaIndicator.style.borderColor = 'rgba(239, 68, 68, 0.4)';
-  } else if (percentage >= 70) {
-    quotaIndicator.style.background = 'rgba(245, 158, 11, 0.2)'; // Orange
-    quotaIndicator.style.borderColor = 'rgba(245, 158, 11, 0.4)';
-  } else {
-    quotaIndicator.style.background = 'rgba(16, 185, 129, 0.2)'; // Vert
-    quotaIndicator.style.borderColor = 'rgba(16, 185, 129, 0.4)';
-  }
-  
-  // Ajouter une icône premium si applicable
+  // Mettre à jour le texte avec un format amélioré
   if (isPremium) {
-    quotaText.innerHTML = `⭐ ${flashcardsCount} (illimité)`;
+    quotaText.innerHTML = `⭐ ${flashcardsCount} flashcards <span style="opacity: 0.8; font-size: 11px;">(unlimited)</span>`;
+    quotaIndicator.style.background = 'linear-gradient(135deg, rgba(240, 147, 251, 0.2), rgba(245, 87, 108, 0.2))';
+    quotaIndicator.style.borderColor = 'rgba(240, 147, 251, 0.4)';
+  } else {
+    const percentage = (flashcardsCount / flashcardsLimit) * 100;
+    quotaText.textContent = `${flashcardsCount}/${flashcardsLimit} flashcards`;
+    
+    // Changer la couleur et ajouter des effets selon le pourcentage
+    if (percentage >= 90) {
+      quotaIndicator.style.background = 'rgba(239, 68, 68, 0.2)'; // Rouge
+      quotaIndicator.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+      quotaIndicator.style.animation = 'pulse 2s ease-in-out infinite';
+    } else if (percentage >= 70) {
+      quotaIndicator.style.background = 'rgba(245, 158, 11, 0.2)'; // Orange
+      quotaIndicator.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+    } else {
+      quotaIndicator.style.background = 'rgba(255, 255, 255, 0.2)'; // Blanc transparent
+      quotaIndicator.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+    }
   }
+  
+  // Ajouter un tooltip au survol
+  quotaIndicator.title = isPremium 
+    ? 'Premium user - Unlimited flashcards!' 
+    : `Free plan - ${flashcardsLimit - flashcardsCount} flashcards remaining`;
 }
 
 // Fonction pour synchroniser les flashcards après connexion
