@@ -1306,13 +1306,13 @@
                 ">
                     <!-- Avatar Letter (always visible) -->
                     <span id="avatarLetter" style="
-                        font-size: 15px;
-                        font-weight: 700;
+                        font-size: 14px;
+                        font-weight: 500;
                         color: white;
                         text-transform: uppercase;
                         transition: all 0.3s ease;
                         display: inline-block;
-                    ">👤</span>
+                    ">U</span>
                     
                     <!-- User Email (hidden by default, shows on hover) -->
                     <span id="userEmailDisplay" style="
@@ -1403,48 +1403,40 @@
             <div style="text-align: center; padding-top: 6px;">
                 <!-- Logo and Title on same line -->
                 <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 10px;">
-                    <div class="logo" style="font-size: 32px; margin: 0;">🌐</div>
-                    <div style="font-size: 19px; font-weight: 800; color: white; line-height: 1; text-shadow: 0 2px 4px rgba(0,0,0,0.2); letter-spacing: -0.5px;">Quick Translator Pro</div>
+                    <div style="font-size: 22px; font-weight: 700; color: white; line-height: 1; text-shadow: 0 2px 4px rgba(0,0,0,0.15); letter-spacing: -0.5px;">LexiFlow</div>
                 </div>
                 
                 <!-- Quota Badge -->
                 <div id="quotaIndicator" style="
                     display: none;
-                    background: rgba(255,255,255,0.2);
-                    backdrop-filter: blur(10px);
-                    padding: 6px 14px;
-                    border-radius: 20px;
-                    font-size: 12px;
+                    background: rgba(255,255,255,0.15);
+                    padding: 4px 12px;
+                    border-radius: 16px;
+                    font-size: 11px;
                     color: white;
-                    font-weight: 600;
-                    border: 1px solid rgba(255,255,255,0.3);
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 6px;
-                    margin-top: 8px;
-                    transition: all 0.3s ease;
-                    cursor: pointer;
+                    font-weight: 400;
+                    border: 1px solid rgba(255,255,255,0.2);
+                    display: inline-block;
+                    margin-top: 6px;
+                    transition: all 0.2s ease;
                 ">
-                    <span style="font-size: 14px;">🎯</span>
-                    <span id="quotaText">0/50 flashcards</span>
+                    <span id="quotaText">0/50</span>
                 </div>
             </div>
             
             <!-- Center content -->
             <div style="margin-top: 6px;">
-                <div class="subtitle" style="font-size: 12px; opacity: 0.9;">Advanced linguistic intelligence</div>
+                <div class="subtitle" style="font-size: 13px; opacity: 0.85; font-weight: 400;">Translation assistant</div>
             </div>
             <div class="badges" style="margin-top: 10px;">
-                <div class="pro-badge" id="proBadge" style="display: none;">
-                    <span>✨</span>
-                    <span>PREMIUM</span>
+                <div class="pro-badge" id="proBadge" style="display: none; background: rgba(255,255,255,0.15); border: none;">
+                    <span style="font-size: 11px; font-weight: 500;">PREMIUM</span>
                 </div>
-                <div class="deepseek-badge" id="deepSeekBadge" style="display: none;">
-                    <span>🤖</span>
-                    <span>AI ENABLED</span>
+                <div class="deepseek-badge" id="deepSeekBadge" style="display: none; background: rgba(255,255,255,0.15); border: none; box-shadow: none;">
+                    <span style="font-size: 11px; font-weight: 500;">AI</span>
                 </div>
-                <button id="upgradeToPremiumBtn" class="btn btn-primary premium-pulse" style="padding: 8px 20px; font-size: 13px; margin-top: 8px; background: var(--gradient-premium); border: none; box-shadow: 0 4px 15px rgba(240, 147, 251, 0.4); font-weight: 600; letter-spacing: 0.5px;" data-action="upgradeToPremium">
-                    ⭐ Upgrade to Premium
+                <button id="upgradeToPremiumBtn" class="btn btn-primary" style="padding: 6px 16px; font-size: 12px; margin-top: 8px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); box-shadow: none; font-weight: 500; letter-spacing: 0.3px;" data-action="upgradeToPremium">
+                    Upgrade
                 </button>
             </div>
         </div>
@@ -1452,82 +1444,64 @@
 
     <div class="nav-tabs">
         <div class="nav-tab active" data-tab="dashboard">
-            <span class="nav-tab-icon">📊</span>
-            <span>Dashboard</span>
+            <span style="font-size: 13px;">Dashboard</span>
         </div>
         <div class="nav-tab" data-tab="history">
-            <span class="nav-tab-icon">📚</span>
-            <span>History</span>
+            <span style="font-size: 13px;">History</span>
         </div>
         <div class="nav-tab" data-tab="flashcards">
-            <span class="nav-tab-icon">🎯</span>
-            <span>Flashcards</span>
+            <span style="font-size: 13px;">Flashcards</span>
         </div>
         <div class="nav-tab" data-tab="settings">
-            <span class="nav-tab-icon">⚙️</span>
-            <span>Settings</span>
+            <span style="font-size: 13px;">Settings</span>
         </div>
     </div>
 
     <!-- Dashboard Tab -->
     <div class="tab-content active" id="dashboard">
         <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon">🌍</div>
-                <div class="stat-number" id="totalTranslations">0</div>
-                <div class="stat-label">Total translations</div>
+            <div class="stat-card" style="border: 1px solid var(--gray-200); box-shadow: none;">
+                <div class="stat-number" id="totalTranslations" style="font-size: 28px; color: var(--gray-800);">0</div>
+                <div class="stat-label" style="font-size: 12px; color: var(--gray-600); font-weight: 400;">Translations</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon">🎴</div>
-                <div class="stat-number" id="totalFlashcards">0</div>
-                <div class="stat-label">Flashcards created</div>
+            <div class="stat-card" style="border: 1px solid var(--gray-200); box-shadow: none;">
+                <div class="stat-number" id="totalFlashcards" style="font-size: 28px; color: var(--gray-800);">0</div>
+                <div class="stat-label" style="font-size: 12px; color: var(--gray-600); font-weight: 400;">Flashcards</div>
             </div>
         </div>
 
         <div class="section">
             <div class="section-header">
-                <h3 class="section-title">
-                    <span>🕒</span>
-                    <span>Recent activity</span>
+                <h3 class="section-title" style="font-size: 14px; font-weight: 500; color: var(--gray-700);">
+                    Recent activity
                 </h3>
-                <div class="section-action" data-action="viewAllHistory" style="cursor: pointer;">View all →</div>
+                <div class="section-action" data-action="viewAllHistory" style="cursor: pointer; font-size: 12px; color: var(--primary-color);">View all</div>
             </div>
             <div id="recentTranslationsList">
-                <div class="empty-state">
-                    <div class="empty-state-icon">📝</div>
-                    <div class="empty-state-title">No recent translations</div>
-                    <div class="empty-state-text">
-                        Select text on any web page to get started
+                <div class="empty-state" style="padding: 32px 20px;">
+                    <div class="empty-state-title" style="font-size: 14px; color: var(--gray-600); font-weight: 400; margin-bottom: 4px;">No recent translations</div>
+                    <div class="empty-state-text" style="font-size: 13px; color: var(--gray-500);">
+                        Select text on any page to translate
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="premium-banner" id="premiumBanner" style="position: relative; overflow: hidden;">
+        <div class="premium-banner" id="premiumBanner" style="background: var(--gray-50); border: 1px solid var(--gray-200); box-shadow: none;">
             <div class="premium-content">
-                <div class="premium-title" style="font-size: 20px; margin-bottom: 12px;">
-                    <span style="font-size: 24px; animation: float 3s ease-in-out infinite;">🤖</span>
-                    <span>Unlock DeepSeek AI Premium</span>
+                <div class="premium-title" style="font-size: 16px; margin-bottom: 12px; color: var(--gray-800); font-weight: 600;">
+                    Upgrade to Premium
                 </div>
-                <div class="premium-features" style="margin-bottom: 20px;">
-                    <div class="premium-feature" style="animation: slideIn 0.5s ease-out 0.1s both;">
-                        <span>✨</span>
-                        <span>Ultra-precise AI-powered translations</span>
-                    </div>
-                    <div class="premium-feature" style="animation: slideIn 0.5s ease-out 0.2s both;">
-                        <span>🎯</span>
-                        <span>Context-aware language detection</span>
-                    </div>
-                    <div class="premium-feature" style="animation: slideIn 0.5s ease-out 0.3s both;">
-                        <span>🚀</span>
-                        <span>Unlimited flashcards & priority support</span>
-                    </div>
+                <div class="premium-features" style="margin-bottom: 16px; font-size: 13px; line-height: 1.6; color: var(--gray-600);">
+                    <div>• AI-powered translations with DeepSeek</div>
+                    <div>• Unlimited flashcard storage</div>
+                    <div>• Advanced language detection</div>
+                    <div>• Priority support</div>
                 </div>
-                <button class="btn btn-block premium-cta" style="background: rgba(255,255,255,0.95); color: #764ba2; border: none; font-weight: 600; font-size: 15px; padding: 14px 24px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: all 0.3s ease;" data-action="upgradeToPremium">
-                    🚀 Upgrade to Premium →
+                <button class="btn btn-block" style="background: var(--primary-color); color: white; border: none; font-weight: 500; font-size: 14px; padding: 10px 20px; border-radius: 8px; transition: all 0.2s ease;" data-action="upgradeToPremium">
+                    Upgrade Now
                 </button>
             </div>
-            <div class="premium-shimmer" style="position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); animation: shimmer 3s infinite;"></div>
         </div>
     </div>
 
@@ -1535,14 +1509,12 @@
     <div class="tab-content" id="history">
         <div class="section">
             <div class="section-header">
-                <h3 class="section-title">
-                    <span>📚</span>
-                    <span>Translation history</span>
+                <h3 class="section-title" style="font-size: 14px; font-weight: 500; color: var(--gray-700);">
+                    Translation history
                 </h3>
                 <div class="setting-control">
-                    <button class="btn btn-sm btn-secondary" data-action="clearHistory">
-                        <span>🗑️</span>
-                        <span>Clear</span>
+                    <button class="btn btn-sm btn-secondary" data-action="clearHistory" style="font-size: 12px; padding: 4px 12px;">
+                        Clear
                     </button>
                 </div>
             </div>
@@ -1559,18 +1531,15 @@
     <div class="tab-content" id="flashcards">
         <div class="section">
             <div class="section-header">
-                <h3 class="section-title">
-                    <span>🎯</span>
-                    <span>My Flashcards</span>
+                <h3 class="section-title" style="font-size: 14px; font-weight: 500; color: var(--gray-700);">
+                    My Flashcards
                 </h3>
                 <div class="setting-control" style="display: flex; gap: 8px;">
-                    <button class="btn btn-primary" id="startPracticeBtn">
-                        <span>🎯</span>
-                        <span>Mode Pratique</span>
+                    <button class="btn btn-primary" id="startPracticeBtn" style="font-size: 12px; padding: 6px 14px;">
+                        Practice
                     </button>
-                    <button class="btn btn-sm btn-secondary" data-action="clearFlashcards">
-                        <span>🗑️</span>
-                        <span>Clear</span>
+                    <button class="btn btn-sm btn-secondary" data-action="clearFlashcards" style="font-size: 12px; padding: 4px 12px;">
+                        Clear
                     </button>
                 </div>
             </div>
@@ -1586,9 +1555,8 @@
     <!-- Settings Tab -->
     <div class="tab-content" id="settings">
         <div class="settings-section">
-            <h3 class="settings-section-title">
-                <span>🌍</span>
-                <span>Translation preferences</span>
+            <h3 class="settings-section-title" style="font-size: 14px; font-weight: 500; color: var(--gray-700);">
+                Translation preferences
             </h3>
             
             <div class="setting-row">

@@ -323,8 +323,10 @@ function createIcon() {
     font-size: 16px;
   `;
   
-  qtIcon.textContent = '🌐';
-  qtIcon.title = 'Traduire';
+  qtIcon.textContent = 'T';
+  qtIcon.style.fontWeight = '600';
+  qtIcon.style.fontSize = '14px';
+  qtIcon.title = 'Translate';
   
   // Effet hover
   qtIcon.addEventListener('mouseenter', () => {
@@ -488,8 +490,8 @@ async function displayTranslation(bubble, result) {
   bubble.innerHTML = `
     <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 12px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-        <span style="font-weight: 600; color: #374151;">
-          🌐 Traduction
+        <span style="font-weight: 600; color: #374151; font-size: 14px;">
+          Translation
         </span>
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 11px; color: #9ca3af;">
@@ -525,11 +527,11 @@ async function displayTranslation(bubble, result) {
     </div>
     
     <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-      <button id="qt-copy-translation" style="flex: 1; background: #6b7280; color: white; border: none; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; transition: all 0.3s ease;">
-        📋 Copy
+      <button id="qt-copy-translation" style="flex: 1; background: #e5e7eb; color: #374151; border: none; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s ease; font-weight: 500;">
+        Copy
       </button>
-      <button id="qt-save-flashcard" style="flex: 1; background: #10b981; color: white; border: none; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; transition: all 0.3s ease; transform-origin: center;">
-        💾 Flashcard
+      <button id="qt-save-flashcard" style="flex: 1; background: #3b82f6; color: white; border: none; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s ease; transform-origin: center; font-weight: 500;">
+        Save
       </button>
     </div>
     
@@ -930,32 +932,24 @@ function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
             const btn = document.getElementById('qt-save-flashcard');
             if (btn) {
               if (response.duplicate) {
-                // Feedback pour doublon avec animation
-                btn.innerHTML = '⚠️ Already exists';
+                // Feedback pour doublon
+                btn.textContent = 'Already exists';
                 btn.style.background = '#f59e0b';
-                btn.style.animation = 'pulse 0.5s ease-out';
-                btn.style.transform = 'scale(1.05)';
                 setTimeout(() => {
-                  btn.textContent = '💾 Flashcard';
-                  btn.style.background = '#10b981';
-                  btn.style.animation = 'none';
-                  btn.style.transform = 'scale(1)';
+                  btn.textContent = 'Save';
+                  btn.style.background = '#3b82f6';
                 }, 2000);
               } else {
-                // Feedback pour succès avec animation
-                btn.innerHTML = '<span style="animation: spin 0.5s ease-out">⏳</span> Adding...';
+                // Feedback pour succès
+                btn.textContent = 'Saving...';
                 btn.style.background = '#059669';
                 
                 setTimeout(() => {
-                  btn.innerHTML = '✅ Added!';
-                  btn.style.transform = 'scale(1.05)';
-                  btn.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.4)';
+                  btn.textContent = 'Saved!';
                   
                   setTimeout(() => {
-                    btn.textContent = '💾 Flashcard';
-                    btn.style.background = '#10b981';
-                    btn.style.transform = 'scale(1)';
-                    btn.style.boxShadow = 'none';
+                    btn.textContent = 'Save';
+                    btn.style.background = '#3b82f6';
                   }, 1500);
                 }, 500);
               }

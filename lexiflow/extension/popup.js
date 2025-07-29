@@ -3641,26 +3641,22 @@ function updateUserQuota(user) {
     quotaIndicator.style.opacity = '1';
   }, 100);
   
-  // Mettre à jour le texte avec un format amélioré
+  // Mettre à jour le texte avec un format simple
   if (isPremium) {
-    quotaText.innerHTML = `⭐ ${flashcardsCount} flashcards <span style="opacity: 0.8; font-size: 11px;">(unlimited)</span>`;
-    quotaIndicator.style.background = 'linear-gradient(135deg, rgba(240, 147, 251, 0.2), rgba(245, 87, 108, 0.2))';
-    quotaIndicator.style.borderColor = 'rgba(240, 147, 251, 0.4)';
+    quotaText.textContent = `${flashcardsCount} (unlimited)`;
+    quotaIndicator.style.background = 'rgba(255, 255, 255, 0.2)';
+    quotaIndicator.style.borderColor = 'rgba(255, 255, 255, 0.3)';
   } else {
     const percentage = (flashcardsCount / flashcardsLimit) * 100;
-    quotaText.textContent = `${flashcardsCount}/${flashcardsLimit} flashcards`;
+    quotaText.textContent = `${flashcardsCount}/${flashcardsLimit}`;
     
-    // Changer la couleur et ajouter des effets selon le pourcentage
+    // Couleur simple selon le pourcentage
     if (percentage >= 90) {
-      quotaIndicator.style.background = 'rgba(239, 68, 68, 0.2)'; // Rouge
-      quotaIndicator.style.borderColor = 'rgba(239, 68, 68, 0.4)';
-      quotaIndicator.style.animation = 'pulse 2s ease-in-out infinite';
-    } else if (percentage >= 70) {
-      quotaIndicator.style.background = 'rgba(245, 158, 11, 0.2)'; // Orange
-      quotaIndicator.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+      quotaIndicator.style.background = 'rgba(239, 68, 68, 0.15)';
+      quotaIndicator.style.borderColor = 'rgba(239, 68, 68, 0.3)';
     } else {
-      quotaIndicator.style.background = 'rgba(255, 255, 255, 0.2)'; // Blanc transparent
-      quotaIndicator.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+      quotaIndicator.style.background = 'rgba(255, 255, 255, 0.15)';
+      quotaIndicator.style.borderColor = 'rgba(255, 255, 255, 0.2)';
     }
   }
   
