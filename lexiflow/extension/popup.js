@@ -4313,6 +4313,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Ne plus vérifier localStorage pour les flashcards
     debug('📦 Flashcards uniquement sur le serveur maintenant');
     
+    // Vérifier si on revient de Stripe
+    chrome.storage.local.get(['pendingCheckout'], (result) => {
+      if (result.pendingCheckout) {
+        console.log('🔄 Retour de Stripe checkout détecté');
+        chrome.storage.local.remove(['pendingCheckout']);
+        
+        // Forcer le rechargement du profil utilisateur
+        setTimeout(async () => {
+          try {
+            const response = await apiRequest('/api/user/profile');
+            if (response && response.user) {
+              debug('✅ Profil rechargé après checkout:', response.user);
+              updateUIAfterLogin(response.user);
+              await checkPremiumStatus();
+            }
+          } catch (error) {
+            console.error('Erreur rechargement profil:', error);
+          }
+        }, 1000);
+      }
+    });
+    
     // Vérifier l'authentification au démarrage (en arrière-plan pour ne pas bloquer)
     // Mais pas trop souvent pour éviter les erreurs répétées
     const now = Date.now();
@@ -4321,7 +4343,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       
       setTimeout(async () => {
         const token = await authAPI.getToken();
-        if (token) {
+        if (token && !window.currentUser) { // Ne vérifier que si pas déjà connecté
           try {
             // Vérifier la validité du token et récupérer les infos utilisateur
             const response = await apiRequest('/api/user/profile');

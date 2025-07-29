@@ -132,6 +132,25 @@ async function selectPlan(planType) {
   try {
     console.log('💳 Sélection du plan:', planType);
     
+    // Vérifier d'abord si l'utilisateur a déjà ce plan
+    if (currentUserData) {
+      const subscriptionPlan = currentUserData.subscriptionPlan || currentUserData.billingCycle;
+      const isMonthly = subscriptionPlan === 'monthly' || subscriptionPlan === 'month';
+      const isAnnual = subscriptionPlan === 'yearly' || subscriptionPlan === 'annual' || subscriptionPlan === 'year';
+      
+      // Si l'utilisateur essaie de sélectionner le plan qu'il a déjà
+      if ((planType === 'monthly' && isMonthly) || (planType === 'yearly' && isAnnual)) {
+        alert('You already have this plan!');
+        return;
+      }
+      
+      // Si l'utilisateur a un plan annuel et essaie de downgrader
+      if (isAnnual && planType === 'monthly') {
+        alert('You cannot downgrade from annual to monthly plan.');
+        return;
+      }
+    }
+    
     // Créer une session de paiement
     const response = await apiRequest('/api/subscription/create-checkout-session', {
       method: 'POST',
@@ -139,21 +158,16 @@ async function selectPlan(planType) {
     });
     
     if (response.checkoutUrl) {
-      // Ouvrir Stripe Checkout dans un nouvel onglet
-      chrome.tabs.create({ url: response.checkoutUrl });
-      
-      // Afficher un message
-      const contentDiv = document.getElementById('subscriptionContent');
-      contentDiv.innerHTML = `
-        <div style="text-align: center; padding: 40px;">
-          <div style="font-size: 48px; margin-bottom: 16px;">🔄</div>
-          <h2>Redirecting to checkout...</h2>
-          <p style="color: #6b7280;">Complete your payment in the new tab</p>
-          <button onclick="window.close()" style="margin-top: 20px; padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
-            Close this window
-          </button>
-        </div>
-      `;
+      // Sauvegarder l'état avant de rediriger
+      chrome.storage.local.set({ pendingCheckout: true }, () => {
+        // Ouvrir Stripe Checkout dans un nouvel onglet
+        chrome.tabs.create({ url: response.checkoutUrl });
+        
+        // Fermer cette fenêtre après un délai
+        setTimeout(() => {
+          window.close();
+        }, 1000);
+      });
     }
   } catch (error) {
     console.error('❌ Erreur création session:', error);
