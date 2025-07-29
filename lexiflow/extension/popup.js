@@ -1598,28 +1598,84 @@ function showPremiumPrompt() {
     });
   });
   
-  // Event listeners pour les boutons
-  prompt.querySelector('.js-subscribe-monthly').onclick = async () => {
-    try {
-      showNotification('Redirection vers le paiement...', 'info');
-      await subscriptionAPI.createCheckoutSession(subscriptionAPI.prices.monthly.id, 'monthly');
-    } catch (error) {
-      showNotification('Erreur lors de la création de la session de paiement', 'error');
-    }
-  };
+  // Event listeners pour les boutons - Utiliser addEventListener pour une meilleure compatibilité
+  const monthlyBtn = prompt.querySelector('.js-subscribe-monthly');
+  const yearlyBtn = prompt.querySelector('.js-subscribe-yearly');
+  const closeBtn = prompt.querySelector('.js-close-prompt');
   
-  prompt.querySelector('.js-subscribe-yearly').onclick = async () => {
-    try {
-      showNotification('Redirection vers le paiement...', 'info');
-      await subscriptionAPI.createCheckoutSession(subscriptionAPI.prices.yearly.id, 'yearly');
-    } catch (error) {
-      showNotification('Erreur lors de la création de la session de paiement', 'error');
-    }
-  };
+  debug('🔍 Boutons trouvés:', { monthly: !!monthlyBtn, yearly: !!yearlyBtn, close: !!closeBtn });
   
-  prompt.querySelector('.js-close-prompt').onclick = () => {
-    prompt.remove();
-  };
+  if (monthlyBtn) {
+    monthlyBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      debug('💳 Clic sur abonnement mensuel');
+      try {
+        showNotification('Redirection vers le paiement...', 'info');
+        
+        // Créer la session Stripe directement
+        const response = await apiRequest('/api/subscription/create-checkout-session', {
+          method: 'POST',
+          body: JSON.stringify({
+            priceType: 'monthly'
+          })
+        });
+
+        if (response.checkoutUrl) {
+          window.open(response.checkoutUrl, '_blank');
+        } else {
+          throw new Error(response.error || 'Failed to create checkout session');
+        }
+      } catch (error) {
+        console.error('Erreur paiement mensuel:', error);
+        showNotification('Erreur lors de la création de la session de paiement', 'error');
+      }
+    });
+    
+    // Forcer le style pour s'assurer que le bouton est cliquable
+    monthlyBtn.style.pointerEvents = 'auto';
+    monthlyBtn.style.cursor = 'pointer';
+  }
+  
+  if (yearlyBtn) {
+    yearlyBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      debug('💳 Clic sur abonnement annuel');
+      try {
+        showNotification('Redirection vers le paiement...', 'info');
+        
+        // Créer la session Stripe directement
+        const response = await apiRequest('/api/subscription/create-checkout-session', {
+          method: 'POST',
+          body: JSON.stringify({
+            priceType: 'yearly'
+          })
+        });
+
+        if (response.checkoutUrl) {
+          window.open(response.checkoutUrl, '_blank');
+        } else {
+          throw new Error(response.error || 'Failed to create checkout session');
+        }
+      } catch (error) {
+        console.error('Erreur paiement annuel:', error);
+        showNotification('Erreur lors de la création de la session de paiement', 'error');
+      }
+    });
+    
+    // Forcer le style pour s'assurer que le bouton est cliquable
+    yearlyBtn.style.pointerEvents = 'auto';
+    yearlyBtn.style.cursor = 'pointer';
+  }
+  
+  if (closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      debug('❌ Fermeture du prompt premium');
+      prompt.remove();
+    });
+  }
 }
 
 // Charger les données
@@ -3130,15 +3186,19 @@ function handleOAuthLogin(provider) {
         }
       } catch (error) {
         console.error('Erreur profil:', error);
-        showNotification('Erreur lors de la récupération du profil', 'error');
-        // Ne PAS appeler resetUIAfterLogout() ici car cela efface les flashcards
-        // Juste déconnecter l'utilisateur sans toucher aux données locales
-        await authAPI.logout();
-        // Réinitialiser seulement le bouton de connexion
-        const loginButton = document.getElementById('loginButton');
-        if (loginButton) {
-          loginButton.innerHTML = '<span style="font-size: 14px;">🔒</span><span>Se connecter</span>';
-          loginButton.onclick = () => showLoginWindow();
+        // Ne déconnecter que si c'est vraiment une erreur d'authentification
+        if (error.message && (error.message.includes('401') || error.message.includes('Unauthorized'))) {
+          showNotification('Session expirée, veuillez vous reconnecter', 'warning');
+          await authAPI.logout();
+          // Réinitialiser seulement le bouton de connexion
+          const loginButton = document.getElementById('loginButton');
+          if (loginButton) {
+            loginButton.innerHTML = '<span style="font-size: 14px;">🔒</span><span>Se connecter</span>';
+            loginButton.onclick = () => showLoginWindow();
+          }
+        } else {
+          // Erreur temporaire, ne pas déconnecter
+          console.error('Erreur temporaire, session maintenue');
         }
       }
     });
@@ -4176,14 +4236,20 @@ document.addEventListener('DOMContentLoaded', async () => {
               }
             }
           } catch (error) {
-            // Token invalide, mais c'est normal si l'utilisateur n'est pas connecté
-            // Ne pas afficher d'erreur, juste mettre à jour l'UI silencieusement
-            debug('Pas d\'utilisateur connecté');
-            window.currentUser = null;
-            const loginButton = document.getElementById('loginButton');
-            if (loginButton) {
-              loginButton.innerHTML = '<span style="font-size: 14px;">🔒</span><span>Se connecter</span>';
-              loginButton.onclick = () => showLoginWindow();
+            // Ne PAS changer l'UI si on a déjà un utilisateur connecté
+            if (window.currentUser) {
+              debug('Erreur temporaire mais utilisateur déjà connecté, on ne change rien');
+              return;
+            }
+            
+            // Seulement si pas d'utilisateur ET erreur 401
+            if (!window.currentUser && error.message && error.message.includes('Authentication required')) {
+              debug('Pas d\'utilisateur connecté');
+              const loginButton = document.getElementById('loginButton');
+              if (loginButton) {
+                loginButton.innerHTML = '<span style="font-size: 14px;">🔒</span><span>Se connecter</span>';
+                loginButton.onclick = () => showLoginWindow();
+              }
             }
           }
         }
@@ -4681,9 +4747,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
       } catch (error) {
         console.error('Erreur profil:', error);
-        showNotification('Erreur lors de la récupération du profil', 'error');
-        await authAPI.logout();
-        resetUIAfterLogout();
+        // Ne déconnecter que si c'est vraiment une erreur d'authentification
+        if (error.message && (error.message.includes('401') || error.message.includes('Unauthorized'))) {
+          showNotification('Session expirée, veuillez vous reconnecter', 'warning');
+          await authAPI.logout();
+          resetUIAfterLogout();
+        } else {
+          // Erreur temporaire, on maintient la session
+          showNotification('Erreur temporaire de connexion', 'warning');
+        }
       }
     });
   } else if (message.type === 'oauth-error') {

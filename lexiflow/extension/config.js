@@ -82,12 +82,8 @@ async function apiRequest(endpoint, options = {}) {
         
         if (!response.ok) {
           if (response.status === 401) {
-            // Token expiré ou invalide
-            chrome.storage.local.remove(['authToken', 'user'], () => {
-              console.log('Token invalide, authentification requise');
-              // Déclencher un événement pour afficher la page de connexion
-              window.dispatchEvent(new Event('auth-required'));
-            });
+            // Token expiré ou invalide - mais ne pas supprimer automatiquement
+            console.log('Erreur 401 - vérification nécessaire');
             throw new Error('Authentication required');
           }
           
