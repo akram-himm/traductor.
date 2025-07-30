@@ -1500,8 +1500,8 @@ async function handleUpgradeToPremium() {
   // Même pour les utilisateurs Premium pour qu'ils puissent gérer leur abonnement
   chrome.tabs.create({ url: chrome.runtime.getURL('subscription.html') });
   
-  // Fermer le popup pour éviter les conflits
-  window.close();
+  // TEMPORAIRE : Ne pas fermer le popup pour débugger
+  // window.close();
 }
 
 // Afficher la promotion pour upgrade vers annuel
