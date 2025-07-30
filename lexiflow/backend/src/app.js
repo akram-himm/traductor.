@@ -72,6 +72,11 @@ app.use('/api/flashcards', limiters.flashcards);
 app.use('/api/deepseek', limiters.deepseek);
 app.use('/api/', limiters.global);
 
+// Health check endpoint (pas d'auth requis)
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // Routes
 app.use('/api/auth', require('./routes/authWithTrial'));
 app.use('/api/auth', require('./routes/password-reset'));

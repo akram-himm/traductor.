@@ -14,8 +14,8 @@ const API_CONFIG = {
   // Fonction pour réveiller le serveur
   wakeUpServer: async function() {
     try {
-      // Utiliser un endpoint simple qui ne nécessite pas d'auth
-      const response = await fetch(this.BASE_URL + '/api/user/profile', {
+      // Utiliser un endpoint de santé qui ne nécessite pas d'auth
+      const response = await fetch(this.BASE_URL + '/api/health', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       });

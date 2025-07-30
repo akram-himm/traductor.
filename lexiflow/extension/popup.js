@@ -24,8 +24,25 @@ function generateUUID() {
   });
 }
 
+// Variables pour éviter les appels multiples
+let isLoadingFlashcards = false;
+let lastFlashcardLoad = 0;
+
 // Charger les flashcards uniquement depuis le serveur
-async function loadFlashcardsFromServer() {
+async function loadFlashcardsFromServer(force = false) {
+  // Éviter les appels multiples simultanés
+  if (isLoadingFlashcards) {
+    debug('⏳ Chargement déjà en cours, ignoré');
+    return;
+  }
+  
+  // Éviter les appels trop rapprochés (sauf si forcé)
+  const now = Date.now();
+  if (!force && (now - lastFlashcardLoad) < 5000) {
+    debug('⏱️ Chargement trop récent, ignoré');
+    return;
+  }
+  
   try {
     const token = await authAPI.getToken();
     if (!token) {
@@ -34,6 +51,8 @@ async function loadFlashcardsFromServer() {
       return;
     }
 
+    isLoadingFlashcards = true;
+    lastFlashcardLoad = now;
     debug('🔄 Chargement des flashcards depuis le serveur...');
     const response = await flashcardsAPI.getAll();
     
@@ -95,6 +114,8 @@ async function loadFlashcardsFromServer() {
     flashcards = [];
     updateFlashcards();
     updateStats();
+  } finally {
+    isLoadingFlashcards = false;
   }
 }
 let flashcardFolders = {
@@ -1478,6 +1499,9 @@ async function handleUpgradeToPremium() {
   // Ouvrir la page de gestion d'abonnement
   // Même pour les utilisateurs Premium pour qu'ils puissent gérer leur abonnement
   chrome.tabs.create({ url: chrome.runtime.getURL('subscription.html') });
+  
+  // Fermer le popup pour éviter les conflits
+  window.close();
 }
 
 // Afficher la promotion pour upgrade vers annuel
@@ -4321,20 +4345,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (result.pendingCheckout) {
         console.log('🔄 Retour de Stripe checkout détecté');
         chrome.storage.local.remove(['pendingCheckout']);
-        
-        // Forcer le rechargement du profil utilisateur
-        setTimeout(async () => {
-          try {
-            const response = await apiRequest('/api/user/profile');
-            if (response && response.user) {
-              debug('✅ Profil rechargé après checkout:', response.user);
-              updateUIAfterLogin(response.user);
-              await checkPremiumStatus();
-            }
-          } catch (error) {
-            console.error('Erreur rechargement profil:', error);
-          }
-        }, 1000);
+        // Ne pas recharger le profil ici, laissons le flux normal s'en charger
       }
     });
     
