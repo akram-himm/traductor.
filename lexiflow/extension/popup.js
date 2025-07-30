@@ -4434,8 +4434,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               }
             }
           }
-        }
-      }, 1000); // Délai plus long pour éviter les vérifications trop rapides
+        }, 1000); // Délai plus long pour éviter les vérifications trop rapides
       }
     });
     
