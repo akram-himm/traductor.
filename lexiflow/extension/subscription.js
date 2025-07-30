@@ -51,7 +51,7 @@ function displaySubscriptionPlans(userData) {
   contentDiv.innerHTML = `
     <div class="plans-container">
       <!-- Plan Mensuel -->
-      <div class="plan-card ${isMonthly ? 'current' : ''} ${isAnnual ? 'disabled' : ''}" id="monthlyPlan">
+      <div class="plan-card ${isMonthly ? 'current disabled' : ''} ${isAnnual ? 'disabled' : ''}" id="monthlyPlan">
         ${isMonthly ? '<div class="current-badge">Current Plan</div>' : ''}
         <div class="plan-name">Monthly</div>
         <div class="plan-price">
@@ -71,7 +71,7 @@ function displaySubscriptionPlans(userData) {
       </div>
       
       <!-- Plan Annuel -->
-      <div class="plan-card ${isAnnual ? 'current' : ''}" id="annualPlan">
+      <div class="plan-card ${isAnnual ? 'current disabled' : ''}" id="annualPlan">
         ${isAnnual ? '<div class="current-badge">Current Plan</div>' : ''}
         <div class="plan-name">Annual</div>
         <div class="plan-price">
