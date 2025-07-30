@@ -4,6 +4,7 @@ let currentUserData = null;
 // Initialisation au chargement de la page
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('📋 Chargement de la page d\'abonnement');
+  console.log('📍 Page subscription.html chargée à:', new Date().toISOString());
   await loadSubscriptionData();
 });
 
@@ -14,6 +15,7 @@ async function loadSubscriptionData() {
   try {
     // Vérifier l'authentification
     const token = await authAPI.getToken();
+    console.log('🔑 Token trouvé:', !!token);
     if (!token) {
       contentDiv.innerHTML = '<div class="error-message">Authentication required</div>';
       setTimeout(() => window.close(), 2000);
@@ -21,10 +23,14 @@ async function loadSubscriptionData() {
     }
     
     // Récupérer les données de l'utilisateur
-    const userData = await apiRequest('/api/user/profile');
+    console.log('📡 Appel API /api/user/profile...');
+    const response = await apiRequest('/api/user/profile');
+    console.log('📥 Réponse brute:', response);
+    const userData = response.user || response; // Gérer les deux cas
     currentUserData = userData;
     
-    console.log('👤 Données utilisateur:', userData);
+    console.log('👤 Données utilisateur extraites:', userData);
+    console.log('💳 Plan détecté:', userData.subscriptionPlan || userData.billingCycle || 'AUCUN');
     
     // Afficher l'interface selon le statut
     displaySubscriptionPlans(userData);
@@ -118,14 +124,20 @@ function displaySubscriptionPlans(userData) {
 function setupEventListeners() {
   // Bouton mensuel
   const monthlyBtn = document.getElementById('selectMonthly');
-  if (monthlyBtn && !monthlyBtn.disabled) {
+  if (monthlyBtn && !monthlyBtn.hasAttribute('disabled')) {
+    console.log('✅ Ajout event listener sur bouton mensuel');
     monthlyBtn.addEventListener('click', () => selectPlan('monthly'));
+  } else {
+    console.log('🚫 Bouton mensuel désactivé, pas d\'event listener');
   }
   
   // Bouton annuel
   const annualBtn = document.getElementById('selectAnnual');
-  if (annualBtn && !annualBtn.disabled) {
+  if (annualBtn && !annualBtn.hasAttribute('disabled')) {
+    console.log('✅ Ajout event listener sur bouton annuel');
     annualBtn.addEventListener('click', () => selectPlan('yearly'));
+  } else {
+    console.log('🚫 Bouton annuel désactivé, pas d\'event listener');
   }
   
   // Bouton d'annulation
