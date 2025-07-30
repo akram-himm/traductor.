@@ -46,6 +46,15 @@ const User = sequelize.define('User', {
     type: DataTypes.DATE,
     allowNull: true
   },
+  subscriptionPlan: {
+    type: DataTypes.ENUM('monthly', 'yearly', 'trial'),
+    allowNull: true
+  },
+  subscriptionStatus: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: 'free'
+  },
   // Free Trial
   trialStartedAt: {
     type: DataTypes.DATE,

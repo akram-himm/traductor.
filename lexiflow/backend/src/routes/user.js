@@ -9,7 +9,18 @@ const flashcards = [];
 router.get('/profile', authMiddleware, (req, res) => {
   try {
     const user = req.user; // Assuming user is attached to req by authMiddleware
-    res.json({ success: true, user });
+    
+    // Convertir l'objet Sequelize en objet simple
+    const userData = user.toJSON ? user.toJSON() : user;
+    
+    // TEMPORAIRE : Si les champs subscription n'existent pas, les simuler
+    if (!userData.subscriptionPlan && userData.isPremium) {
+      // Pour le test, on simule que tous les Premium sont mensuels
+      userData.subscriptionPlan = 'monthly';
+      userData.subscriptionStatus = 'premium';
+    }
+    
+    res.json({ success: true, user: userData });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to fetch user profile.' });
   }
