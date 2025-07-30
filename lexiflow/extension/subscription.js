@@ -73,6 +73,28 @@ function displaySubscriptionPlans(userData) {
   
   console.log('📊 Statut final:', { isPremium, cycle, isMonthly, isAnnual });
   
+  // Sauvegarder les logs pour debug
+  const debugInfo = {
+    userData: {
+      isPremium: userData.isPremium,
+      subscriptionStatus: userData.subscriptionStatus,
+      subscriptionPlan: userData.subscriptionPlan,
+      billingCycle: userData.billingCycle,
+      subscription: userData.subscription
+    },
+    detection: {
+      cycle,
+      isMonthly,
+      isAnnual
+    },
+    timestamp: new Date().toISOString()
+  };
+  
+  // Sauvegarder dans chrome.storage pour récupérer plus tard
+  chrome.storage.local.set({ subscriptionDebugInfo: debugInfo }, () => {
+    console.log('💾 Debug info sauvegardé dans chrome.storage');
+  });
+  
   // HTML pour les plans
   contentDiv.innerHTML = `
     <div class="plans-container">
@@ -211,10 +233,10 @@ async function selectPlan(planType) {
         // Ouvrir Stripe Checkout dans un nouvel onglet
         chrome.tabs.create({ url: response.checkoutUrl });
         
-        // Fermer cette fenêtre après un délai
-        setTimeout(() => {
-          window.close();
-        }, 1000);
+        // TEMPORAIRE : Ne pas fermer pour débugger
+        // setTimeout(() => {
+        //   window.close();
+        // }, 1000);
       });
     }
   } catch (error) {

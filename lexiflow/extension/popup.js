@@ -3,6 +3,18 @@
 const POPUP_DEBUG = true; // Mettre à true pour activer les logs
 const debug = (...args) => POPUP_DEBUG && console.log(...args);
 
+// Fonction pour afficher les logs de subscription (TEMPORAIRE)
+window.showSubscriptionDebug = function() {
+  chrome.storage.local.get(['subscriptionDebugInfo'], (result) => {
+    if (result.subscriptionDebugInfo) {
+      console.log('📋 DEBUG INFO SUBSCRIPTION:');
+      console.log(JSON.stringify(result.subscriptionDebugInfo, null, 2));
+    } else {
+      console.log('❌ Aucune info de debug trouvée');
+    }
+  });
+};
+
 
 let userSettings = {};
 let translations = [];
