@@ -48,6 +48,15 @@ function displaySubscriptionPlans(userData) {
   // Déterminer le statut actuel
   const isPremium = userData.isPremium || userData.subscriptionStatus === 'premium';
   
+  // Debug complet des données
+  console.log('🔍 Debug userData complet:', {
+    isPremium: userData.isPremium,
+    subscriptionStatus: userData.subscriptionStatus,
+    subscriptionPlan: userData.subscriptionPlan,
+    billingCycle: userData.billingCycle,
+    subscription: userData.subscription
+  });
+  
   // Normalisation complète du plan
   const cycle = (userData.subscription?.interval || 
                 userData.billingCycle || 
@@ -62,7 +71,7 @@ function displaySubscriptionPlans(userData) {
   const isMonthly = monthlyVariants.some(variant => cycle.includes(variant));
   const isAnnual = annualVariants.some(variant => cycle.includes(variant));
   
-  console.log('📊 Statut:', { isPremium, cycle, isMonthly, isAnnual });
+  console.log('📊 Statut final:', { isPremium, cycle, isMonthly, isAnnual });
   
   // HTML pour les plans
   contentDiv.innerHTML = `
@@ -124,6 +133,14 @@ function displaySubscriptionPlans(userData) {
 function setupEventListeners() {
   // Bouton mensuel
   const monthlyBtn = document.getElementById('selectMonthly');
+  console.log('🔍 Bouton mensuel:', {
+    existe: !!monthlyBtn,
+    hasDisabled: monthlyBtn?.hasAttribute('disabled'),
+    disabled: monthlyBtn?.disabled,
+    className: monthlyBtn?.className,
+    outerHTML: monthlyBtn?.outerHTML?.substring(0, 100)
+  });
+  
   if (monthlyBtn && !monthlyBtn.hasAttribute('disabled')) {
     console.log('✅ Ajout event listener sur bouton mensuel');
     monthlyBtn.addEventListener('click', () => selectPlan('monthly'));

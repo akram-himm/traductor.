@@ -3730,6 +3730,9 @@ function showUserMenu(user) {
 function resetUIAfterLogout() {
   debug('🚪 Resetting UI after logout...');
   
+  // TRÈS IMPORTANT : Réinitialiser l'utilisateur courant
+  window.currentUser = null;
+  
   // IMPORTANT: Sauvegarder les données de l'utilisateur avant de déconnecter
   const currentUserId = localStorage.getItem('lastUserId');
   if (currentUserId && (flashcards.length > 0 || translations.length > 0)) {
