@@ -193,10 +193,23 @@ async function handleCheckoutComplete(session) {
       cancelAtPeriodEnd: subscription.cancel_at_period_end
     });
     
+    // Déterminer le type de plan basé sur le price ID
+    const priceId = subscription.items.data[0].price.id;
+    let subscriptionPlan = 'monthly'; // Par défaut
+    
+    if (priceId === PRICES.yearly) {
+      subscriptionPlan = 'yearly';
+    } else if (priceId === PRICES.monthly) {
+      subscriptionPlan = 'monthly';
+    }
+    
     // Mettre à jour l'utilisateur
     await user.update({
       isPremium: true,
-      stripeCustomerId: session.customer
+      stripeCustomerId: session.customer,
+      subscriptionPlan: subscriptionPlan,
+      subscriptionStatus: 'premium',
+      premiumUntil: new Date(subscription.current_period_end * 1000)
     });
     
   } catch (error) {
@@ -217,15 +230,28 @@ async function handleSubscriptionUpdate(subscription) {
     await sub.update({
       status: subscription.status,
       currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      cancelAtPeriodEnd: subscription.cancel_at_period_end
+      cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      stripePriceId: subscription.items.data[0].price.id
     });
+    
+    // Déterminer le type de plan
+    const priceId = subscription.items.data[0].price.id;
+    let subscriptionPlan = 'monthly';
+    
+    if (priceId === PRICES.yearly) {
+      subscriptionPlan = 'yearly';
+    } else if (priceId === PRICES.monthly) {
+      subscriptionPlan = 'monthly';
+    }
     
     // Mettre à jour l'utilisateur
     const user = await User.findByPk(sub.userId);
     if (user) {
       await user.update({
         isPremium: subscription.status === 'active',
-        premiumUntil: new Date(subscription.current_period_end * 1000)
+        premiumUntil: new Date(subscription.current_period_end * 1000),
+        subscriptionPlan: subscriptionPlan,
+        subscriptionStatus: subscription.status === 'active' ? 'premium' : 'inactive'
       });
     }
     

@@ -6,22 +6,49 @@ const router = express.Router();
 const flashcards = [];
 
 // GET /api/user/profile
-router.get('/profile', authMiddleware, (req, res) => {
+router.get('/profile', authMiddleware, async (req, res) => {
   try {
     const user = req.user; // Assuming user is attached to req by authMiddleware
     
     // Convertir l'objet Sequelize en objet simple
     const userData = user.toJSON ? user.toJSON() : user;
     
-    // TEMPORAIRE : Si les champs subscription n'existent pas, les simuler
+    // Si l'utilisateur est Premium mais n'a pas de plan défini, essayer de le récupérer depuis Subscription
     if (!userData.subscriptionPlan && userData.isPremium) {
-      // Pour le test, on simule que tous les Premium sont mensuels
-      userData.subscriptionPlan = 'monthly';
-      userData.subscriptionStatus = 'premium';
+      const Subscription = require('../models/Subscription');
+      const { PRICES } = require('../config/stripe');
+      
+      const subscription = await Subscription.findOne({
+        where: {
+          userId: user.id,
+          status: 'active'
+        }
+      });
+      
+      if (subscription) {
+        // Déterminer le type de plan basé sur le price ID
+        if (subscription.stripePriceId === PRICES.yearly) {
+          userData.subscriptionPlan = 'yearly';
+        } else if (subscription.stripePriceId === PRICES.monthly) {
+          userData.subscriptionPlan = 'monthly';
+        }
+        userData.subscriptionStatus = 'premium';
+        
+        // Optionnel : mettre à jour l'utilisateur dans la DB
+        await user.update({
+          subscriptionPlan: userData.subscriptionPlan,
+          subscriptionStatus: userData.subscriptionStatus
+        });
+      } else {
+        // Fallback : pour le test, on simule que tous les Premium sont mensuels
+        userData.subscriptionPlan = 'monthly';
+        userData.subscriptionStatus = 'premium';
+      }
     }
     
     res.json({ success: true, user: userData });
   } catch (error) {
+    console.error('Error in /api/user/profile:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch user profile.' });
   }
 });
