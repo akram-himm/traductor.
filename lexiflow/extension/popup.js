@@ -3471,6 +3471,9 @@ function updateUIAfterLogin(user) {
   // Sauvegarder l'utilisateur courant
   window.currentUser = user;
   
+  // Sauvegarder aussi dans chrome.storage pour la persistance
+  chrome.storage.local.set({ user: user });
+  
   debug('👤 Utilisateur connecté:', user.email || user.name);
   
   // Mettre à jour l'interface utilisateur
@@ -4336,23 +4339,57 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     
     // Récupérer lastAuthCheck depuis le storage
-    chrome.storage.local.get(['lastAuthCheck'], async (result) => {
+    chrome.storage.local.get(['lastAuthCheck', 'user'], async (result) => {
       const lastAuthCheck = result.lastAuthCheck || 0;
       const now = Date.now();
+      const token = await authAPI.getToken();
       
-      // Vérifier l'authentification seulement si nécessaire
-      if (now - lastAuthCheck > 60000 && !window.currentUser) { // Vérifier max toutes les 60 secondes
+      if (!token) {
+        debug('Pas de token, utilisateur non connecté');
+        return;
+      }
+      
+      // Si on a un token mais pas de currentUser, toujours charger le profil
+      if (!window.currentUser && result.user) {
+        // Utiliser l'utilisateur en cache d'abord pour l'UI rapide
+        window.currentUser = result.user;
+        updateUIAfterLogin(result.user);
+        debug('Utilisateur restauré depuis le cache');
+      }
+      
+      // Si toujours pas de currentUser, charger depuis l'API
+      if (!window.currentUser) {
+        try {
+          const response = await apiRequest('/api/user/profile');
+          if (response && response.user) {
+            debug('Utilisateur chargé depuis l\'API');
+            window.currentUser = response.user;
+            updateUIAfterLogin(response.user);
+            // Sauvegarder en cache
+            chrome.storage.local.set({ user: response.user });
+          }
+        } catch (error) {
+          debug('Erreur chargement profil:', error);
+        }
+      }
+      
+      // Vérifier le token en arrière-plan seulement si nécessaire
+      if (now - lastAuthCheck > 60000) {
         chrome.storage.local.set({ lastAuthCheck: now });
         
         setTimeout(async () => {
-          const token = await authAPI.getToken();
-          if (token && !window.currentUser) { // Ne vérifier que si pas déjà connecté
-            try {
-              // Vérifier la validité du token et récupérer les infos utilisateur
-              const response = await apiRequest('/api/user/profile');
-              if (response && response.user) {
-                debug('Utilisateur connecté:', response.user);
+          try {
+            // Vérifier la validité du token en arrière-plan
+            const response = await apiRequest('/api/user/profile');
+            if (response && response.user) {
+              // Mettre à jour le cache
+              chrome.storage.local.set({ user: response.user });
+              
+              // Mettre à jour seulement si différent
+              if (JSON.stringify(window.currentUser) !== JSON.stringify(response.user)) {
+                window.currentUser = response.user;
                 updateUIAfterLogin(response.user);
+              }
               
               // Vérifier si c'est le même utilisateur
               const previousUserId = localStorage.getItem('lastUserId') || localStorage.getItem('lastDisconnectedUserId');

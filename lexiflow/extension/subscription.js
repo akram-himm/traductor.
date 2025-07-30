@@ -41,11 +41,22 @@ function displaySubscriptionPlans(userData) {
   
   // Déterminer le statut actuel
   const isPremium = userData.isPremium || userData.subscriptionStatus === 'premium';
-  const subscriptionPlan = (userData.subscriptionPlan || userData.billingCycle || '').toLowerCase().trim();
-  const isMonthly = subscriptionPlan === 'monthly' || subscriptionPlan === 'month' || subscriptionPlan === 'mensuel';
-  const isAnnual = subscriptionPlan === 'yearly' || subscriptionPlan === 'annual' || subscriptionPlan === 'year' || subscriptionPlan === 'annuel';
   
-  console.log('📊 Statut:', { isPremium, subscriptionPlan, isMonthly, isAnnual });
+  // Normalisation complète du plan
+  const cycle = (userData.subscription?.interval || 
+                userData.billingCycle || 
+                userData.subscriptionPlan || 
+                userData.subscription?.plan ||
+                '').toString().toLowerCase().trim();
+                
+  // Liste étendue de variantes possibles
+  const monthlyVariants = ['month', 'monthly', 'mensuel', 'mensuelle', 'month-to-month', 'mois'];
+  const annualVariants = ['year', 'yearly', 'annual', 'annuel', 'annuelle', 'année', 'an'];
+  
+  const isMonthly = monthlyVariants.some(variant => cycle.includes(variant));
+  const isAnnual = annualVariants.some(variant => cycle.includes(variant));
+  
+  console.log('📊 Statut:', { isPremium, cycle, isMonthly, isAnnual });
   
   // HTML pour les plans
   contentDiv.innerHTML = `
@@ -134,9 +145,17 @@ async function selectPlan(planType) {
     
     // Vérifier d'abord si l'utilisateur a déjà ce plan
     if (currentUserData) {
-      const subscriptionPlan = (currentUserData.subscriptionPlan || currentUserData.billingCycle || '').toLowerCase().trim();
-      const isMonthly = subscriptionPlan === 'monthly' || subscriptionPlan === 'month' || subscriptionPlan === 'mensuel';
-      const isAnnual = subscriptionPlan === 'yearly' || subscriptionPlan === 'annual' || subscriptionPlan === 'year' || subscriptionPlan === 'annuel';
+      const cycle = (currentUserData.subscription?.interval || 
+                    currentUserData.billingCycle || 
+                    currentUserData.subscriptionPlan || 
+                    currentUserData.subscription?.plan ||
+                    '').toString().toLowerCase().trim();
+                    
+      const monthlyVariants = ['month', 'monthly', 'mensuel', 'mensuelle', 'month-to-month', 'mois'];
+      const annualVariants = ['year', 'yearly', 'annual', 'annuel', 'annuelle', 'année', 'an'];
+      
+      const isMonthly = monthlyVariants.some(variant => cycle.includes(variant));
+      const isAnnual = annualVariants.some(variant => cycle.includes(variant));
       
       // Si l'utilisateur essaie de sélectionner le plan qu'il a déjà
       if ((planType === 'monthly' && isMonthly) || (planType === 'yearly' && isAnnual)) {

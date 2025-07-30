@@ -58,6 +58,12 @@
     .plan-card.disabled {
       opacity: 0.6;
       cursor: not-allowed;
+      pointer-events: none;
+    }
+    
+    .plan-card.disabled * {
+      pointer-events: none;
+      cursor: not-allowed;
     }
     
     .plan-card:not(.disabled):hover {
