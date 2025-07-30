@@ -53,6 +53,30 @@ router.get('/profile', authMiddleware, async (req, res) => {
   }
 });
 
+// TEMPORAIRE : Route pour forcer le changement de plan (à supprimer après tests)
+router.post('/force-plan', authMiddleware, async (req, res) => {
+  try {
+    const { plan } = req.body;
+    if (!['monthly', 'yearly'].includes(plan)) {
+      return res.status(400).json({ error: 'Invalid plan type' });
+    }
+    
+    await req.user.update({
+      subscriptionPlan: plan,
+      subscriptionStatus: 'premium'
+    });
+    
+    res.json({ 
+      success: true, 
+      message: `Plan updated to ${plan}`,
+      user: req.user
+    });
+  } catch (error) {
+    console.error('Error forcing plan:', error);
+    res.status(500).json({ error: 'Failed to update plan' });
+  }
+});
+
 // PUT /api/user/profile
 router.put('/profile', authMiddleware, (req, res) => {
   try {
