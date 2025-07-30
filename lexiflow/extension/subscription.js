@@ -252,17 +252,19 @@ async function handleCancelSubscription() {
   }
   
   try {
-    const response = await apiRequest('/api/subscription/manage', {
+    const response = await apiRequest('/api/subscription/cancel', {
       method: 'POST'
     });
     
-    if (response.portalUrl) {
-      // Ouvrir le portail Stripe
-      chrome.tabs.create({ url: response.portalUrl });
-      window.close();
+    if (response.message) {
+      alert(response.message);
+      // Rafraîchir la page pour montrer le statut mis à jour
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     }
   } catch (error) {
     console.error('❌ Erreur annulation:', error);
-    alert('Failed to open subscription management. Please try again.');
+    alert('Failed to cancel subscription. Please try again.');
   }
 }

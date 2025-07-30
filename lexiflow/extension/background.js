@@ -127,6 +127,38 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
   
+  // Gérer la mise à jour du profil après paiement
+  if (request.action === 'updateUserProfile') {
+    chrome.storage.local.get(['authToken'], async (result) => {
+      if (result.authToken) {
+        try {
+          const response = await fetch('https://my-backend-api-cng7.onrender.com/api/user/profile', {
+            headers: {
+              'Authorization': `Bearer ${result.authToken}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.user) {
+              chrome.storage.local.set({ user: data.user }, () => {
+                sendResponse({ success: true, user: data.user });
+              });
+            }
+          } else {
+            sendResponse({ success: false, error: 'Failed to update profile' });
+          }
+        } catch (error) {
+          sendResponse({ success: false, error: error.message });
+        }
+      } else {
+        sendResponse({ success: false, error: 'Not authenticated' });
+      }
+    });
+    return true; // Asynchrone
+  }
+  
   // Synchroniser une flashcard avec le serveur
   if (request.action === 'syncFlashcard') {
     chrome.storage.local.get(['authToken'], async (result) => {

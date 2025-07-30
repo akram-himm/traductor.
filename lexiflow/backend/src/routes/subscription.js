@@ -46,8 +46,8 @@ router.post('/create-checkout-session', authMiddleware, async (req, res) => {
       payment_method_types: ['card'],
       mode: 'subscription',
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${process.env.FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL}/pricing`,
+      success_url: `${process.env.BASE_URL || 'https://my-backend-api-cng7.onrender.com'}/payment-success.html?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.BASE_URL || 'https://my-backend-api-cng7.onrender.com'}/payment-cancel.html`,
       metadata: { userId: user.id }
     });
     

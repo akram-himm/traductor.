@@ -49,7 +49,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["subscription.html", "subscription.js"],
+      "resources": ["subscription.html", "subscription.js", "success.html", "success.js"],
       "matches": ["<all_urls>"]
     }
   ]

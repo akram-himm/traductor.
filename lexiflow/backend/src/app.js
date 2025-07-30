@@ -48,6 +48,9 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Servir les fichiers statiques (pour les pages de succès)
+app.use(express.static('public'));
+
 // Session pour OAuth
 app.use(session({
   secret: process.env.SESSION_SECRET || 'lexiflow-secret-key',
