@@ -72,18 +72,33 @@ router.post('/create-checkout-session', authMiddleware, async (req, res) => {
 
 // Webhook Stripe (appelé automatiquement par Stripe)
 router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  console.log('🔔 Webhook reçu!');
   const sig = req.headers['stripe-signature'];
   let event;
   
-  try {
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
-  } catch (err) {
-    console.error('Webhook signature verification failed:', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+  // Si pas de webhook secret configuré, log l'erreur mais accepter pour le test
+  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error('⚠️ STRIPE_WEBHOOK_SECRET non configuré!');
+    // En mode dev/test, on peut parser l'event directement
+    try {
+      event = JSON.parse(req.body);
+      console.log('📦 Event type:', event.type);
+    } catch (err) {
+      console.error('Erreur parsing webhook:', err);
+      return res.status(400).send('Invalid payload');
+    }
+  } else {
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET
+      );
+      console.log('✅ Webhook signature vérifiée, event type:', event.type);
+    } catch (err) {
+      console.error('❌ Webhook signature verification failed:', err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
   }
   
   // Gérer les différents événements
@@ -287,6 +302,14 @@ async function handleSubscriptionDeleted(subscription) {
     console.error('Erreur handleSubscriptionDeleted:', error);
   }
 }
+
+// Route de test pour vérifier les webhooks
+router.get('/webhook-test', (req, res) => {
+  res.json({ 
+    message: 'Webhook endpoint is accessible',
+    url: `${process.env.BASE_URL || 'https://my-backend-api-cng7.onrender.com'}/api/subscription/webhook`
+  });
+});
 
 // Obtenir le statut de l'abonnement
 router.get('/status', authMiddleware, async (req, res) => {

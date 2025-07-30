@@ -229,14 +229,17 @@ async function selectPlan(planType) {
     
     if (response.checkoutUrl) {
       // Sauvegarder l'état avant de rediriger
-      chrome.storage.local.set({ pendingCheckout: true }, () => {
+      chrome.storage.local.set({ 
+        pendingCheckout: true,
+        checkoutSessionId: response.sessionId 
+      }, () => {
         // Ouvrir Stripe Checkout dans un nouvel onglet
         chrome.tabs.create({ url: response.checkoutUrl });
         
-        // TEMPORAIRE : Ne pas fermer pour débugger
-        // setTimeout(() => {
-        //   window.close();
-        // }, 1000);
+        // Fermer la fenêtre subscription après un délai
+        setTimeout(() => {
+          window.close();
+        }, 1000);
       });
     }
   } catch (error) {

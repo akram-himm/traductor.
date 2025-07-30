@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Connexion réussie - LexiFlow</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: #f0f9ff;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .icon {
+            font-size: 64px;
+            color: #10b981;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">✅</div>
+        <h1>Connexion réussie!</h1>
+        <p>Cette fenêtre va se fermer automatiquement...</p>
+    </div>
+
+    <script>
+        // Extraire le token de l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        if (token) {
+            // Envoyer le token au background script de l'extension
+            // L'extension détectera cette URL et récupérera le token
+            console.log('Token reçu:', token);
+            
+            // Fermer la fenêtre après un court délai
+            setTimeout(() => {
+                window.close();
+            }, 1500);
+        } else {
+            // Rediriger vers la page d'erreur si pas de token
+            window.location.href = '/oauth-error.html?error=No%20token%20received';
+        }
+    </script>
+</body>
+</html>
