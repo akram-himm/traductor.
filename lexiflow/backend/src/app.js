@@ -116,9 +116,15 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
+// Initialiser la base de données avant de démarrer le serveur
+const initDatabase = require('./config/initDatabase');
+
 // Démarrage du serveur
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', async () => {
   console.log(`🚀 LexiFlow Backend running on port ${PORT}`);
   console.log(`📱 Accessible depuis: http://${require('os').hostname()}:${PORT}`);
   console.log(`🌐 Ou via IP: http://10.0.2.15:${PORT}`);
+  
+  // Initialiser la base de données après le démarrage du serveur
+  await initDatabase();
 });
