@@ -30,7 +30,27 @@ router.post('/register', async (req, res) => {
     }
 
     // Vérifier si l'email existe déjà
-    const existingUser = await User.findOne({ where: { email } });
+    let existingUser;
+    try {
+      existingUser = await User.findOne({ where: { email } });
+    } catch (dbError) {
+      console.error('Database error checking existing user:', dbError);
+      // Si erreur de colonnes manquantes, essayer avec attributes limités
+      if (dbError.message && dbError.message.includes('subscriptionPlan')) {
+        try {
+          existingUser = await User.findOne({ 
+            where: { email },
+            attributes: ['id', 'email']
+          });
+        } catch (fallbackError) {
+          console.error('Fallback query for existing user also failed:', fallbackError);
+          return res.status(500).json({ error: 'Database error. Please try again.' });
+        }
+      } else {
+        return res.status(500).json({ error: 'Registration failed. Please try again.' });
+      }
+    }
+    
     if (existingUser) {
       return res.status(400).json({ error: 'This email is already registered' });
     }
@@ -241,7 +261,28 @@ router.post('/login', async (req, res) => {
     }
 
     // Trouver l'utilisateur
-    const user = await User.findOne({ where: { email } });
+    let user;
+    try {
+      user = await User.findOne({ where: { email } });
+    } catch (dbError) {
+      console.error('Database error during login:', dbError);
+      // Si erreur de colonnes manquantes, essayer avec attributes limités
+      if (dbError.message && dbError.message.includes('subscriptionPlan')) {
+        try {
+          user = await User.findOne({ 
+            where: { email },
+            attributes: ['id', 'email', 'password', 'name', 'isPremium', 'premiumUntil', 
+                        'trialStartedAt', 'trialEndsAt', 'emailVerified', 
+                        'flashcardCount', 'settings', 'createdAt']
+          });
+        } catch (fallbackError) {
+          console.error('Fallback query also failed:', fallbackError);
+          return res.status(500).json({ error: 'Database error. Please try again.' });
+        }
+      } else {
+        return res.status(500).json({ error: 'Login failed. Please try again.' });
+      }
+    }
     
     if (!user || !(await user.validatePassword(password))) {
       return res.status(401).json({ error: 'Invalid email or password' });

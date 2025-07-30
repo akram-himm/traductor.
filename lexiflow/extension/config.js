@@ -115,7 +115,10 @@ async function apiRequest(endpoint, options = {}) {
 const authAPI = {
   async login(email, password) {
     // Appel direct sans token pour le login
-    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`, {
+    const loginUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`;
+    console.log('🔐 Login attempt to:', loginUrl);
+    
+    const response = await fetch(loginUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
@@ -123,7 +126,8 @@ const authAPI = {
     
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error(error.error || 'Login failed');
+      console.error('Login error - Status:', response.status, 'Response:', error);
+      throw new Error(error.error || error.message || 'Login failed. Please try again.');
     }
     
     const data = await response.json();
