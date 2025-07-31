@@ -7,6 +7,42 @@ const Subscription = require('../models/Subscription');
 // Charger les associations entre les modèles
 require('../models/associations');
 
+// Vérifier une session de checkout (appelé depuis payment-success.html)
+router.post('/verify-session', async (req, res) => {
+  try {
+    const { sessionId } = req.body;
+    
+    if (!sessionId) {
+      return res.status(400).json({ error: 'Session ID required' });
+    }
+    
+    // Récupérer la session depuis Stripe
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    
+    if (session.payment_status === 'paid') {
+      // Forcer le traitement du webhook si pas encore fait
+      console.log('✅ Session payée, traitement...');
+      
+      // Simuler l'appel du webhook pour traiter immédiatement
+      await handleCheckoutComplete(session);
+      
+      res.json({
+        success: true,
+        status: 'paid',
+        plan: session.metadata.priceType || 'premium'
+      });
+    } else {
+      res.json({
+        success: false,
+        status: session.payment_status
+      });
+    }
+  } catch (error) {
+    console.error('Erreur vérification session:', error);
+    res.status(500).json({ error: 'Verification failed' });
+  }
+});
+
 // Créer une session de paiement Stripe
 router.post('/create-checkout-session', authMiddleware, async (req, res) => {
   try {
