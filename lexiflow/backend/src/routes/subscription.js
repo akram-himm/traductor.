@@ -86,7 +86,10 @@ router.post('/create-checkout-session', authMiddleware, async (req, res) => {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${process.env.BASE_URL || 'https://my-backend-api-cng7.onrender.com'}/payment-success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.BASE_URL || 'https://my-backend-api-cng7.onrender.com'}/payment-cancel.html`,
-      metadata: { userId: user.id }
+      metadata: { 
+        userId: user.id,
+        priceType: priceType // Ajouter le type de plan pour le traitement webhook
+      }
     });
     
     res.json({ checkoutUrl: session.url, sessionId: session.id });
