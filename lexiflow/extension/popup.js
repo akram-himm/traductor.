@@ -1585,6 +1585,14 @@ function showUpgradeToAnnualPrompt() {
       try {
         showNotification('Redirection vers la mise à niveau...', 'info');
         
+        // Marquer qu'on attend un checkout pour upgrade
+        chrome.storage.local.set({ 
+          pendingCheckout: true,
+          checkoutTime: Date.now(),
+          isUpgrade: true,
+          previousPlan: 'monthly'
+        });
+        
         // Appeler l'API d'upgrade
         const response = await apiRequest('/api/subscription/upgrade-to-annual', {
           method: 'POST'
@@ -1962,6 +1970,12 @@ async function initUI() {
   // Gérer l'affichage du bouton upgrade dans le header
   if (upgradeToPremiumBtn) {
     // Cacher le bouton dans le header si l'utilisateur est Premium
+    console.log('🔍 Statut Premium pour bouton Upgrade:', { 
+      isPremium, 
+      user,
+      userIsPremium: user?.isPremium,
+      userStatus: user?.subscriptionStatus 
+    });
     upgradeToPremiumBtn.style.display = isPremium ? 'none' : 'inline-block';
   }
   
@@ -1973,18 +1987,33 @@ async function initUI() {
     if (!subscriptionSection) {
       subscriptionSection = document.createElement('div');
       subscriptionSection.id = 'subscriptionManagement';
-      subscriptionSection.style.cssText = 'margin-top: 20px; padding: 16px; background: #f3f4f6; border-radius: 8px;';
+      subscriptionSection.className = 'settings-section';
       subscriptionSection.innerHTML = `
-        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">Subscription</h3>
-        <button class="btn btn-primary" data-action="managePremium" style="width: 100%;">
-          Manage Premium
-        </button>
+        <h3 class="settings-section-title">
+          <span>💎</span>
+          <span>Premium Subscription</span>
+        </h3>
+        <div class="setting-row" style="padding: 16px; background: var(--gradient-soft); border-radius: 8px; margin-top: 12px;">
+          <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 24px;">✨</span>
+              <div>
+                <div style="font-weight: 600; color: white;">Premium ${user.subscriptionPlan === 'yearly' ? 'Annual' : 'Monthly'}</div>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.8);">Active until ${user.premiumUntil ? new Date(user.premiumUntil).toLocaleDateString() : 'N/A'}</div>
+              </div>
+            </div>
+            <button class="btn btn-secondary" data-action="managePremium" style="width: 100%; background: rgba(255,255,255,0.9); color: #4b5563; font-weight: 500;">
+              <span>⚙️</span>
+              <span>Manage Subscription</span>
+            </button>
+          </div>
+        </div>
       `;
       
-      // Ajouter après la section des paramètres d'import/export
-      const importExportSection = settingsTab.querySelector('.settings-group:last-child');
-      if (importExportSection) {
-        importExportSection.after(subscriptionSection);
+      // Ajouter avant la dernière section (Data and backup)
+      const lastSection = settingsTab.querySelector('.settings-section:last-child');
+      if (lastSection) {
+        lastSection.before(subscriptionSection);
       } else {
         settingsTab.appendChild(subscriptionSection);
       }
@@ -4338,16 +4367,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadData();
     await initUI();
     
-    // S'assurer que le bouton Premium est visible après un court délai
+    // Rafraîchir l'affichage du bouton après que l'utilisateur soit chargé
     setTimeout(() => {
-      const upgradeToPremiumBtn = document.getElementById('upgradeToPremiumBtn');
-      const user = window.currentUser;
-      const isPremium = user && (user.isPremium || user.subscriptionStatus === 'premium');
-      
-      if (upgradeToPremiumBtn && !isPremium) {
-        upgradeToPremiumBtn.style.display = 'inline-block';
-      }
-    }, 100);
+      initUI(); // Re-exécuter initUI pour mettre à jour correctement l'interface
+    }, 500);
     
     
     // Debug: Vérifier les flashcards au démarrage
@@ -4356,11 +4379,65 @@ document.addEventListener('DOMContentLoaded', async () => {
     debug('📦 Flashcards uniquement sur le serveur maintenant');
     
     // Vérifier si on revient de Stripe
-    chrome.storage.local.get(['pendingCheckout'], (result) => {
+    chrome.storage.local.get(['pendingCheckout', 'isUpgrade', 'previousPlan'], async (result) => {
       if (result.pendingCheckout) {
         console.log('🔄 Retour de Stripe checkout détecté');
-        chrome.storage.local.remove(['pendingCheckout']);
-        // Ne pas recharger le profil ici, laissons le flux normal s'en charger
+        const isUpgrade = result.isUpgrade || false;
+        chrome.storage.local.remove(['pendingCheckout', 'isUpgrade', 'previousPlan']);
+        
+        // Afficher un message d'attente
+        if (isUpgrade) {
+          showNotification('⏳ Mise à jour de votre plan en cours...', 'info');
+        }
+        
+        // Forcer le rafraîchissement du profil après un délai pour laisser Stripe traiter
+        setTimeout(async () => {
+          console.log('⏳ Rafraîchissement du profil après paiement...');
+          let retryCount = 0;
+          const maxRetries = 5;
+          
+          const refreshProfile = async () => {
+            try {
+              // Réveiller le serveur si nécessaire
+              if (window.API_CONFIG && window.API_CONFIG.wakeUpServer) {
+                await window.API_CONFIG.wakeUpServer();
+              }
+              
+              const response = await apiRequest('/api/user/profile');
+              if (response && response.user) {
+                console.log('✅ Profil mis à jour avec succès:', response.user);
+                window.currentUser = response.user;
+                chrome.storage.local.set({ user: response.user });
+                
+                // Mettre à jour l'UI
+                updateUIAfterLogin(response.user);
+                
+                // Vérifier le statut Premium
+                await checkPremiumStatus();
+                
+                // Afficher une notification si c'était un upgrade et que le plan a changé
+                if (isUpgrade && response.user.subscriptionPlan === 'yearly') {
+                  showNotification('✨ Félicitations! Vous êtes maintenant sur le plan annuel!', 'success');
+                } else if (response.user.subscriptionPlan) {
+                  showNotification('✅ Votre abonnement est actif!', 'success');
+                }
+              }
+            } catch (error) {
+              console.error(`Erreur rafraîchissement profil (tentative ${retryCount + 1}):`, error);
+              retryCount++;
+              
+              if (retryCount < maxRetries) {
+                // Réessayer après un délai progressif
+                setTimeout(refreshProfile, 2000 * retryCount);
+              } else {
+                console.log('❌ Échec du rafraîchissement après', maxRetries, 'tentatives');
+                showNotification('Le serveur met du temps à répondre. Veuillez rafraîchir la page dans quelques instants.', 'warning');
+              }
+            }
+          };
+          
+          await refreshProfile();
+        }, 3000); // Attendre 3 secondes avant de commencer
       }
     });
     

@@ -100,6 +100,23 @@
   </div>
   
   <script>
+    // Vérifier si c'est un upgrade
+    const urlParams = new URLSearchParams(window.location.search);
+    const isUpgrade = urlParams.get('upgrade') === 'true';
+    
+    if (isUpgrade) {
+      document.querySelector('h1').textContent = 'Upgrade Successful!';
+      document.querySelector('p').textContent = 'Your plan has been upgraded to yearly! You will save €16.88 per year.';
+      document.querySelector('.steps h3').textContent = 'What happens next:';
+      const steps = document.querySelector('.steps ol');
+      steps.innerHTML = `
+        <li>Your monthly subscription has been canceled</li>
+        <li>Your new yearly plan is now active</li>
+        <li>You'll be billed annually from now on</li>
+        <li>All your Premium features remain active</li>
+      `;
+    }
+    
     // Attendre 5 secondes puis suggérer de fermer
     setTimeout(() => {
       const note = document.querySelector('.note');
