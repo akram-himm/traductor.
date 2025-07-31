@@ -92,6 +92,7 @@ app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/sync', require('./routes/sync'));
 app.use('/api/waitlist', require('./routes/waitlist'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/diagnostic', require('./routes/diagnostic'));
 app.use('/api', require('./routes/health'));
 
 // Legal pages (privacy, terms)

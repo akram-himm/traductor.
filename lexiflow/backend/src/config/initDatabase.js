@@ -2,6 +2,8 @@ const { sequelize } = require('./database');
 const User = require('../models/User');
 const Subscription = require('../models/Subscription');
 const Flashcard = require('../models/Flashcard');
+// Charger les associations entre les modèles
+require('../models/associations');
 
 async function initDatabase() {
   try {
