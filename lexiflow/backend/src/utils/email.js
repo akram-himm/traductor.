@@ -42,7 +42,7 @@ const emailService = {
     const verifyUrl = `${baseUrl}/api/auth/verify-email?token=${verificationToken}`;
 
     const mailOptions = {
-      from: '"LexiFlow" <noreply@lexiflow.com>',
+      from: `"LexiFlow" <${process.env.EMAIL_FROM || 'lexiflow.contact@gmail.com'}>`,
       to: user.email,
       subject: '🔐 Vérifiez votre email - LexiFlow',
       html: `
@@ -82,7 +82,7 @@ const emailService = {
   // Email de bienvenue
   async sendWelcomeEmail(user) {
     const mailOptions = {
-      from: '"LexiFlow" <noreply@lexiflow.com>',
+      from: `"LexiFlow" <${process.env.EMAIL_FROM || 'lexiflow.contact@gmail.com'}>`,
       to: user.email,
       subject: 'Bienvenue sur LexiFlow !',
       html: `
@@ -124,7 +124,7 @@ const emailService = {
   async sendPaymentSuccessEmail(user, subscription) {
     const endDate = new Date(subscription.currentPeriodEnd);
     const mailOptions = {
-      from: '"LexiFlow" <noreply@lexiflow.com>',
+      from: `"LexiFlow" <${process.env.EMAIL_FROM || 'lexiflow.contact@gmail.com'}>`,
       to: user.email,
       subject: 'Votre abonnement LexiFlow Premium est actif !',
       html: `
@@ -157,7 +157,7 @@ const emailService = {
   async sendSubscriptionCanceledEmail(user, subscription) {
     const endDate = new Date(subscription.currentPeriodEnd);
     const mailOptions = {
-      from: '"LexiFlow" <noreply@lexiflow.com>',
+      from: `"LexiFlow" <${process.env.EMAIL_FROM || 'lexiflow.contact@gmail.com'}>`,
       to: user.email,
       subject: 'Votre abonnement LexiFlow a été annulé',
       html: `
@@ -196,7 +196,7 @@ const emailService = {
     const resetUrl = `${baseUrl}/reset-password.html?token=${resetToken}&email=${user.email}`;
 
     const mailOptions = {
-      from: process.env.EMAIL_USER || 'lexiflow.contact@gmail.com', // Utiliser l'email configuré
+      from: `"LexiFlow" <${process.env.EMAIL_FROM || 'lexiflow.contact@gmail.com'}>`, // Utiliser l'email configuré
       to: user.email,
       subject: 'Réinitialisation de votre mot de passe LexiFlow',
       html: `
@@ -247,7 +247,7 @@ const emailService = {
   // Email d'échec de paiement
   async sendPaymentFailedEmail(user) {
     const mailOptions = {
-      from: '"LexiFlow" <noreply@lexiflow.com>',
+      from: `"LexiFlow" <${process.env.EMAIL_FROM || 'lexiflow.contact@gmail.com'}>`,
       to: user.email,
       subject: 'Problème avec votre paiement LexiFlow',
       html: `
