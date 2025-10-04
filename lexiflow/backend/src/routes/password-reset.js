@@ -4,7 +4,10 @@ const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
 const User = require('../models/User');
-const emailService = require('../utils/email');
+// Utiliser Resend si configuré, sinon Gmail
+const emailService = process.env.RESEND_API_KEY
+  ? require('../utils/email-resend')
+  : require('../utils/email');
 
 // Demander un reset de mot de passe
 router.post('/forgot-password', async (req, res) => {
