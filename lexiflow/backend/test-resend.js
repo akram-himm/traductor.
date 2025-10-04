@@ -10,8 +10,8 @@ console.log('2. Obtenez votre API Key');
 console.log('3. Installez: npm install resend');
 console.log('4. C\'est tout!\n');
 
-// Clé API Resend configurée
-const RESEND_API_KEY = 're_jdZHqwcu_BEp5VrnNH6ZVu6zXvBgPFK8z';
+// Clé API Resend configurée (nouvelle)
+const RESEND_API_KEY = 're_7UxPiqpu_EvqKPJcgKi1ogTpB1KbXSjAC';
 
 async function testResend() {
   // Installer d'abord: npm install resend
@@ -41,7 +41,7 @@ async function testResend() {
 
     const { data, error } = await resend.emails.send({
       from: 'onboarding@resend.dev', // Email par défaut Resend (obligatoire au début)
-      to: 'akramhimmich21@gmail.com', // Test avec ton email
+      to: 'lexiflow.contact@gmail.com', // Resend limite aux emails du compte au début
       subject: '✅ Resend fonctionne - LexiFlow',
       html: `
         <div style="font-family: Arial; max-width: 600px; margin: 0 auto;">
