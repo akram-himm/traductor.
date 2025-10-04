@@ -6,6 +6,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   console.log('📋 Chargement de la page d\'abonnement');
   console.log('📍 Page subscription.html chargée à:', new Date().toISOString());
   await loadSubscriptionData();
+  
+  // Rafraîchir les données quand la fenêtre reprend le focus (après retour de Stripe)
+  let lastFocusTime = Date.now();
+  window.addEventListener('focus', async () => {
+    const now = Date.now();
+    // Si la fenêtre a perdu le focus pendant plus de 5 secondes, rafraîchir
+    if (now - lastFocusTime > 5000) {
+      console.log('🔄 Rafraîchissement après retour de Stripe...');
+      await loadSubscriptionData();
+    }
+    lastFocusTime = now;
+  });
+  
+  window.addEventListener('blur', () => {
+    lastFocusTime = Date.now();
+  });
 });
 
 // Charger les données d'abonnement
@@ -57,19 +73,27 @@ function displaySubscriptionPlans(userData) {
     subscription: userData.subscription
   });
   
-  // Normalisation complète du plan
-  const cycle = (userData.subscription?.interval || 
+  // Normalisation complète du plan - Priorité à subscriptionPlan
+  const planFromDB = userData.subscriptionPlan ? userData.subscriptionPlan.toLowerCase().trim() : '';
+  const cycle = planFromDB || 
+                (userData.subscription?.interval || 
                 userData.billingCycle || 
-                userData.subscriptionPlan || 
                 userData.subscription?.plan ||
                 '').toString().toLowerCase().trim();
+                
+  console.log('🔍 Plan detection:', { 
+    subscriptionPlan: userData.subscriptionPlan,
+    planFromDB: planFromDB,
+    cycle: cycle 
+  });
                 
   // Liste étendue de variantes possibles
   const monthlyVariants = ['month', 'monthly', 'mensuel', 'mensuelle', 'month-to-month', 'mois'];
   const annualVariants = ['year', 'yearly', 'annual', 'annuel', 'annuelle', 'année', 'an'];
   
-  const isMonthly = monthlyVariants.some(variant => cycle.includes(variant));
-  const isAnnual = annualVariants.some(variant => cycle.includes(variant));
+  // Détection directe si on a subscriptionPlan
+  const isMonthly = planFromDB === 'monthly' || (!planFromDB && monthlyVariants.some(variant => cycle.includes(variant)));
+  const isAnnual = planFromDB === 'yearly' || (!planFromDB && annualVariants.some(variant => cycle.includes(variant)));
   
   console.log('📊 Statut final:', { isPremium, cycle, isMonthly, isAnnual });
   
@@ -119,8 +143,9 @@ function displaySubscriptionPlans(userData) {
       </div>
       
       <!-- Plan Annuel -->
-      <div class="plan-card ${isAnnual ? 'current disabled' : ''}" id="annualPlan">
+      <div class="plan-card ${isAnnual ? 'current disabled' : ''} ${isMonthly ? 'recommended' : ''}" id="annualPlan">
         ${isAnnual ? '<div class="current-badge">Current Plan</div>' : ''}
+        ${isMonthly ? '<div class="recommended-badge">Save 17%!</div>' : ''}
         <div class="plan-name">Annual</div>
         <div class="plan-price">
           €49.90<small>/year</small>
@@ -196,17 +221,27 @@ async function selectPlan(planType) {
     
     // Vérifier d'abord si l'utilisateur a déjà ce plan
     if (currentUserData) {
-      const cycle = (currentUserData.subscription?.interval || 
+      // Utiliser la même logique que displaySubscriptionPlans
+      const planFromDB = currentUserData.subscriptionPlan ? currentUserData.subscriptionPlan.toLowerCase().trim() : '';
+      const cycle = planFromDB || 
+                    (currentUserData.subscription?.interval || 
                     currentUserData.billingCycle || 
-                    currentUserData.subscriptionPlan || 
                     currentUserData.subscription?.plan ||
                     '').toString().toLowerCase().trim();
+                    
+      console.log('🔍 Plan check in selectPlan:', { 
+        subscriptionPlan: currentUserData.subscriptionPlan,
+        planFromDB: planFromDB,
+        cycle: cycle,
+        planType: planType
+      });
                     
       const monthlyVariants = ['month', 'monthly', 'mensuel', 'mensuelle', 'month-to-month', 'mois'];
       const annualVariants = ['year', 'yearly', 'annual', 'annuel', 'annuelle', 'année', 'an'];
       
-      const isMonthly = monthlyVariants.some(variant => cycle.includes(variant));
-      const isAnnual = annualVariants.some(variant => cycle.includes(variant));
+      // Détection directe si on a subscriptionPlan
+      const isMonthly = planFromDB === 'monthly' || (!planFromDB && monthlyVariants.some(variant => cycle.includes(variant)));
+      const isAnnual = planFromDB === 'yearly' || (!planFromDB && annualVariants.some(variant => cycle.includes(variant)));
       
       // Si l'utilisateur essaie de sélectionner le plan qu'il a déjà
       if ((planType === 'monthly' && isMonthly) || (planType === 'yearly' && isAnnual)) {
@@ -229,14 +264,17 @@ async function selectPlan(planType) {
     
     if (response.checkoutUrl) {
       // Sauvegarder l'état avant de rediriger
-      chrome.storage.local.set({ pendingCheckout: true }, () => {
+      chrome.storage.local.set({ 
+        pendingCheckout: true,
+        checkoutSessionId: response.sessionId 
+      }, () => {
         // Ouvrir Stripe Checkout dans un nouvel onglet
         chrome.tabs.create({ url: response.checkoutUrl });
         
-        // TEMPORAIRE : Ne pas fermer pour débugger
-        // setTimeout(() => {
-        //   window.close();
-        // }, 1000);
+        // Fermer la fenêtre subscription après un délai
+        setTimeout(() => {
+          window.close();
+        }, 1000);
       });
     }
   } catch (error) {
@@ -252,19 +290,34 @@ async function handleCancelSubscription() {
   }
   
   try {
+    console.log('🚫 Tentative d\'annulation...');
     const response = await apiRequest('/api/subscription/cancel', {
       method: 'POST'
     });
     
-    if (response.message) {
-      alert(response.message);
+    console.log('📊 Réponse annulation:', response);
+    
+    if (response.success) {
+      alert(response.message || 'Subscription canceled successfully');
       // Rafraîchir la page pour montrer le statut mis à jour
       setTimeout(() => {
         window.location.reload();
       }, 2000);
+    } else if (response.error) {
+      alert('Error: ' + response.error);
     }
   } catch (error) {
     console.error('❌ Erreur annulation:', error);
-    alert('Failed to cancel subscription. Please try again.');
+    // Afficher plus de détails sur l'erreur
+    let errorMessage = 'Failed to cancel subscription. ';
+    if (error.message) {
+      errorMessage += error.message;
+    }
+    if (error.status === 404) {
+      errorMessage = 'No active subscription found to cancel.';
+    } else if (error.status === 500) {
+      errorMessage = 'Server error. Please try again later.';
+    }
+    alert(errorMessage);
   }
 }

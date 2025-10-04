@@ -83,9 +83,25 @@ router.post('/register', async (req, res) => {
       // On continue quand même pour ne pas bloquer l'inscription
     }
 
+    // TEMPORAIRE : Connexion automatique sans vérification email
+    const authToken = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '30d' }
+    );
+    
     res.status(201).json({
-      message: 'Registration successful! Please check your email to verify your account.',
-      requiresVerification: true
+      message: 'Registration successful!',
+      requiresVerification: true,
+      token: authToken, // Permettre la connexion immédiate
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        isPremium: false,
+        emailVerified: false,
+        flashcardLimit: 100
+      }
     });
 
   } catch (error) {

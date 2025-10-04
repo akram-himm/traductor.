@@ -99,6 +99,12 @@
     </p>
   </div>
   
-  <script src="/payment-success.js"></script>
+  <script>
+    // Attendre 5 secondes puis suggérer de fermer
+    setTimeout(() => {
+      const note = document.querySelector('.note');
+      note.innerHTML = 'You can now close this window.<br>Need help? Contact us at support@lexiflow.ai';
+    }, 5000);
+  </script>
 </body>
 </html>

@@ -49,9 +49,45 @@ chrome.commands.onCommand.addListener((command) => {
   }
 });
 
-// Gestion des retours OAuth
+// Gestion des retours OAuth et paiements
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.url) {
+    // Vérifier si c'est notre page de succès de paiement
+    if (tab.url.includes('payment-success.html')) {
+      debug('💰 Page de succès de paiement détectée');
+      
+      // Attendre que les webhooks se traitent
+      setTimeout(() => {
+        // Notifier toutes les vues de l'extension pour rafraîchir
+        chrome.runtime.sendMessage({
+          type: 'payment-success'
+        }).catch(() => {});
+        
+        // Mettre à jour le profil utilisateur
+        chrome.storage.local.get(['authToken'], async (result) => {
+          if (result.authToken) {
+            try {
+              const response = await fetch('https://my-backend-api-cng7.onrender.com/api/user/profile', {
+                headers: {
+                  'Authorization': `Bearer ${result.authToken}`,
+                  'Content-Type': 'application/json'
+                }
+              });
+              
+              if (response.ok) {
+                const data = await response.json();
+                if (data.user) {
+                  chrome.storage.local.set({ user: data.user });
+                  debug('✅ Profil utilisateur mis à jour après paiement');
+                }
+              }
+            } catch (error) {
+              debug('❌ Erreur mise à jour profil:', error);
+            }
+          }
+        });
+      }, 5000); // Attendre 5 secondes pour les webhooks
+    }
     // Vérifier si c'est notre URL de callback OAuth
     if (tab.url.includes('my-backend-api-cng7.onrender.com/oauth-success.html') ||
         tab.url.includes('my-backend-api-cng7.onrender.com/oauth-error.html') ||

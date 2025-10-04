@@ -16,8 +16,8 @@ const Subscription = sequelize.define('Subscription', {
   },
   stripeCustomerId: {
     type: DataTypes.STRING,
-    unique: true,
     allowNull: false
+    // Retiré unique: true car un client peut avoir plusieurs souscriptions
   },
   stripeSubscriptionId: {
     type: DataTypes.STRING,

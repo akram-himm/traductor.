@@ -13,8 +13,8 @@ router.get('/profile', authMiddleware, async (req, res) => {
     // Convertir l'objet Sequelize en objet simple
     const userData = user.toJSON ? user.toJSON() : user;
     
-    // Si l'utilisateur est Premium mais n'a pas de plan défini, essayer de le récupérer depuis Subscription
-    if (!userData.subscriptionPlan && userData.isPremium) {
+    // TOUJOURS vérifier la cohérence du plan avec Stripe pour les utilisateurs Premium
+    if (userData.isPremium) {
       const Subscription = require('../models/Subscription');
       const { PRICES } = require('../config/stripe');
       
@@ -22,25 +22,35 @@ router.get('/profile', authMiddleware, async (req, res) => {
         where: {
           userId: user.id,
           status: 'active'
-        }
+        },
+        order: [['createdAt', 'DESC']] // Prendre la plus récente
       });
       
       if (subscription) {
         // Déterminer le type de plan basé sur le price ID
+        let correctPlan = 'monthly';
         if (subscription.stripePriceId === PRICES.yearly) {
-          userData.subscriptionPlan = 'yearly';
+          correctPlan = 'yearly';
         } else if (subscription.stripePriceId === PRICES.monthly) {
-          userData.subscriptionPlan = 'monthly';
+          correctPlan = 'monthly';
         }
-        userData.subscriptionStatus = 'premium';
         
-        // Optionnel : mettre à jour l'utilisateur dans la DB
-        await user.update({
-          subscriptionPlan: userData.subscriptionPlan,
-          subscriptionStatus: userData.subscriptionStatus
-        });
-      } else {
-        // Fallback : pour le test, on simule que tous les Premium sont mensuels
+        // Vérifier si le plan stocké est correct
+        if (userData.subscriptionPlan !== correctPlan) {
+          console.log(`⚠️ Plan incorrect pour ${user.email}: ${userData.subscriptionPlan} -> ${correctPlan}`);
+          userData.subscriptionPlan = correctPlan;
+          
+          // Mettre à jour l'utilisateur dans la DB
+          await user.update({
+            subscriptionPlan: correctPlan,
+            subscriptionStatus: 'premium'
+          });
+        }
+        
+        userData.subscriptionStatus = 'premium';
+      } else if (!userData.subscriptionPlan) {
+        // Fallback si pas de souscription trouvée
+        console.log(`⚠️ Aucune souscription active trouvée pour l'utilisateur Premium ${user.email}`);
         userData.subscriptionPlan = 'monthly';
         userData.subscriptionStatus = 'premium';
       }
@@ -52,6 +62,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
     res.status(500).json({ success: false, error: 'Failed to fetch user profile.' });
   }
 });
+
 
 // PUT /api/user/profile
 router.put('/profile', authMiddleware, (req, res) => {

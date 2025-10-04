@@ -49,7 +49,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Servir les fichiers statiques (pour les pages de succès)
-app.use(express.static('public'));
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Session pour OAuth
 app.use(session({
@@ -91,6 +92,7 @@ app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/sync', require('./routes/sync'));
 app.use('/api/waitlist', require('./routes/waitlist'));
 app.use('/api/admin', require('./routes/admin'));
+// app.use('/api/diagnostic', require('./routes/diagnostic')); // Temporairement désactivé
 app.use('/api', require('./routes/health'));
 
 // Legal pages (privacy, terms)
