@@ -3619,14 +3619,14 @@ function showForgotPasswordWindow() {
 
     try {
       // Réveiller le serveur d'abord si nécessaire
-      submitButton.textContent = 'Réveil du serveur...';
+      submitButton.textContent = 'Réveil du serveur (peut prendre 30s)...';
       await API_CONFIG.wakeUpServer();
 
-      submitButton.textContent = 'Envoi en cours...';
+      submitButton.textContent = 'Envoi de l\'email...';
 
-      // Appel API pour demander la réinitialisation avec timeout
+      // Appel API pour demander la réinitialisation avec timeout plus long
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 secondes timeout
+      const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 secondes timeout (2 minutes pour serveur Render)
 
       const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/forgot-password`, {
         method: 'POST',
