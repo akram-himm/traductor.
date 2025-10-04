@@ -1,15 +1,39 @@
 const nodemailer = require('nodemailer');
 
-// Configuration du transporteur email
-const transporter = nodemailer.createTransport({
+// Configuration du transporteur email avec debug
+console.log('📧 Configuration email:', {
   host: process.env.EMAIL_HOST,
   port: process.env.EMAIL_PORT,
+  user: process.env.EMAIL_USER,
+  passSet: !!process.env.EMAIL_PASS
+});
+
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+  port: process.env.EMAIL_PORT || 587,
   secure: process.env.EMAIL_PORT === '465',
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
+  },
+  tls: {
+    rejectUnauthorized: false // Pour éviter les erreurs de certificat sur Render
   }
 });
+
+// Vérifier la connexion au démarrage
+transporter.verify()
+  .then(() => {
+    console.log('✅ Connexion SMTP établie avec succès');
+  })
+  .catch((error) => {
+    console.error('❌ Erreur de connexion SMTP:', error.message);
+    console.error('   Détails:', {
+      host: process.env.EMAIL_HOST,
+      user: process.env.EMAIL_USER,
+      error: error.code
+    });
+  });
 
 const emailService = {
   // Email de vérification
@@ -166,11 +190,13 @@ const emailService = {
 
   // Email de réinitialisation de mot de passe
   async sendPasswordResetEmail(user, resetToken) {
+    console.log(`📨 Tentative d'envoi email à: ${user.email}`);
+
     const baseUrl = process.env.BASE_URL || 'https://my-backend-api-cng7.onrender.com';
     const resetUrl = `${baseUrl}/reset-password.html?token=${resetToken}&email=${user.email}`;
-    
+
     const mailOptions = {
-      from: '"LexiFlow" <noreply@lexiflow.com>',
+      from: process.env.EMAIL_USER || 'lexiflow.contact@gmail.com', // Utiliser l'email configuré
       to: user.email,
       subject: 'Réinitialisation de votre mot de passe LexiFlow',
       html: `
@@ -199,13 +225,23 @@ const emailService = {
             Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :<br>
             <a href="${resetUrl}" style="color: #3b82f6; word-break: break-all;">${resetUrl}</a>
           </p>
-          
+
           <p>L'équipe LexiFlow</p>
         </div>
       `
     };
 
-    await transporter.sendMail(mailOptions);
+    try {
+      const info = await transporter.sendMail(mailOptions);
+      console.log('✅ Email de récupération envoyé:', info.messageId);
+      console.log('   Accepted:', info.accepted);
+      return info;
+    } catch (error) {
+      console.error('❌ Erreur envoi email récupération:', error.message);
+      console.error('   Code:', error.code);
+      console.error('   Response:', error.response);
+      throw error;
+    }
   },
 
   // Email d'échec de paiement

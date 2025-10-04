@@ -21,7 +21,7 @@ async function testDirectEmail() {
     }
   });
 
-  console.log('📧 Test d\'envoi d\'email à saadakram159@gmail.com...');
+  console.log('📧 Test d\'envoi d\'email à akramhimmich21@gmail.com...');
 
   try {
     // Vérifier la connexion
