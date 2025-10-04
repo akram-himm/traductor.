@@ -3620,24 +3620,20 @@ function showForgotPasswordWindow() {
     try {
       // Réveiller le serveur d'abord si nécessaire
       submitButton.textContent = 'Réveil du serveur (peut prendre 30s)...';
-      await API_CONFIG.wakeUpServer();
+
+      // Enlever le wakeUpServer qui peut causer des conflits
+      // await API_CONFIG.wakeUpServer();
 
       submitButton.textContent = 'Envoi de l\'email...';
 
-      // Appel API pour demander la réinitialisation avec timeout plus long
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 secondes timeout (2 minutes pour serveur Render)
-
+      // Appel API SANS AbortController pour éviter les bugs
       const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ email }),
-        signal: controller.signal
+        body: JSON.stringify({ email })
       });
-
-      clearTimeout(timeoutId);
 
       const data = await response.json();
 
@@ -3646,18 +3642,16 @@ function showForgotPasswordWindow() {
       document.getElementById('forgotPasswordSuccess').style.display = 'block';
 
     } catch (error) {
-      console.error('Erreur complète:', error);
-      console.error('Type:', error.name);
-      console.error('Message:', error.message);
+      console.error('Erreur:', error);
 
       let errorMessage = 'Erreur lors de l\'envoi de l\'email';
 
-      if (error.name === 'AbortError') {
-        errorMessage = 'Délai dépassé - Le serveur met trop de temps à répondre. Réessayez.';
-      } else if (!navigator.onLine) {
+      if (!navigator.onLine) {
         errorMessage = 'Pas de connexion internet';
       } else if (error.message.includes('Failed to fetch')) {
-        errorMessage = 'Impossible de contacter le serveur. Il se réveille peut-être, réessayez dans 10 secondes.';
+        errorMessage = 'Le serveur se réveille. Réessayez dans 30 secondes.';
+      } else {
+        errorMessage = 'Erreur: ' + error.message;
       }
 
       showNotification(errorMessage, 'error');

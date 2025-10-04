@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test AbortController</title>
+</head>
+<body>
+    <h1>Test AbortController et Forgot Password</h1>
+    <button onclick="testWithAbort()">Test AVEC AbortController</button>
+    <button onclick="testWithoutAbort()">Test SANS AbortController</button>
+    <button onclick="testSimple()">Test SIMPLE (sans wakeup)</button>
+    <pre id="result"></pre>
+
+    <script>
+        const API_URL = 'https://my-backend-api-cng7.onrender.com';
+        const resultDiv = document.getElementById('result');
+
+        async function testWithAbort() {
+            resultDiv.textContent = 'Test AVEC AbortController...\n';
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => {
+                    console.log('Timeout déclenché!');
+                    controller.abort();
+                }, 120000); // 2 minutes
+
+                const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: 'test@example.com' }),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+                const data = await response.json();
+                resultDiv.textContent += `✅ Succès: ${JSON.stringify(data)}`;
+            } catch (error) {
+                resultDiv.textContent += `❌ Erreur: ${error.name} - ${error.message}\n`;
+                console.error('Erreur détaillée:', error);
+            }
+        }
+
+        async function testWithoutAbort() {
+            resultDiv.textContent = 'Test SANS AbortController...\n';
+            try {
+                const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: 'test@example.com' })
+                });
+
+                const data = await response.json();
+                resultDiv.textContent += `✅ Succès: ${JSON.stringify(data)}`;
+            } catch (error) {
+                resultDiv.textContent += `❌ Erreur: ${error.name} - ${error.message}`;
+            }
+        }
+
+        async function testSimple() {
+            resultDiv.textContent = 'Test SIMPLE direct...\n';
+            const startTime = Date.now();
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: 'saadakram159@gmail.com' })
+                });
+
+                const elapsed = Date.now() - startTime;
+                const data = await response.json();
+                resultDiv.textContent += `✅ Succès en ${elapsed}ms\n`;
+                resultDiv.textContent += JSON.stringify(data, null, 2);
+            } catch (error) {
+                const elapsed = Date.now() - startTime;
+                resultDiv.textContent += `❌ Erreur après ${elapsed}ms\n`;
+                resultDiv.textContent += `${error.name}: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
