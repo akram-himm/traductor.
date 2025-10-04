@@ -12,6 +12,49 @@ const transporter = nodemailer.createTransport({
 });
 
 const emailService = {
+  // Email de vérification
+  async sendVerificationEmail(user, verificationToken) {
+    const baseUrl = process.env.BASE_URL || 'https://my-backend-api-cng7.onrender.com';
+    const verifyUrl = `${baseUrl}/api/auth/verify-email?token=${verificationToken}`;
+
+    const mailOptions = {
+      from: '"LexiFlow" <noreply@lexiflow.com>',
+      to: user.email,
+      subject: '🔐 Vérifiez votre email - LexiFlow',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #3b82f6;">Bienvenue sur LexiFlow !</h1>
+          <p>Bonjour ${user.name || ''},</p>
+
+          <p>Merci de vous être inscrit ! Pour activer votre compte, veuillez vérifier votre adresse email.</p>
+
+          <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+            <p style="margin-bottom: 20px;">Cliquez sur le bouton ci-dessous pour vérifier votre email :</p>
+            <a href="${verifyUrl}" style="display: inline-block; background: #3b82f6; color: white; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+              Vérifier mon email
+            </a>
+            <p style="font-size: 12px; color: #666; margin-top: 16px;">
+              Ce lien expire dans 24 heures
+            </p>
+          </div>
+
+          <p style="font-size: 14px; color: #666;">
+            Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br>
+            <a href="${verifyUrl}" style="color: #3b82f6; word-break: break-all; font-size: 12px;">${verifyUrl}</a>
+          </p>
+
+          <p style="font-size: 14px; color: #666;">
+            Si vous n'avez pas créé de compte, ignorez cet email.
+          </p>
+
+          <p>L'équipe LexiFlow</p>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+  },
+
   // Email de bienvenue
   async sendWelcomeEmail(user) {
     const mailOptions = {
@@ -123,7 +166,8 @@ const emailService = {
 
   // Email de réinitialisation de mot de passe
   async sendPasswordResetEmail(user, resetToken) {
-    const resetUrl = `https://lexiflow.app/reset-password?token=${resetToken}&email=${user.email}`;
+    const baseUrl = process.env.BASE_URL || 'https://my-backend-api-cng7.onrender.com';
+    const resetUrl = `${baseUrl}/reset-password.html?token=${resetToken}&email=${user.email}`;
     
     const mailOptions = {
       from: '"LexiFlow" <noreply@lexiflow.com>',

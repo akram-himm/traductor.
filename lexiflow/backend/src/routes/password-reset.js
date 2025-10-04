@@ -31,7 +31,13 @@ router.post('/forgot-password', async (req, res) => {
     });
     
     // Envoyer l'email avec le token
-    await emailService.sendPasswordResetEmail(user, resetToken);
+    try {
+      await emailService.sendPasswordResetEmail(user, resetToken);
+      console.log('✅ Email de récupération envoyé à:', user.email);
+    } catch (emailError) {
+      console.error('❌ Erreur envoi email:', emailError);
+      // Continue quand même pour la sécurité (ne pas révéler si l'email existe)
+    }
     
     res.json({ 
       message: 'Si cet email existe, vous recevrez un lien de réinitialisation.' 

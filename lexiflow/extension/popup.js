@@ -3079,7 +3079,7 @@ function showLoginWindow() {
         
         
         <div style="text-align: center;">
-          <a href="#" style="color: #667eea; font-size: 13px; text-decoration: none; margin-right: 12px;">Mot de passe oublié ?</a>
+          <a href="#" class="js-forgot-password" style="color: #667eea; font-size: 13px; text-decoration: none; margin-right: 12px;">Mot de passe oublié ?</a>
           <span style="color: #d1d5db;">•</span>
           <a href="#" class="js-register-link" style="color: #667eea; font-size: 13px; text-decoration: none; margin-left: 12px;">Créer un compte</a>
         </div>
@@ -3195,6 +3195,16 @@ function showLoginWindow() {
     loginModal.remove();
     showRegisterWindow();
   });
+
+  // Event listener pour le lien "Mot de passe oublié"
+  const forgotLink = loginModal.querySelector('.js-forgot-password');
+  if (forgotLink) {
+    forgotLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      loginModal.remove();
+      showForgotPasswordWindow();
+    });
+  }
   
   
 }
@@ -3497,6 +3507,181 @@ function showRegisterWindow() {
   setTimeout(() => {
     const nameInput = document.getElementById('registerName');
     if (nameInput) nameInput.focus();
+  }, 100);
+}
+
+// Fonction pour afficher la fenêtre de récupération de mot de passe
+function showForgotPasswordWindow() {
+  const forgotModal = document.createElement('div');
+  forgotModal.className = 'forgot-modal';
+  forgotModal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  `;
+
+  forgotModal.innerHTML = `
+    <div style="background: white; border-radius: 16px; padding: 32px; width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); transform: scale(1); animation: slideIn 0.3s ease-out;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2 style="font-size: 24px; font-weight: 700; color: #1f2937; margin: 0;">🔑 Récupération de mot de passe</h2>
+        <button class="js-forgot-cancel" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #9ca3af; padding: 4px;">✕</button>
+      </div>
+
+      <div id="forgotPasswordForm">
+        <p style="color: #6b7280; margin-bottom: 20px; font-size: 14px;">
+          Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
+        </p>
+
+        <div style="margin-bottom: 24px;">
+          <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 13px;">Email</label>
+          <input type="email" id="forgotEmail" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s; background: #f9fafb;" placeholder="votre@email.com">
+        </div>
+
+        <button class="js-forgot-submit" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
+          Envoyer le lien de récupération
+        </button>
+
+        <div style="text-align: center;">
+          <a href="#" class="js-back-to-login" style="color: #667eea; font-size: 13px; text-decoration: none;">← Retour à la connexion</a>
+        </div>
+      </div>
+
+      <div id="forgotPasswordSuccess" style="display: none;">
+        <div style="text-align: center; padding: 20px;">
+          <div style="font-size: 48px; margin-bottom: 16px;">✉️</div>
+          <h3 style="font-size: 18px; font-weight: 600; color: #1f2937; margin-bottom: 12px;">Email envoyé !</h3>
+          <p style="color: #6b7280; font-size: 14px; margin-bottom: 24px;">
+            Si cet email existe dans notre base de données, vous recevrez un lien de récupération dans quelques instants.
+          </p>
+          <button class="js-back-to-login-success" style="padding: 12px 24px; background: #f3f4f6; color: #374151; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
+            Retour à la connexion
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(forgotModal);
+
+  // Event listeners
+  forgotModal.querySelector('.js-forgot-cancel').addEventListener('click', () => {
+    forgotModal.remove();
+  });
+
+  forgotModal.querySelector('.js-forgot-submit').addEventListener('click', async () => {
+    const email = document.getElementById('forgotEmail').value;
+
+    if (!email) {
+      showNotification('Veuillez entrer votre email', 'warning');
+      return;
+    }
+
+    // Désactiver le bouton pendant l'envoi
+    const submitButton = forgotModal.querySelector('.js-forgot-submit');
+    submitButton.disabled = true;
+    submitButton.textContent = 'Envoi en cours...';
+
+    try {
+      // Réveiller le serveur d'abord si nécessaire
+      submitButton.textContent = 'Réveil du serveur...';
+      await API_CONFIG.wakeUpServer();
+
+      submitButton.textContent = 'Envoi en cours...';
+
+      // Appel API pour demander la réinitialisation avec timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 secondes timeout
+
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      const data = await response.json();
+
+      // Toujours afficher le message de succès (sécurité)
+      document.getElementById('forgotPasswordForm').style.display = 'none';
+      document.getElementById('forgotPasswordSuccess').style.display = 'block';
+
+    } catch (error) {
+      console.error('Erreur complète:', error);
+      console.error('Type:', error.name);
+      console.error('Message:', error.message);
+
+      let errorMessage = 'Erreur lors de l\'envoi de l\'email';
+
+      if (error.name === 'AbortError') {
+        errorMessage = 'Délai dépassé - Le serveur met trop de temps à répondre. Réessayez.';
+      } else if (!navigator.onLine) {
+        errorMessage = 'Pas de connexion internet';
+      } else if (error.message.includes('Failed to fetch')) {
+        errorMessage = 'Impossible de contacter le serveur. Il se réveille peut-être, réessayez dans 10 secondes.';
+      }
+
+      showNotification(errorMessage, 'error');
+      submitButton.disabled = false;
+      submitButton.textContent = 'Envoyer le lien de récupération';
+    }
+  });
+
+  // Retour à la connexion depuis le formulaire
+  const backLink = forgotModal.querySelector('.js-back-to-login');
+  if (backLink) {
+    backLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      forgotModal.remove();
+      showLoginWindow();
+    });
+  }
+
+  // Retour à la connexion depuis le succès
+  const backSuccessBtn = forgotModal.querySelector('.js-back-to-login-success');
+  if (backSuccessBtn) {
+    backSuccessBtn.addEventListener('click', () => {
+      forgotModal.remove();
+      showLoginWindow();
+    });
+  }
+
+  // Fermer en cliquant à l'extérieur
+  forgotModal.addEventListener('click', (e) => {
+    if (e.target === forgotModal) {
+      forgotModal.remove();
+    }
+  });
+
+  // Focus sur l'email
+  setTimeout(() => {
+    const emailInput = document.getElementById('forgotEmail');
+    if (emailInput) {
+      emailInput.focus();
+
+      // Effets de focus
+      emailInput.addEventListener('focus', () => {
+        emailInput.style.borderColor = '#667eea';
+        emailInput.style.background = 'white';
+        emailInput.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+      });
+
+      emailInput.addEventListener('blur', () => {
+        emailInput.style.borderColor = '#e5e7eb';
+        emailInput.style.background = '#f9fafb';
+        emailInput.style.boxShadow = 'none';
+      });
+    }
   }, 100);
 }
 

@@ -75,9 +75,13 @@ router.post('/register', async (req, res) => {
     });
 
     // Envoyer l'email de vérification
-    // TODO: Réactiver après configuration email
-    // await emailService.sendVerificationEmail(user, verificationToken);
-    console.log('📧 Email de vérification désactivé temporairement');
+    try {
+      await emailService.sendVerificationEmail(user, verificationToken);
+      console.log('✅ Email de vérification envoyé à:', user.email);
+    } catch (emailError) {
+      console.error('❌ Erreur envoi email vérification:', emailError);
+      // On continue quand même pour ne pas bloquer l'inscription
+    }
 
     res.status(201).json({
       message: 'Registration successful! Please check your email to verify your account.',
@@ -289,14 +293,12 @@ router.post('/login', async (req, res) => {
     }
 
     // Vérifier si l'email est vérifié
-    // TODO: Réactiver après configuration email
-    // if (!user.emailVerified) {
-    //   return res.status(403).json({ 
-    //     error: 'Please verify your email first',
-    //     requiresVerification: true 
-    //   });
-    // }
-    console.log('⚠️ Vérification email désactivée temporairement');
+    if (!user.emailVerified) {
+      return res.status(403).json({
+        error: 'Veuillez vérifier votre email avant de vous connecter',
+        requiresVerification: true
+      });
+    }
 
     try {
       // Vérifier le statut du trial/premium
