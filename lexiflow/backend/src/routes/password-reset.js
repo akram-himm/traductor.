@@ -33,15 +33,22 @@ router.post('/forgot-password', async (req, res) => {
     
     // Envoyer l'email en arrière-plan (non-bloquant)
     emailService.sendPasswordResetEmail(user, resetToken)
-      .then(() => {
+      .then((info) => {
         console.log('✅ Email de récupération envoyé à:', user.email);
+        console.log('   Message ID:', info?.messageId);
+        console.log('   Accepted:', info?.accepted);
+        console.log('   Response:', info?.response);
       })
       .catch((emailError) => {
         console.error('❌ Erreur envoi email:', emailError.message);
-        // Log plus détaillé pour déboguer
         console.error('   Host:', process.env.EMAIL_HOST);
         console.error('   User:', process.env.EMAIL_USER);
+        console.error('   From:', process.env.EMAIL_FROM);
         console.error('   Pass défini:', !!process.env.EMAIL_PASS);
+        console.error('   Code erreur:', emailError.code);
+        console.error('   Command:', emailError.command);
+        console.error('   Response:', emailError.response);
+        console.error('   Stack:', emailError.stack);
       });
 
     // Ne pas attendre l'email, répondre immédiatement
