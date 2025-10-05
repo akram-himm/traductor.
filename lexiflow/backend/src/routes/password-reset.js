@@ -4,8 +4,10 @@ const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
 const User = require('../models/User');
-// Utiliser le service email principal (Brevo configuré)
-const emailService = require('../utils/email');
+// Utiliser Resend pour contourner les blocages SMTP de Render
+const emailService = process.env.RESEND_API_KEY
+  ? require('../utils/emailResend')  // Utiliser Resend si la clé existe
+  : require('../utils/email');        // Sinon utiliser SMTP
 
 // Demander un reset de mot de passe
 router.post('/forgot-password', async (req, res) => {
