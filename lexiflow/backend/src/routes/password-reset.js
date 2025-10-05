@@ -4,10 +4,12 @@ const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
 const User = require('../models/User');
-// Utiliser Resend pour contourner les blocages SMTP de Render
-const emailService = process.env.RESEND_API_KEY
-  ? require('../utils/emailResend')  // Utiliser Resend si la clé existe
-  : require('../utils/email');        // Sinon utiliser SMTP
+// Utiliser SendGrid en priorité, puis Resend, sinon SMTP
+const emailService = process.env.SENDGRID_API_KEY
+  ? require('../utils/emailSendGrid')  // SendGrid si la clé existe
+  : process.env.RESEND_API_KEY
+  ? require('../utils/emailResend')    // Sinon Resend
+  : require('../utils/email');          // Sinon SMTP
 
 // Demander un reset de mot de passe
 router.post('/forgot-password', async (req, res) => {
