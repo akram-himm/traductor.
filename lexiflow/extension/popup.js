@@ -3621,10 +3621,18 @@ async function showForgotPasswordWindow() {
   });
 
   forgotModal.querySelector('.js-forgot-submit').addEventListener('click', async () => {
-    const email = document.getElementById('forgotEmail').value;
+    const email = document.getElementById('forgotEmail').value.trim();
 
     if (!email) {
       showNotification('Veuillez entrer votre email', 'warning');
+      return;
+    }
+
+    // Validation stricte de l'email
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      showNotification('Veuillez entrer une adresse email valide', 'error');
+      document.getElementById('forgotEmail').focus();
       return;
     }
 

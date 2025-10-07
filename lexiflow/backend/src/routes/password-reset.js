@@ -15,7 +15,15 @@ const emailService = process.env.SENDGRID_API_KEY
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
-    
+
+    // Validation du format email
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!email || !emailRegex.test(email)) {
+      return res.status(400).json({
+        error: 'Veuillez fournir une adresse email valide'
+      });
+    }
+
     // Vérifier si l'utilisateur existe
     const user = await User.findOne({ where: { email } });
     if (!user) {
