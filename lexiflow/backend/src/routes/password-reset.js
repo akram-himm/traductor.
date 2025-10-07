@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
-const { Op } = require('sequelize');
+const { Op } = require('../config/database');
 const User = require('../models/User');
 // Utiliser SendGrid en priorité, puis Resend, sinon SMTP
 const emailService = process.env.SENDGRID_API_KEY

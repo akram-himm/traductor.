@@ -40,4 +40,8 @@ sequelize.authenticate()
   .then(() => console.log('✅ Database connected'))
   .catch(err => console.error('❌ Database connection error:', err));
 
-module.exports = { sequelize, DataTypes: Sequelize.DataTypes };
+module.exports = {
+  sequelize,
+  DataTypes: Sequelize.DataTypes,
+  Op: Sequelize.Op
+};
