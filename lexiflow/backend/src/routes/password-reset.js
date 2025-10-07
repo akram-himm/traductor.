@@ -79,18 +79,31 @@ router.post('/forgot-password', async (req, res) => {
 router.post('/reset-password', async (req, res) => {
   try {
     const { token, email, newPassword } = req.body;
-    
+
+    console.log('=== RESET PASSWORD REQUEST ===');
+    console.log('Email:', email);
+    console.log('Token reçu:', token);
+    console.log('Nouveau mot de passe longueur:', newPassword ? newPassword.length : 0);
+
     // Valider le mot de passe
     if (!newPassword || newPassword.length < 6) {
-      return res.status(400).json({ 
-        error: 'Le mot de passe doit contenir au moins 6 caractères' 
+      console.log('❌ Mot de passe trop court');
+      return res.status(400).json({
+        error: 'Le mot de passe doit contenir au moins 6 caractères'
       });
     }
-    
+
     // Hasher le token reçu
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    console.log('Token hashé:', hashedToken);
     
     // Trouver l'utilisateur avec ce token valide
+    console.log('Recherche utilisateur avec:', {
+      email,
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: 'doit être > ' + new Date()
+    });
+
     const user = await User.findOne({
       where: {
         email,
@@ -98,10 +111,16 @@ router.post('/reset-password', async (req, res) => {
         resetPasswordExpires: { [Op.gt]: new Date() } // Token non expiré
       }
     });
-    
+
+    console.log('Utilisateur trouvé:', user ? 'OUI' : 'NON');
+    if (user) {
+      console.log('Token expire à:', user.resetPasswordExpires);
+    }
+
     if (!user) {
-      return res.status(400).json({ 
-        error: 'Token invalide ou expiré' 
+      console.log('❌ Token invalide ou expiré');
+      return res.status(400).json({
+        error: 'Token invalide ou expiré'
       });
     }
     
@@ -115,11 +134,23 @@ router.post('/reset-password', async (req, res) => {
       resetPasswordExpires: null
     });
     
+    console.log('✅ Mot de passe réinitialisé avec succès pour:', email);
     res.json({ message: 'Mot de passe réinitialisé avec succès' });
-    
+
   } catch (error) {
-    console.error('Reset password error:', error);
-    res.status(500).json({ error: 'Erreur lors de la réinitialisation' });
+    console.error('❌ ERREUR RESET PASSWORD:', error);
+    console.error('Stack:', error.stack);
+    console.error('Message:', error.message);
+
+    // Envoyer plus de détails en développement
+    if (process.env.NODE_ENV === 'development') {
+      res.status(500).json({
+        error: 'Erreur lors de la réinitialisation',
+        details: error.message
+      });
+    } else {
+      res.status(500).json({ error: 'Erreur lors de la réinitialisation' });
+    }
   }
 });
 
