@@ -9,7 +9,10 @@ const emailService = {
     console.log(`📨 Envoi email via SendGrid à: ${user.email}`);
 
     // La page de réinitialisation est sur le backend, pas le frontend
-    const baseUrl = process.env.BACKEND_URL || 'https://my-backend-api-cng7.onrender.com';
+    // En production, toujours utiliser l'URL Render même si BACKEND_URL n'est pas défini correctement
+    const baseUrl = process.env.NODE_ENV === 'production'
+      ? 'https://my-backend-api-cng7.onrender.com'
+      : (process.env.BACKEND_URL || 'http://localhost:3001');
     const resetUrl = `${baseUrl}/reset-password.html?token=${resetToken}&email=${encodeURIComponent(user.email)}`;
 
     const msg = {
