@@ -3165,6 +3165,9 @@ function showLoginWindow() {
       
       // Sauvegarder l'ID de l'utilisateur actuel
       localStorage.setItem('lastUserId', currentUserId);
+
+      // Sauvegarder l'email pour pré-remplir le formulaire de récupération
+      chrome.storage.local.set({ lastLoginEmail: email });
       
       // NE PAS appeler syncFlashcardsAfterLogin ici - updateUIAfterLogin s'en charge
       
@@ -3540,7 +3543,20 @@ function showRegisterWindow() {
 }
 
 // Fonction pour afficher la fenêtre de récupération de mot de passe
-function showForgotPasswordWindow() {
+async function showForgotPasswordWindow() {
+  // Récupérer l'email du dernier utilisateur connecté
+  let lastUserEmail = '';
+  try {
+    const storage = await chrome.storage.local.get(['user', 'lastLoginEmail']);
+    if (storage.user && storage.user.email) {
+      lastUserEmail = storage.user.email;
+    } else if (storage.lastLoginEmail) {
+      lastUserEmail = storage.lastLoginEmail;
+    }
+  } catch (error) {
+    console.log('Pas d\'email sauvegardé');
+  }
+
   const forgotModal = document.createElement('div');
   forgotModal.className = 'forgot-modal';
   forgotModal.style.cssText = `
@@ -3570,7 +3586,7 @@ function showForgotPasswordWindow() {
 
         <div style="margin-bottom: 24px;">
           <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 13px;">Email</label>
-          <input type="email" id="forgotEmail" autocomplete="email" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s; background: #f9fafb;" placeholder="votre@email.com">
+          <input type="email" id="forgotEmail" autocomplete="email" value="${lastUserEmail}" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s; background: #f9fafb;" placeholder="votre@email.com">
         </div>
 
         <button class="js-forgot-submit" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
