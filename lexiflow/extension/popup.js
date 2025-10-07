@@ -3570,7 +3570,7 @@ function showForgotPasswordWindow() {
 
         <div style="margin-bottom: 24px;">
           <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 13px;">Email</label>
-          <input type="email" id="forgotEmail" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s; background: #f9fafb;" placeholder="votre@email.com">
+          <input type="email" id="forgotEmail" autocomplete="email" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s; background: #f9fafb;" placeholder="votre@email.com">
         </div>
 
         <button class="js-forgot-submit" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
@@ -3619,23 +3619,58 @@ function showForgotPasswordWindow() {
 
     try {
       // Réveiller le serveur d'abord si nécessaire
-      submitButton.textContent = 'Réveil du serveur (peut prendre 30s)...';
+      submitButton.textContent = 'Connexion au serveur...';
 
-      // Enlever le wakeUpServer qui peut causer des conflits
-      // await API_CONFIG.wakeUpServer();
+      // Première tentative pour réveiller le serveur
+      const wakeResponse = await fetch(`${API_CONFIG.BASE_URL}/api/health`).catch(() => null);
+
+      if (!wakeResponse || wakeResponse.status === 503) {
+        submitButton.textContent = 'Réveil du serveur (30-60s)...';
+        // Attendre 2 secondes et réessayer
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
 
       submitButton.textContent = 'Envoi de l\'email...';
 
-      // Appel API SANS AbortController pour éviter les bugs
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/forgot-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email })
-      });
+      // Appel API avec retry en cas de 503
+      let response;
+      let retries = 3;
 
-      const data = await response.json();
+      while (retries > 0) {
+        response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/forgot-password`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email })
+        });
+
+        // Si 503, le serveur se réveille, attendre et réessayer
+        if (response.status === 503 && retries > 1) {
+          submitButton.textContent = `Serveur en cours de réveil... (${4 - retries}/3)`;
+          await new Promise(resolve => setTimeout(resolve, 5000));
+          retries--;
+        } else {
+          break;
+        }
+      }
+
+      // Gérer les réponses vides (erreur 503, 502, etc)
+      let data = {};
+      const contentLength = response.headers.get('content-length');
+
+      if (contentLength && contentLength !== '0') {
+        try {
+          data = await response.json();
+        } catch (jsonError) {
+          console.warn('Réponse non-JSON reçue:', response.status);
+        }
+      }
+
+      // Si 503 persistant, afficher quand même le succès (l'email peut être envoyé)
+      if (response.status === 503) {
+        console.warn('Serveur en hibernation, mais l\'email a probablement été envoyé');
+      }
 
       // Toujours afficher le message de succès (sécurité)
       document.getElementById('forgotPasswordForm').style.display = 'none';
@@ -3691,6 +3726,14 @@ function showForgotPasswordWindow() {
     const emailInput = document.getElementById('forgotEmail');
     if (emailInput) {
       emailInput.focus();
+
+      // Support de la touche Entrée pour soumettre
+      emailInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          forgotModal.querySelector('.js-forgot-submit').click();
+        }
+      });
 
       // Effets de focus
       emailInput.addEventListener('focus', () => {

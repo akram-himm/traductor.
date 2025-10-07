@@ -8,8 +8,8 @@ const emailService = {
   async sendPasswordResetEmail(user, resetToken) {
     console.log(`📨 Envoi email via SendGrid à: ${user.email}`);
 
-    const baseUrl = process.env.BASE_URL || 'https://my-backend-api-cng7.onrender.com';
-    const resetUrl = `${baseUrl}/reset-password.html?token=${resetToken}&email=${user.email}`;
+    const baseUrl = process.env.FRONTEND_URL || 'https://my-backend-api-cng7.onrender.com';
+    const resetUrl = `${baseUrl}/reset-password.html?token=${resetToken}&email=${encodeURIComponent(user.email)}`;
 
     const msg = {
       to: user.email,
