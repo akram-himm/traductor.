@@ -2,14 +2,30 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
-const { Op } = require('../config/database');
 const User = require('../models/User');
+
+// Importer Op depuis sequelize directement
+let Op;
+try {
+  Op = require('sequelize').Op;
+  console.log('✅ Op importé depuis sequelize');
+} catch (error) {
+  console.error('❌ Erreur import Op:', error);
+  // Fallback
+  Op = require('../config/database').Op;
+}
+
 // Utiliser SendGrid en priorité, puis Resend, sinon SMTP
-const emailService = process.env.SENDGRID_API_KEY
-  ? require('../utils/emailSendGrid')  // SendGrid si la clé existe
-  : process.env.RESEND_API_KEY
-  ? require('../utils/emailResend')    // Sinon Resend
-  : require('../utils/email');          // Sinon SMTP
+let emailService;
+try {
+  emailService = process.env.SENDGRID_API_KEY
+    ? require('../utils/emailSendGrid')  // SendGrid si la clé existe
+    : process.env.RESEND_API_KEY
+    ? require('../utils/emailResend')    // Sinon Resend
+    : require('../utils/email');          // Sinon SMTP
+} catch (error) {
+  console.error('❌ Erreur import emailService:', error);
+}
 
 // Demander un reset de mot de passe
 router.post('/forgot-password', async (req, res) => {
@@ -104,13 +120,26 @@ router.post('/reset-password', async (req, res) => {
       resetPasswordExpires: 'doit être > ' + new Date()
     });
 
-    const user = await User.findOne({
-      where: {
-        email,
-        resetPasswordToken: hashedToken,
-        resetPasswordExpires: { [Op.gt]: new Date() } // Token non expiré
+    let user;
+    try {
+      // Vérifier si Op est défini
+      if (!Op || !Op.gt) {
+        console.error('❌ Op ou Op.gt non défini!');
+        throw new Error('Op.gt is not defined');
       }
-    });
+
+      user = await User.findOne({
+        where: {
+          email,
+          resetPasswordToken: hashedToken,
+          resetPasswordExpires: { [Op.gt]: new Date() } // Token non expiré
+        }
+      });
+    } catch (dbError) {
+      console.error('❌ Erreur DB lors de la recherche utilisateur:', dbError);
+      console.error('Stack:', dbError.stack);
+      throw dbError;
+    }
 
     console.log('Utilisateur trouvé:', user ? 'OUI' : 'NON');
     if (user) {
