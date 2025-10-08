@@ -3,29 +3,10 @@ const router = express.Router();
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
+const { sequelize } = require('../config/database');
 
-// Importer Op depuis sequelize directement
-let Op;
-try {
-  Op = require('sequelize').Op;
-  console.log('✅ Op importé depuis sequelize');
-} catch (error) {
-  console.error('❌ Erreur import Op:', error);
-  // Fallback
-  Op = require('../config/database').Op;
-}
-
-// Utiliser SendGrid en priorité, puis Resend, sinon SMTP
-let emailService;
-try {
-  emailService = process.env.SENDGRID_API_KEY
-    ? require('../utils/emailSendGrid')  // SendGrid si la clé existe
-    : process.env.RESEND_API_KEY
-    ? require('../utils/emailResend')    // Sinon Resend
-    : require('../utils/email');          // Sinon SMTP
-} catch (error) {
-  console.error('❌ Erreur import emailService:', error);
-}
+// Utiliser SendGrid pour l'envoi d'emails (API REST, pas SMTP)
+const emailService = require('../utils/emailSendGrid');
 
 // Demander un reset de mot de passe
 router.post('/forgot-password', async (req, res) => {
@@ -120,19 +101,13 @@ router.post('/reset-password', async (req, res) => {
       resetPasswordExpires: 'doit être > ' + new Date()
     });
 
+    // Solution alternative : rechercher l'utilisateur et vérifier la date manuellement
     let user;
     try {
-      // Vérifier si Op est défini
-      if (!Op || !Op.gt) {
-        console.error('❌ Op ou Op.gt non défini!');
-        throw new Error('Op.gt is not defined');
-      }
-
       user = await User.findOne({
         where: {
           email,
-          resetPasswordToken: hashedToken,
-          resetPasswordExpires: { [Op.gt]: new Date() } // Token non expiré
+          resetPasswordToken: hashedToken
         }
       });
     } catch (dbError) {
@@ -142,12 +117,30 @@ router.post('/reset-password', async (req, res) => {
     }
 
     console.log('Utilisateur trouvé:', user ? 'OUI' : 'NON');
-    if (user) {
-      console.log('Token expire à:', user.resetPasswordExpires);
+
+    // Vérifier si l'utilisateur existe et si le token n'est pas expiré
+    if (!user) {
+      console.log('❌ Utilisateur non trouvé ou token invalide');
+      return res.status(400).json({
+        error: 'Token invalide ou expiré'
+      });
     }
 
-    if (!user) {
-      console.log('❌ Token invalide ou expiré');
+    // Vérifier manuellement l'expiration du token
+    if (user.resetPasswordExpires) {
+      const tokenExpiry = new Date(user.resetPasswordExpires);
+      const now = new Date();
+      console.log('Token expire à:', tokenExpiry);
+      console.log('Date actuelle:', now);
+
+      if (tokenExpiry <= now) {
+        console.log('❌ Token expiré');
+        return res.status(400).json({
+          error: 'Token invalide ou expiré'
+        });
+      }
+    } else {
+      console.log('❌ Pas de date d\'expiration pour le token');
       return res.status(400).json({
         error: 'Token invalide ou expiré'
       });
