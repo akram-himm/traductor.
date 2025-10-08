@@ -148,12 +148,14 @@ router.post('/reset-password', async (req, res) => {
     
     // Hasher le nouveau mot de passe
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    
+
     // Mettre à jour le mot de passe et supprimer le token
+    // ET marquer l'email comme vérifié (logique : s'il peut reset via email, l'email est valide)
     await user.update({
       password: hashedPassword,
       resetPasswordToken: null,
-      resetPasswordExpires: null
+      resetPasswordExpires: null,
+      emailVerified: true  // ✅ Marquer comme vérifié après réinitialisation réussie
     });
     
     console.log('✅ Mot de passe réinitialisé avec succès pour:', email);
