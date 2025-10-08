@@ -97,6 +97,7 @@ app.use('/api/auth', require('./routes/password-reset'));
 app.use('/api/auth', require('./routes/test-email'));
 app.use('/api/user', require('./routes/user'));
 app.use('/api/subscription', require('./routes/subscription'));
+app.use('/api/subscription', require('./routes/webhook-debug'));
 app.use('/api/flashcards', require('./routes/flashcards'));
 app.use('/api/translations', require('./routes/translations'));
 app.use('/api/dashboard', require('./routes/dashboard'));
