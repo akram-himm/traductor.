@@ -55,6 +55,12 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// IMPORTANT: Webhook Stripe DOIT être configuré AVANT express.json()
+// pour recevoir le body raw nécessaire à la vérification de signature
+app.use('/api/subscription', require('./routes/webhookStripe'));
+
+// Après le webhook, on peut parser JSON pour les autres routes
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -96,7 +102,8 @@ app.use('/api/auth', require('./routes/authWithTrial'));
 app.use('/api/auth', require('./routes/password-reset'));
 app.use('/api/auth', require('./routes/test-email'));
 app.use('/api/user', require('./routes/user'));
-app.use('/api/subscription', require('./routes/subscription'));
+// Webhook Stripe déjà chargé avant express.json() - voir ligne 61
+app.use('/api/subscription', require('./routes/subscription')); // Autres routes subscription
 app.use('/api/subscription', require('./routes/webhook-debug'));
 app.use('/api/flashcards', require('./routes/flashcards'));
 app.use('/api/translations', require('./routes/translations'));
