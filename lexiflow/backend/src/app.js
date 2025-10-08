@@ -23,9 +23,13 @@ app.use(cors({
       'http://localhost:5000',
       'http://localhost:8000',
       'http://localhost:3000',
+      'http://localhost:3001',
+      'https://my-backend-api-cng7.onrender.com', // Le serveur lui-même !
       process.env.FRONTEND_URL,
-      process.env.CLIENT_URL
-    ];
+      process.env.CLIENT_URL,
+      process.env.BASE_URL,
+      process.env.BACKEND_URL
+    ].filter(Boolean); // Enlever les undefined
     
     // Allow requests with no origin (like mobile apps or Postman)
     if (!origin) return callback(null, true);
@@ -34,10 +38,16 @@ app.use(cors({
     if (origin.startsWith('chrome-extension://')) {
       return callback(null, true);
     }
-    
+
+    // Allow same origin (pages servies depuis ce serveur)
+    if (origin && origin.includes('onrender.com')) {
+      return callback(null, true);
+    }
+
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.log('🚫 CORS blocked origin:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -118,8 +128,21 @@ app._router.stack.forEach(function(r){
 
 // Gestion des erreurs
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+  console.error('❌ ERREUR GLOBALE:', err.message);
+  console.error('   URL:', req.url);
+  console.error('   Method:', req.method);
+  console.error('   Stack:', err.stack);
+
+  // En développement, envoyer plus de détails
+  if (process.env.NODE_ENV === 'development') {
+    res.status(500).json({
+      error: 'Something went wrong!',
+      message: err.message,
+      path: req.url
+    });
+  } else {
+    res.status(500).json({ error: 'Something went wrong!' });
+  }
 });
 
 // Initialiser la base de données avant de démarrer le serveur
