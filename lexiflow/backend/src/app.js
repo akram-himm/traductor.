@@ -58,7 +58,7 @@ app.use(cors({
 
 // IMPORTANT: Webhook Stripe DOIT être configuré AVANT express.json()
 // pour recevoir le body raw nécessaire à la vérification de signature
-app.use('/api/subscription', require('./routes/webhookStripe'));
+app.use('/api/subscription', require('./routes/webhookStripeFixed'));
 
 // Après le webhook, on peut parser JSON pour les autres routes
 app.use(express.json());
