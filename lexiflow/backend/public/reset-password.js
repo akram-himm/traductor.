@@ -21,6 +21,16 @@ document.getElementById('passwordResetForm').addEventListener('submit', async (e
 
     console.log('Formulaire soumis - Nouveau mot de passe longueur:', newPassword.length);
 
+    // Réveiller le serveur si on est sur Render
+    if (!window.location.hostname.includes('localhost')) {
+        const serverAwake = await wakeUpServer(true);
+        if (!serverAwake) {
+            errorMsg.textContent = 'Serveur indisponible. Veuillez réessayer dans quelques secondes.';
+            errorMsg.style.display = 'block';
+            return;
+        }
+    }
+
     // Réinitialiser les messages
     errorMsg.style.display = 'none';
 
