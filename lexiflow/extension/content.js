@@ -1179,6 +1179,14 @@ debug('✅ LexiFlow content script chargé');
 debug('📍 URL:', window.location.href);
 debug('📄 Content Type:', document.contentType);
 
+if (window.location.href.includes('pdf-viewer.html')) {
+  debug('🚀 Running inside PDF Viewer');
+  const indicator = document.createElement('div');
+  indicator.innerHTML = '✅ Extension Active';
+  indicator.style.cssText = 'position:fixed; bottom:5px; right:5px; background:green; color:white; padding:5px 10px; font-size:12px; z-index:99999; border-radius:4px; font-family:sans-serif;';
+  document.body.appendChild(indicator);
+}
+
 if (window.location.href.endsWith('.pdf') || document.contentType === 'application/pdf') {
   debug('🚨 PDF DETECTED! Injecting "Enable Translation" button');
 
