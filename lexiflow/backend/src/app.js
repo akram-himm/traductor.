@@ -1,4 +1,11 @@
 require('dotenv').config();
+
+// FIX: Ignore invalid placeholder DATABASE_URL - MUST BE BEFORE OTHER IMPORTS
+if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('@host')) {
+  console.log('⚠️ Detecté DATABASE_URL placeholder invalide. Suppression pour utiliser localhost.');
+  delete process.env.DATABASE_URL;
+}
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -8,6 +15,13 @@ const limiters = require('./middleware/rateLimiter');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+console.log('🔍 DEBUG ENV:', {
+  DATABASE_URL: process.env.DATABASE_URL ? 'Set (starts with ' + process.env.DATABASE_URL.substring(0, 10) + '...)' : 'Not set',
+  DB_HOST: process.env.DB_HOST,
+  full_db_url_check: process.env.DATABASE_URL // Only for debugging, remove later if sensitive
+});
+
+
 
 // Trust proxy for Render (nécessaire pour express-rate-limit)
 app.set('trust proxy', 1);
@@ -18,7 +32,7 @@ app.use('/api/subscription/webhook', express.raw({ type: 'application/json' }));
 // Middleware de sécurité
 app.use(helmet());
 app.use(cors({
-  origin: function(origin, callback) {
+  origin: function (origin, callback) {
     const allowedOrigins = [
       'http://localhost:5000',
       'http://localhost:8000',
@@ -30,10 +44,10 @@ app.use(cors({
       process.env.BASE_URL,
       process.env.BACKEND_URL
     ].filter(Boolean); // Enlever les undefined
-    
+
     // Allow requests with no origin (like mobile apps or Postman)
     if (!origin) return callback(null, true);
-    
+
     // Allow Chrome extension requests
     if (origin.startsWith('chrome-extension://')) {
       return callback(null, true);
@@ -58,7 +72,7 @@ app.use(cors({
 
 // IMPORTANT: Webhook Stripe DOIT être configuré AVANT express.json()
 // pour recevoir le body raw nécessaire à la vérification de signature
-app.use('/api/subscription', require('./routes/webhookStripe'));
+app.use('/api/subscription', require('./routes/webhookStripeFixed'));
 
 // Après le webhook, on peut parser JSON pour les autres routes
 app.use(express.json());
@@ -87,7 +101,7 @@ app.use(passport.session());
 app.use(express.static('public'));
 
 // Rate limiting par route
-app.use('/api/auth', limiters.auth);
+// app.use('/api/auth', limiters.auth);
 app.use('/api/flashcards', limiters.flashcards);
 app.use('/api/deepseek', limiters.deepseek);
 app.use('/api/', limiters.global);
@@ -128,8 +142,8 @@ app.get('/ping', (req, res) => {
 });
 
 // List all routes (for debugging)
-app._router.stack.forEach(function(r){
-  if (r.route && r.route.path){
+app._router.stack.forEach(function (r) {
+  if (r.route && r.route.path) {
     console.log(r.route.methods, r.route.path);
   }
 });
@@ -161,7 +175,7 @@ app.listen(PORT, '0.0.0.0', async () => {
   console.log(`🚀 LexiFlow Backend running on port ${PORT}`);
   console.log(`📱 Accessible depuis: http://${require('os').hostname()}:${PORT}`);
   console.log(`🌐 Ou via IP: http://10.0.2.15:${PORT}`);
-  
+
   // Initialiser la base de données après le démarrage du serveur
   await initDatabase();
 });

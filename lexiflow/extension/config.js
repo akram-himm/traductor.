@@ -3,16 +3,16 @@ const API_CONFIG = {
   // URL du backend - Utiliser Render ou localhost
   BASE_URL: 'https://my-backend-api-cng7.onrender.com', // Backend sur Render
   // BASE_URL: 'http://localhost:3001', // Backend local pour les tests
-  
+
   // Configuration DeepSeek (clé gérée côté serveur pour les Premium)
   DEEPSEEK_CONFIG: {
     // La clé sera utilisée côté backend uniquement pour les utilisateurs Premium
     // Pas besoin de la stocker côté client pour des raisons de sécurité
     endpoint: '/api/translate/deepseek'
   },
-  
+
   // Fonction pour réveiller le serveur
-  wakeUpServer: async function() {
+  wakeUpServer: async function () {
     try {
       // Utiliser un endpoint de santé qui ne nécessite pas d'auth
       const response = await fetch(this.BASE_URL + '/api/health', {
@@ -26,7 +26,7 @@ const API_CONFIG = {
       return false;
     }
   },
-  
+
   // Endpoints
   ENDPOINTS: {
     // Auth
@@ -34,18 +34,18 @@ const API_CONFIG = {
     REGISTER: '/api/auth/register',
     LOGOUT: '/api/auth/logout',
     VERIFY_TOKEN: '/api/auth/verify',
-    
+
     // OAuth
     GOOGLE_AUTH: '/api/auth/google',
-    
+
     // User
     PROFILE: '/api/user/profile',
     UPDATE_PROFILE: '/api/user/profile',
-    
+
     // Flashcards
     FLASHCARDS: '/api/flashcards',
     FLASHCARD_BY_ID: (id) => `/api/flashcards/${id}`,
-    
+
     // Subscription
     SUBSCRIPTION: '/api/subscription',
     CREATE_CHECKOUT: '/api/subscription/create-checkout-session',
@@ -59,7 +59,7 @@ async function apiRequest(endpoint, options = {}) {
   return new Promise((resolve, reject) => {
     chrome.storage.local.get(['authToken'], async (result) => {
       const token = result.authToken;
-      
+
       const defaultOptions = {
         headers: {
           'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ async function apiRequest(endpoint, options = {}) {
         },
         credentials: 'include'
       };
-      
+
       const finalOptions = {
         ...defaultOptions,
         ...options,
@@ -76,10 +76,10 @@ async function apiRequest(endpoint, options = {}) {
           ...options.headers
         }
       };
-      
+
       try {
         const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, finalOptions);
-        
+
         if (!response.ok) {
           if (response.status === 401) {
             // Token expiré ou invalide - mais ne pas supprimer automatiquement
@@ -89,7 +89,7 @@ async function apiRequest(endpoint, options = {}) {
             error.status = 401;
             throw error;
           }
-          
+
           const errorText = await response.text();
           console.error('❌ Réponse erreur du serveur:', response.status, errorText);
           let errorData = {};
@@ -100,7 +100,7 @@ async function apiRequest(endpoint, options = {}) {
           }
           throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
         resolve(data);
       } catch (error) {
@@ -117,21 +117,21 @@ const authAPI = {
     // Appel direct sans token pour le login
     const loginUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`;
     console.log('🔐 Login attempt to:', loginUrl);
-    
+
     const response = await fetch(loginUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
-    
+
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
       console.error('Login error - Status:', response.status, 'Response:', error);
       throw new Error(error.error || error.message || 'Login failed. Please try again.');
     }
-    
+
     const data = await response.json();
-    
+
     if (data.token) {
       // Sauvegarder dans chrome.storage
       await new Promise((resolve) => {
@@ -141,10 +141,10 @@ const authAPI = {
         }, resolve);
       });
     }
-    
+
     return data;
   },
-  
+
   async register(name, email, password) {
     // Appel direct sans token pour l'inscription
     const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTER}`, {
@@ -152,14 +152,14 @@ const authAPI = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password })
     });
-    
+
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
       throw new Error(error.error || 'Registration failed');
     }
-    
+
     const data = await response.json();
-    
+
     if (data.token) {
       // Sauvegarder dans chrome.storage
       await new Promise((resolve) => {
@@ -169,19 +169,19 @@ const authAPI = {
         }, resolve);
       });
     }
-    
+
     return data;
   },
-  
+
   async logout() {
     await apiRequest(API_CONFIG.ENDPOINTS.LOGOUT, {
       method: 'POST'
-    }).catch(() => {}); // Ignorer les erreurs de logout
-    
+    }).catch(() => { }); // Ignorer les erreurs de logout
+
     // Effacer de chrome.storage
     chrome.storage.local.remove(['authToken', 'user']);
   },
-  
+
   async verifyToken() {
     try {
       const data = await apiRequest(API_CONFIG.ENDPOINTS.VERIFY_TOKEN);
@@ -190,7 +190,7 @@ const authAPI = {
       return false;
     }
   },
-  
+
   // Fonction helper pour obtenir le token actuel
   async getToken() {
     return new Promise((resolve) => {
@@ -199,7 +199,7 @@ const authAPI = {
       });
     });
   },
-  
+
   // Fonction helper pour obtenir l'utilisateur actuel
   async getCurrentUser() {
     return new Promise((resolve) => {
@@ -215,7 +215,7 @@ const flashcardsAPI = {
   async getAll() {
     return await apiRequest(API_CONFIG.ENDPOINTS.FLASHCARDS);
   },
-  
+
   async create(flashcardData) {
     // Adapter le format pour le backend qui attend front/back/language/sourceLanguage
     const adaptedData = {
@@ -224,26 +224,26 @@ const flashcardsAPI = {
       language: flashcardData.language || flashcardData.targetLanguage || 'fr',
       sourceLanguage: flashcardData.sourceLanguage || null,
       category: flashcardData.folder || flashcardData.category || 'General',
-      difficulty: flashcardData.difficulty === 'normal' ? 0 : 
-                 flashcardData.difficulty === 'hard' ? 3 : 
-                 flashcardData.difficulty === 'easy' ? 1 : 0 // TEMPORAIRE: L'ancien backend attend des nombres
+      difficulty: flashcardData.difficulty === 'normal' ? 0 :
+        flashcardData.difficulty === 'hard' ? 3 :
+          flashcardData.difficulty === 'easy' ? 1 : 0 // TEMPORAIRE: L'ancien backend attend des nombres
     };
-    
+
     console.log('📤 Envoi flashcard au backend:', adaptedData);
-    
+
     return await apiRequest(API_CONFIG.ENDPOINTS.FLASHCARDS, {
       method: 'POST',
       body: JSON.stringify(adaptedData)
     });
   },
-  
+
   async update(id, flashcardData) {
     return await apiRequest(API_CONFIG.ENDPOINTS.FLASHCARD_BY_ID(id), {
       method: 'PUT',
       body: JSON.stringify(flashcardData)
     });
   },
-  
+
   async delete(id) {
     return await apiRequest(API_CONFIG.ENDPOINTS.FLASHCARD_BY_ID(id), {
       method: 'DELETE'

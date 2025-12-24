@@ -2,6 +2,8 @@
 const express = require('express');
 const router = express.Router();
 const emailService = require('../utils/email');
+const User = require('../models/User');
+const bcrypt = require('bcrypt');
 
 // Test d'envoi d'email simple
 router.post('/test-email', async (req, res) => {

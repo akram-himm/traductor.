@@ -22,18 +22,18 @@ const transporter = nodemailer.createTransport({
 });
 
 // Vérifier la connexion au démarrage
-transporter.verify()
-  .then(() => {
-    console.log('✅ Connexion SMTP établie avec succès');
-  })
-  .catch((error) => {
-    console.error('❌ Erreur de connexion SMTP:', error.message);
-    console.error('   Détails:', {
-      host: process.env.EMAIL_HOST,
-      user: process.env.EMAIL_USER,
-      error: error.code
-    });
-  });
+// transporter.verify()
+//   .then(() => {
+//     console.log('✅ Connexion SMTP établie avec succès');
+//   })
+//   .catch((error) => {
+//     console.error('❌ Erreur de connexion SMTP:', error.message);
+//     console.error('   Détails:', {
+//       host: process.env.EMAIL_HOST,
+//       user: process.env.EMAIL_USER,
+//       error: error.code
+//     });
+//   });
 
 const emailService = {
   // Email de vérification
