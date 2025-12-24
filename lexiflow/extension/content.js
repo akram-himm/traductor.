@@ -1,6 +1,6 @@
 // Variables globales
 // Debug function - désactiver en production
-const DEBUG = false; // Mettre à true pour activer les logs
+const DEBUG = true; // Mettre à true pour activer les logs
 const debug = (...args) => DEBUG && console.log(...args);
 
 
@@ -26,7 +26,7 @@ let languageMenuOpen = false;
 
 // Générateur d'UUID pour les flashcards
 function generateUUID() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
     const r = Math.random() * 16 | 0;
     const v = c == 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
@@ -41,7 +41,7 @@ function showNotification(message, type = 'info') {
     error: '#ef4444',
     info: '#3b82f6'
   };
-  
+
   const notification = document.createElement('div');
   notification.style.cssText = `
     position: fixed;
@@ -58,9 +58,9 @@ function showNotification(message, type = 'info') {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   `;
   notification.textContent = message;
-  
+
   document.body.appendChild(notification);
-  
+
   setTimeout(() => {
     notification.style.animation = 'slideOut 0.3s ease-out';
     setTimeout(() => notification.remove(), 300);
@@ -70,7 +70,7 @@ function showNotification(message, type = 'info') {
 // Fonction de détection de langue locale
 function detectLanguageLocally(text) {
   if (!text) return null;
-  
+
   // Détection par caractères spéciaux
   const patterns = {
     'ar': /[\u0600-\u06ff]/,  // Arabe
@@ -84,26 +84,26 @@ function detectLanguageLocally(text) {
     'it': /[àèéìíîòóù]/i,  // Italien
     'pt': /[àáâãçéêíõôú]/i  // Portugais
   };
-  
+
   // Vérifier d'abord les scripts non-latins
   for (const [lang, pattern] of Object.entries(patterns)) {
     if (['ar', 'zh', 'ja', 'ko', 'ru'].includes(lang) && pattern.test(text)) {
       return lang;
     }
   }
-  
+
   // Pour les langues latines, vérifier les caractères spéciaux
   for (const [lang, pattern] of Object.entries(patterns)) {
     if (!['ar', 'zh', 'ja', 'ko', 'ru'].includes(lang) && pattern.test(text)) {
       return lang;
     }
   }
-  
+
   // Par défaut, supposer anglais pour le texte latin sans accents
   if (/[a-zA-Z]/.test(text)) {
     return 'en';
   }
-  
+
   return null;
 }
 
@@ -177,12 +177,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // API de traduction avec plusieurs services
 async function translateText(text, targetLang = 'fr', sourceLang = 'auto') {
   debug('🌐 Translation:', { text, from: sourceLang, to: targetLang });
-  
+
   // Vérifier les limitations du plan gratuit
   const FREE_LANGUAGES = ['fr', 'en', 'es']; // 3 langues pour le plan gratuit
   const result = await chrome.storage.local.get(['user']);
   const isPremium = result.user && result.user.subscriptionStatus === 'premium';
-  
+
   // Si pas Premium et langue cible non autorisée
   if (!isPremium && !FREE_LANGUAGES.includes(targetLang)) {
     showNotification('⭐ Langue Premium! Passez à Premium pour débloquer toutes les langues', 'warning');
@@ -192,7 +192,7 @@ async function translateText(text, targetLang = 'fr', sourceLang = 'auto') {
       confidence: 0
     };
   }
-  
+
   // Vérifier la limite de caractères (150 pour gratuit, illimité pour Premium)
   if (!isPremium && text.length > 150) {
     showNotification('⚠️ Texte trop long! Limite gratuite: 150 caractères', 'warning');
@@ -202,7 +202,7 @@ async function translateText(text, targetLang = 'fr', sourceLang = 'auto') {
       confidence: 0
     };
   }
-  
+
   // Ne pas traduire si même langue
   if (sourceLang === targetLang && sourceLang !== 'auto') {
     return {
@@ -211,14 +211,14 @@ async function translateText(text, targetLang = 'fr', sourceLang = 'auto') {
       confidence: 1
     };
   }
-  
+
   // Essayer plusieurs APIs dans l'ordre
   const translators = [
     translateWithGoogleFree,
     translateWithLibreTranslate,
     translateWithMyMemory
   ];
-  
+
   for (const translator of translators) {
     try {
       const result = await translator(text, targetLang, sourceLang);
@@ -229,7 +229,7 @@ async function translateText(text, targetLang = 'fr', sourceLang = 'auto') {
       console.warn('⚠️ Error with translation service:', error);
     }
   }
-  
+
   // Si tout échoue, retourner le texte original
   return {
     translatedText: text,
@@ -244,18 +244,18 @@ async function translateWithGoogleFree(text, targetLang, sourceLang) {
     const sl = sourceLang === 'auto' ? 'auto' : sourceLang;
     const tl = targetLang;
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
-    
+
     const response = await fetch(url);
     const data = await response.json();
-    
+
     if (data && data[0] && data[0][0]) {
       let detectedLang = data[2] || sourceLang;
-      
+
       // Ne PAS utiliser la détection locale - se baser uniquement sur Google Translate
       if (!detectedLang || detectedLang === 'auto') {
         detectedLang = sourceLang; // Garder la langue source
       }
-      
+
       debug(`🔍 Google Translate - Détecté: ${detectedLang} pour "${text.substring(0, 30)}..."`);
       return {
         translatedText: data[0][0][0],
@@ -280,10 +280,10 @@ async function translateWithMyMemory(text, targetLang, sourceLang) {
   try {
     const langPair = sourceLang === 'auto' ? `autodetect|${targetLang}` : `${sourceLang}|${targetLang}`;
     const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`;
-    
+
     const response = await fetch(url);
     const data = await response.json();
-    
+
     if (data.responseStatus === 200) {
       // MyMemory ne détecte pas la langue, on utilise notre détection locale
       const detectedLang = sourceLang === 'auto' ? detectLanguage(text) : sourceLang;
@@ -302,7 +302,7 @@ async function translateWithMyMemory(text, targetLang, sourceLang) {
 // Créer l'icône de traduction (style original GitHub)
 function createIcon() {
   if (qtIcon) qtIcon.remove();
-  
+
   qtIcon = document.createElement('div');
   qtIcon.id = 'qt-icon';
   qtIcon.style.cssText = `
@@ -322,24 +322,24 @@ function createIcon() {
     user-select: none;
     font-size: 16px;
   `;
-  
+
   qtIcon.innerHTML = '<span style="font-size: 16px;">🌐</span>';
   qtIcon.title = 'Translate';
-  
+
   // Effet hover
   qtIcon.addEventListener('mouseenter', () => {
     if (userSettings.animationsEnabled) {
       qtIcon.style.transform = 'scale(1.1)';
     }
   });
-  
+
   qtIcon.addEventListener('mouseleave', () => {
     qtIcon.style.transform = 'scale(1)';
   });
-  
+
   // Gérer le clic
   qtIcon.addEventListener('click', handleTranslation);
-  
+
   document.body.appendChild(qtIcon);
   return qtIcon;
 }
@@ -347,7 +347,7 @@ function createIcon() {
 // Créer la bulle de traduction (style exact du GitHub)
 function createBubble() {
   if (qtBubble) qtBubble.remove();
-  
+
   qtBubble = document.createElement('div');
   qtBubble.id = 'qt-bubble';
   qtBubble.style.cssText = `
@@ -366,7 +366,7 @@ function createBubble() {
     color: #111827;
     animation: ${userSettings.animationsEnabled ? 'fadeIn 0.2s ease-out' : 'none'};
   `;
-  
+
   // Ajouter l'animation
   if (userSettings.animationsEnabled && !document.getElementById('qt-animations')) {
     const style = document.createElement('style');
@@ -396,7 +396,7 @@ function createBubble() {
     `;
     document.head.appendChild(style);
   }
-  
+
   document.body.appendChild(qtBubble);
   return qtBubble;
 }
@@ -405,19 +405,19 @@ function createBubble() {
 async function handleTranslation(event) {
   event.preventDefault();
   event.stopPropagation();
-  
+
   if (isTranslating || !selectedText.trim()) return;
-  
+
   isTranslating = true;
-  
+
   try {
     const bubble = createBubble();
     const selection = window.getSelection();
-    
+
     if (selection.rangeCount > 0) {
       positionBubble(selection);
     }
-    
+
     // Afficher le chargement
     bubble.innerHTML = `
       <div style="text-align: center; padding: 8px;">
@@ -427,14 +427,14 @@ async function handleTranslation(event) {
         <div style="color: #6b7280; font-size: 12px; margin-top: 8px;">Translating...</div>
       </div>
     `;
-    
+
     // Traduire
     const result = await translateText(selectedText, userSettings.targetLanguage);
     lastTranslation = result;
-    
+
     // Afficher le résultat
     displayTranslation(bubble, result);
-    
+
     // Sauvegarder dans l'historique
     if (result.translatedText !== selectedText) {
       saveTranslation(
@@ -443,7 +443,7 @@ async function handleTranslation(event) {
         result.detectedLanguage,
         userSettings.targetLanguage
       );
-      
+
       // Créer automatiquement une flashcard si activé
       debug('🔍 Checking auto save:', userSettings.autoSaveToFlashcards);
       if (userSettings.autoSaveToFlashcards) {
@@ -451,7 +451,7 @@ async function handleTranslation(event) {
         createFlashcard(selectedText, result.translatedText, userSettings.targetLanguage, result.detectedLanguage);
       }
     }
-    
+
   } catch (error) {
     console.error('❌ Translation error:', error);
     if (qtBubble) {
@@ -469,21 +469,21 @@ async function handleTranslation(event) {
 // Afficher la traduction dans la bulle (style original exact du GitHub)
 async function displayTranslation(bubble, result) {
   const { translatedText, detectedLanguage, confidence } = result;
-  
+
   // Vérifier le statut Premium
   const storageResult = await chrome.storage.local.get(['user']);
   const isPremium = storageResult.user && storageResult.user.subscriptionStatus === 'premium';
   const FREE_LANGUAGES = ['fr', 'en', 'es'];
-  
+
   // Vérifier si le texte est déjà dans la langue cible
-  const isAlreadyInTargetLanguage = detectedLanguage === userSettings.targetLanguage && 
-                                   translatedText.toLowerCase().trim() === selectedText.toLowerCase().trim();
-  
-  const sameLanguageNote = isAlreadyInTargetLanguage ? 
+  const isAlreadyInTargetLanguage = detectedLanguage === userSettings.targetLanguage &&
+    translatedText.toLowerCase().trim() === selectedText.toLowerCase().trim();
+
+  const sameLanguageNote = isAlreadyInTargetLanguage ?
     `<div style="background: #fef3c7; color: #92400e; padding: 8px; border-radius: 6px; font-size: 12px; margin-bottom: 8px; border-left: 3px solid #f59e0b;">
       ℹ️ Déjà en ${getLanguageName(userSettings.targetLanguage)}
     </div>` : '';
-  
+
   // Structure exacte du design original
   bubble.innerHTML = `
     <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 12px;">
@@ -551,13 +551,13 @@ async function displayTranslation(bubble, result) {
       </div>
     </div>
   `;
-  
+
   // Event listeners
   setTimeout(() => {
     const copyBtn = document.getElementById('qt-copy-translation');
     const saveBtn = document.getElementById('qt-save-flashcard');
     const langSelector = document.getElementById('qt-lang-selector');
-    
+
     if (copyBtn) {
       copyBtn.addEventListener('click', () => {
         navigator.clipboard.writeText(translatedText);
@@ -569,7 +569,7 @@ async function displayTranslation(bubble, result) {
         }, 2000);
       });
     }
-    
+
     if (saveBtn) {
       saveBtn.addEventListener('click', () => {
         // Utiliser uniquement la langue détectée par Google Translate
@@ -577,24 +577,24 @@ async function displayTranslation(bubble, result) {
         createFlashcard(selectedText, translatedText, userSettings.targetLanguage, sourceLanguage);
       });
     }
-    
+
     if (langSelector) {
       langSelector.addEventListener('change', async (e) => {
         const newLang = e.target.value;
-        
+
         // Vérifier si l'utilisateur peut utiliser cette langue
         if (!isPremium && !FREE_LANGUAGES.includes(newLang)) {
           e.target.value = userSettings.targetLanguage; // Rétablir l'ancienne valeur
           showNotification('⭐ Langue Premium! Passez à Premium pour débloquer toutes les langues', 'warning');
           return;
         }
-        
+
         userSettings.targetLanguage = newLang;
-        
+
         if (chrome.storage && chrome.storage.sync) {
           chrome.storage.sync.set({ targetLanguage: newLang });
         }
-        
+
         // Retraduire avec animation
         const translationDiv = bubble.querySelector('div[style*="background: #f8fafc"]');
         if (translationDiv) {
@@ -607,14 +607,14 @@ async function displayTranslation(bubble, result) {
             </div>
           `;
         }
-        
+
         try {
           const newResult = await translateText(selectedText, newLang, lastTranslation?.detectedLanguage || 'auto');
           lastTranslation = newResult;
-          
+
           // Reconstruire complètement la bulle avec le nouveau résultat
           displayTranslation(bubble, newResult);
-          
+
           saveTranslation(selectedText, newResult.translatedText, newResult.detectedLanguage, newLang);
         } catch (error) {
           if (translationDiv) {
@@ -630,14 +630,14 @@ async function displayTranslation(bubble, result) {
 function showLanguageDropdown(anchor) {
   const dropdown = document.getElementById('qt-lang-dropdown');
   if (!dropdown) return;
-  
+
   // Si déjà ouvert, fermer
   if (dropdown.style.display === 'block') {
     dropdown.style.display = 'none';
     languageMenuOpen = false;
     return;
   }
-  
+
   const languages = [
     { code: 'fr', name: 'Français', flag: '🇫🇷' },
     { code: 'en', name: 'English', flag: '🇺🇸' },
@@ -651,7 +651,7 @@ function showLanguageDropdown(anchor) {
     { code: 'ko', name: '한국어', flag: '🇰🇷' },
     { code: 'zh', name: '中文', flag: '🇨🇳' }
   ];
-  
+
   dropdown.innerHTML = languages.map(lang => `
     <div class="qt-lang-item" data-lang="${lang.code}" 
          style="padding: 6px 12px; cursor: pointer; display: flex; 
@@ -660,16 +660,16 @@ function showLanguageDropdown(anchor) {
       <span style="font-size: 12px;">${lang.name}</span>
     </div>
   `).join('');
-  
+
   // Positionner le dropdown
   const anchorRect = anchor.getBoundingClientRect();
   const bubbleRect = qtBubble.getBoundingClientRect();
-  
+
   dropdown.style.top = `${anchorRect.bottom - bubbleRect.top + 4}px`;
   dropdown.style.left = `${anchorRect.left - bubbleRect.left}px`;
   dropdown.style.display = 'block';
   languageMenuOpen = true;
-  
+
   // Event listeners pour chaque langue
   dropdown.querySelectorAll('.qt-lang-item').forEach(item => {
     item.addEventListener('mouseenter', () => {
@@ -681,15 +681,15 @@ function showLanguageDropdown(anchor) {
     item.addEventListener('click', async () => {
       const langCode = item.dataset.lang;
       const langData = languages.find(l => l.code === langCode);
-      
+
       // Mettre à jour les paramètres
       userSettings.targetLanguage = langCode;
       chrome.storage.sync.set({ targetLanguage: langCode });
-      
+
       // Fermer le dropdown
       dropdown.style.display = 'none';
       languageMenuOpen = false;
-      
+
       // Mettre à jour l'affichage
       const targetLangBtn = document.querySelector('#qt-target-lang');
       if (targetLangBtn) {
@@ -698,7 +698,7 @@ function showLanguageDropdown(anchor) {
           <span style="color: #333; font-size: 12px;">${langData.name}</span>
         `;
       }
-      
+
       // Retraduire avec la nouvelle langue
       if (selectedText && lastTranslation) {
         try {
@@ -714,15 +714,15 @@ function showLanguageDropdown(anchor) {
               </div>
             `;
           }
-          
+
           // Traduire
           const result = await translateText(selectedText, langCode, lastTranslation.detectedLanguage);
-          
+
           // Mettre à jour la traduction
           if (translationDiv) {
             translationDiv.innerHTML = result.translatedText;
           }
-          
+
           // Mettre à jour la confiance si affichée
           if (userSettings.showConfidence && result.confidence) {
             const confidenceBar = qtBubble.querySelector('div[style*="border-radius: 2px"]');
@@ -730,7 +730,7 @@ function showLanguageDropdown(anchor) {
               confidenceBar.firstElementChild.style.width = `${result.confidence * 100}%`;
             }
           }
-          
+
           // Sauvegarder
           lastTranslation = result;
           saveTranslation(
@@ -750,21 +750,21 @@ function showLanguageDropdown(anchor) {
 // Positionner la bulle (pour qu'elle soit toujours visible)
 function positionBubble(selection) {
   if (!qtBubble || !selection.rangeCount) return;
-  
+
   const range = selection.getRangeAt(0);
   const rect = range.getBoundingClientRect();
-  
+
   // Position initiale
   let left = rect.left + window.scrollX;
   let top = rect.bottom + window.scrollY + 12;
-  
+
   // Mesurer la bulle
   qtBubble.style.visibility = 'hidden';
   qtBubble.style.display = 'block';
   const bubbleRect = qtBubble.getBoundingClientRect();
   const bubbleWidth = bubbleRect.width;
   const bubbleHeight = bubbleRect.height;
-  
+
   // Ajustement horizontal
   if (left + bubbleWidth > window.innerWidth - 20) {
     left = window.innerWidth - bubbleWidth - 20;
@@ -772,13 +772,13 @@ function positionBubble(selection) {
   if (left < 10) {
     left = 10;
   }
-  
+
   // Ajustement vertical
   if (top + bubbleHeight > window.innerHeight + window.scrollY - 20) {
     // Afficher au-dessus de la sélection
     top = rect.top + window.scrollY - bubbleHeight - 12;
   }
-  
+
   qtBubble.style.left = `${left}px`;
   qtBubble.style.top = `${top}px`;
   qtBubble.style.visibility = 'visible';
@@ -787,17 +787,17 @@ function positionBubble(selection) {
 // Positionner l'icône
 function positionIcon(selection) {
   if (!qtIcon || !selection.rangeCount) return;
-  
+
   const range = selection.getRangeAt(0);
   const rect = range.getBoundingClientRect();
-  
+
   // Position à droite du texte
   const top = rect.top + (rect.height / 2) - 12 + window.scrollY;
   const left = rect.right + window.scrollX + 5;
-  
+
   qtIcon.style.top = `${top}px`;
   qtIcon.style.left = `${left}px`;
-  
+
   // Si déborde à droite, mettre à gauche
   if (rect.right + 30 > window.innerWidth) {
     qtIcon.style.left = `${rect.left + window.scrollX - 30}px`;
@@ -808,7 +808,7 @@ function positionIcon(selection) {
 async function saveTranslation(original, translated, fromLang, toLang) {
   try {
     if (fromLang === toLang) return;
-    
+
     const translation = {
       id: Date.now(),
       original: original.substring(0, 100),
@@ -819,26 +819,26 @@ async function saveTranslation(original, translated, fromLang, toLang) {
       url: window.location.href,
       domain: window.location.hostname
     };
-    
+
     chrome.storage.local.get({ translations: [] }, (result) => {
       const translations = result.translations || [];
-      
+
       // Vérifier si une traduction identique existe déjà récemment (dans les 10 dernières)
       const recentTranslations = translations.slice(0, 10);
-      const isDuplicate = recentTranslations.some(t => 
-        t.original === translation.original && 
+      const isDuplicate = recentTranslations.some(t =>
+        t.original === translation.original &&
         t.translated === translation.translated &&
         t.fromLang === translation.fromLang &&
         t.toLang === translation.toLang
       );
-      
+
       if (!isDuplicate) {
         translations.unshift(translation);
-        
+
         if (translations.length > 1000) {
           translations.splice(1000);
         }
-        
+
         chrome.storage.local.set({ translations }, () => {
           debug('✅ Translation saved');
           // Le listener chrome.storage.onChanged dans popup.js s'occupera de la mise à jour
@@ -856,7 +856,7 @@ async function saveTranslation(original, translated, fromLang, toLang) {
 function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
   try {
     debug('💾 Creating flashcard:', { front, back, targetLanguage, sourceLanguage, autoSave: userSettings.autoSaveToFlashcards });
-    
+
     // Vérifier qu'on a une langue source valide
     if (!sourceLanguage || sourceLanguage === 'auto' || sourceLanguage === 'unknown') {
       debug('⚠️ Pas de langue source détectée, flashcard ignorée');
@@ -873,7 +873,7 @@ function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
       }
       return;
     }
-    
+
     // Vérifier si l'utilisateur est connecté
     chrome.storage.local.get({ authToken: null }, (data) => {
       if (!data.authToken) {
@@ -891,7 +891,7 @@ function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
         }
         return;
       }
-      
+
       // Envoyer directement au serveur via le background script
       chrome.runtime.sendMessage({
         action: 'syncFlashcard',
@@ -908,7 +908,7 @@ function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
           console.error('❌ Error sending flashcard:', chrome.runtime.lastError);
           return;
         }
-        
+
         if (response && response.success) {
           if (response.duplicate) {
             debug('⚠️ Cette flashcard existe déjà');
@@ -917,14 +917,14 @@ function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
             debug('✅ Flashcard saved on server');
             // Pas de notification en haut pour le succès non plus
           }
-          
+
           // Notifier le popup de recharger les flashcards
           chrome.runtime.sendMessage({
             action: 'flashcardAdded',
             flashcard: response.flashcard,
             duplicate: response.duplicate
           });
-          
+
           // Si c'est une sauvegarde manuelle, afficher le feedback sur le bouton
           if (!userSettings.autoSaveToFlashcards) {
             const btn = document.getElementById('qt-save-flashcard');
@@ -941,10 +941,10 @@ function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
                 // Feedback pour succès
                 btn.innerHTML = '<span style="font-size: 13px;">⏳</span> Saving...';
                 btn.style.background = '#059669';
-                
+
                 setTimeout(() => {
                   btn.innerHTML = '<span style="font-size: 13px;">✅</span> Saved!';
-                  
+
                   setTimeout(() => {
                     btn.innerHTML = '<span style="font-size: 13px;">💾</span> Save';
                     btn.style.background = '#3b82f6';
@@ -990,10 +990,10 @@ function createFlashcard(front, back, targetLanguage, sourceLanguage = 'auto') {
 // Détecter la langue
 function detectLanguage(text) {
   if (!text) return 'fr';
-  
+
   // Nettoyer le texte
   const cleanText = text.toLowerCase().trim();
-  
+
   // Détection par caractères spéciaux (priorité absolue)
   const patterns = {
     'fr': /[àâäéêëèîïôùûüÿç]/i,
@@ -1007,7 +1007,7 @@ function detectLanguage(text) {
     'zh': /[\u4e00-\u9fff]/,
     'ar': /[\u0600-\u06ff]/
   };
-  
+
   // Si on trouve des caractères spéciaux, c'est définitif
   for (const [lang, pattern] of Object.entries(patterns)) {
     if (pattern.test(text)) {
@@ -1015,7 +1015,7 @@ function detectLanguage(text) {
       return lang;
     }
   }
-  
+
   // Détection par mots courants pour textes sans accents
   const words = cleanText.split(/\s+/);
   const langWords = {
@@ -1025,10 +1025,10 @@ function detectLanguage(text) {
     'de': ['der', 'die', 'das', 'und', 'ist', 'in', 'ein', 'eine', 'mit', 'für', 'auf', 'nicht', 'ich', 'du'],
     'it': ['il', 'la', 'lo', 'le', 'e', 'è', 'in', 'un', 'una', 'con', 'per', 'che', 'non', 'di']
   };
-  
+
   let maxScore = 0;
   let detectedLang = 'fr'; // Par défaut français
-  
+
   for (const [lang, keywords] of Object.entries(langWords)) {
     const score = words.filter(w => keywords.includes(w)).length;
     if (score > maxScore) {
@@ -1036,7 +1036,7 @@ function detectLanguage(text) {
       detectedLang = lang;
     }
   }
-  
+
   debug(`🔍 Langue détectée par mots: ${detectedLang} (score: ${maxScore}) pour "${text}"`);
   return detectedLang;
 }
@@ -1057,7 +1057,7 @@ function getFlagEmoji(langCode) {
     'zh': '🇨🇳',
     'auto': '🌐'
   };
-  
+
   return flags[langCode] || '🌐';
 }
 
@@ -1077,7 +1077,7 @@ function getLanguageName(langCode) {
     'zh': '中文',
     'auto': 'Auto'
   };
-  
+
   return names[langCode] || langCode.toUpperCase();
 }
 
@@ -1087,17 +1087,17 @@ document.addEventListener('mousedown', (event) => {
   if (event.target.closest('#qt-lang-dropdown')) {
     return;
   }
-  
+
   // Fermer le dropdown si ouvert
   const dropdown = document.getElementById('qt-lang-dropdown');
   if (dropdown && languageMenuOpen) {
     dropdown.style.display = 'none';
     languageMenuOpen = false;
   }
-  
+
   // Fermer tout si on clique ailleurs
-  if (qtIcon && !qtIcon.contains(event.target) && 
-      qtBubble && !qtBubble.contains(event.target)) {
+  if (qtIcon && !qtIcon.contains(event.target) &&
+    qtBubble && !qtBubble.contains(event.target)) {
     if (qtIcon) {
       qtIcon.remove();
       qtIcon = null;
@@ -1112,31 +1112,31 @@ document.addEventListener('mousedown', (event) => {
 // Gérer la sélection de texte
 document.addEventListener('mouseup', (event) => {
   if (!userSettings.isEnabled) return;
-  
+
   // Ignorer si on clique sur nos éléments
-  if (event.target.id === 'qt-icon' || 
-      event.target.id === 'qt-bubble' ||
-      event.target.closest('#qt-bubble')) {
+  if (event.target.id === 'qt-icon' ||
+    event.target.id === 'qt-bubble' ||
+    event.target.closest('#qt-bubble')) {
     return;
   }
-  
+
   setTimeout(() => {
     const selection = window.getSelection();
     const text = selection.toString().trim();
-    
+
     if (text && text.length > 0 && text.length < 1000) {
       selectedText = text;
-      
+
       // Supprimer l'icône existante
       if (qtIcon) {
         qtIcon.remove();
         qtIcon = null;
       }
-      
+
       // Créer et positionner la nouvelle icône
       createIcon();
       positionIcon(selection);
-      
+
       // Traduction au survol si activé
       if (userSettings.hoverTranslation) {
         clearTimeout(translationTimeout);
@@ -1158,14 +1158,14 @@ document.addEventListener('mouseup', (event) => {
 // Gérer le raccourci clavier
 document.addEventListener('keydown', (event) => {
   if (!userSettings.isEnabled || !userSettings.enableShortcut) return;
-  
+
   // Ctrl+Q ou Cmd+Q
   if ((event.ctrlKey || event.metaKey) && event.key === 'q') {
     event.preventDefault();
-    
+
     const selection = window.getSelection();
     const text = selection.toString().trim();
-    
+
     if (text) {
       selectedText = text;
       createIcon();
@@ -1176,3 +1176,48 @@ document.addEventListener('keydown', (event) => {
 });
 
 debug('✅ LexiFlow content script chargé');
+debug('📍 URL:', window.location.href);
+debug('📄 Content Type:', document.contentType);
+
+if (window.location.href.endsWith('.pdf') || document.contentType === 'application/pdf') {
+  debug('🚨 PDF DETECTED! Injecting "Enable Translation" button');
+
+  // Create a floating Action Button
+  const fab = document.createElement('div');
+  fab.id = 'lexiflow-pdf-redirect';
+  fab.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="font-size: 20px;">🌐</span>
+      <div>
+        <div style="font-weight: bold; font-size: 14px;">Enable Translation</div>
+        <div style="font-size: 10px; opacity: 0.9;">Click to support icon & bubble</div>
+      </div>
+    </div>
+  `;
+
+  fab.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #3b82f6;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    z-index: 2147483647;
+    cursor: pointer;
+    font-family: sans-serif;
+    transition: transform 0.2s;
+    user-select: none;
+  `;
+
+  fab.onmouseover = () => fab.style.transform = 'scale(1.05)';
+  fab.onmouseout = () => fab.style.transform = 'scale(1)';
+
+  fab.onclick = () => {
+    const viewerUrl = chrome.runtime.getURL('pdf-viewer.html') + '?file=' + encodeURIComponent(window.location.href);
+    window.location.href = viewerUrl;
+  };
+
+  document.body.appendChild(fab);
+}
