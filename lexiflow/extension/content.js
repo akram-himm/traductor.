@@ -1209,5 +1209,45 @@ if (window.location.href.includes('pdf-viewer.html')) {
 }
 
 if (window.location.href.endsWith('.pdf') || document.contentType === 'application/pdf') {
-  debug('🚨 PDF DETECTED! Icon will use mouse-based positioning');
+  debug('🚨 PDF DETECTED! Adding "Open in Translator" button');
+
+  // Créer le bouton bleu
+  const fab = document.createElement('div');
+  fab.id = 'lexiflow-pdf-button';
+  fab.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="font-size: 20px;">🌐</span>
+      <div>
+        <div style="font-weight: bold; font-size: 14px;">Open in Translator</div>
+        <div style="font-size: 10px; opacity: 0.9;">Enable translation icon</div>
+      </div>
+    </div>
+  `;
+
+  fab.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #3b82f6;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    z-index: 2147483647;
+    cursor: pointer;
+    font-family: sans-serif;
+    transition: transform 0.2s;
+    user-select: none;
+  `;
+
+  fab.onmouseover = () => fab.style.transform = 'scale(1.05)';
+  fab.onmouseout = () => fab.style.transform = 'scale(1)';
+
+  fab.onclick = () => {
+    const viewerUrl = chrome.runtime.getURL('pdf-viewer.html') + '?file=' + encodeURIComponent(window.location.href);
+    window.location.href = viewerUrl;
+  };
+
+  document.body.appendChild(fab);
+  debug('✅ Blue button added');
 }
