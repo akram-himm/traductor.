@@ -73,18 +73,47 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 });
 
 // Gestion des commandes clavier
-chrome.commands.onCommand.addListener((command) => {
+chrome.commands.onCommand.addListener(async (command) => {
   if (command === 'translate-selection') {
-    // Envoyer un message au content script de l'onglet actif
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0]) {
-        chrome.tabs.sendMessage(tabs[0].id, {
-          action: 'triggerTranslation'
-        }).catch(() => {
-          debug('Content script not loaded on this page');
-        });
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tab) return;
+
+      // Essayer d'abord d'envoyer un message au content script (pour les pages normales)
+      try {
+        await chrome.tabs.sendMessage(tab.id, { action: 'triggerTranslation' });
+      } catch (error) {
+        // Si ça échoue (PDF ou autre page protégée), extraire le texte directement
+        debug('📄 Content script not available, attempting direct text extraction');
+
+        try {
+          // Injecter un script temporaire pour extraire la sélection
+          const results = await chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            func: () => window.getSelection().toString().trim()
+          });
+
+          const selectedText = results && results[0] && results[0].result;
+
+          if (selectedText) {
+            debug('✅ Text extracted:', selectedText);
+            // Ouvrir la popup avec le texte
+            chrome.windows.create({
+              url: `popup.html?text=${encodeURIComponent(selectedText)}`,
+              type: 'popup',
+              width: 400,
+              height: 600
+            });
+          } else {
+            debug('❌ No text selected');
+          }
+        } catch (scriptError) {
+          debug('❌ Cannot inject script on this page:', scriptError);
+        }
       }
-    });
+    } catch (error) {
+      debug('❌ Keyboard shortcut error:', error);
+    }
   }
 });
 
