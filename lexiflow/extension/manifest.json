@@ -60,7 +60,12 @@
         "subscription.html",
         "subscription.js",
         "success.html",
-        "success.js"
+        "success.js",
+        "pdf-viewer.html",
+        "pdf-viewer.js",
+        "pdfjs/pdf.min.js",
+        "pdfjs/pdf.worker.min.js",
+        "content.js"
       ],
       "matches": [
         "<all_urls>"

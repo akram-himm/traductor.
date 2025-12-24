@@ -38,6 +38,12 @@ chrome.runtime.onInstalled.addListener((details) => {
     title: "Translate with LexiFlow",
     contexts: ["selection"]
   });
+
+  chrome.contextMenus.create({
+    id: "open-pdf-viewer",
+    title: "Open in PDF Viewer (Enable Icon)",
+    contexts: ["link", "page"]
+  });
 });
 
 // Handle Context Menu Click
@@ -50,6 +56,19 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
       width: 400,
       height: 600
     });
+  } else if (info.menuItemId === "open-pdf-viewer") {
+    // Determine URL (linkUrl if right-clicked link, pageUrl if right-clicked background)
+    const pdfUrl = info.linkUrl || info.pageUrl;
+    if (pdfUrl.toLowerCase().endsWith('.pdf')) {
+      chrome.tabs.create({
+        url: `pdf-viewer.html?file=${encodeURIComponent(pdfUrl)}`
+      });
+    } else {
+      // Try anyway or warn? Just try.
+      chrome.tabs.create({
+        url: `pdf-viewer.html?file=${encodeURIComponent(pdfUrl)}`
+      });
+    }
   }
 });
 

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>LexiFlow PDF Viewer</title>
+    <style>
+        body {
+            background-color: #525659;
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #toolbar {
+            background-color: #323639;
+            color: white;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+
+        #container {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .pdf-page {
+            position: relative;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .textLayer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            opacity: 0.2;
+            line-height: 1.0;
+        }
+
+        .textLayer>span {
+            color: transparent;
+            position: absolute;
+            white-space: pre;
+            cursor: text;
+            transform-origin: 0% 0%;
+        }
+
+        /* Selection color */
+        ::selection {
+            background: rgba(0, 0, 255, 0.3);
+        }
+
+        #loading {
+            color: white;
+            margin: auto;
+        }
+
+        button {
+            background: #3b82f6;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+    </style>
+    <script src="pdfjs/pdf.min.js"></script>
+    <script src="pdf-viewer.js" defer></script>
+    <!-- Inject content scripts logic here if needed, but manifest matching is cleaner -->
+    <!-- We will rely on manifest matching "match_about_blank" or matching this URL -->
+    <link rel="stylesheet" href="pdfjs/pdf_viewer.css">
+</head>
+
+<body>
+    <div id="toolbar">
+        <button id="zoomOut">-</button>
+        <span id="zoomLevel">100%</span>
+        <button id="zoomIn">+</button>
+        <div style="flex:1"></div>
+        <span id="pageCount">Loading...</span>
+    </div>
+    <div id="container">
+        <div id="loading">Loading PDF...</div>
+    </div>
+    <script src="content.js"></script>
+</body>
+
+</html>
