@@ -7,11 +7,14 @@ const pdfUrl = urlParams.get('file');
 const container = document.getElementById('container');
 const loading = document.getElementById('loading');
 let pdfDoc = null;
-let scale = 1.2;
+let scale = 1.5; // Meilleure qualité par défaut
 
 async function renderPage(num) {
     const page = await pdfDoc.getPage(num);
     const viewport = page.getViewport({ scale });
+
+    // Utiliser devicePixelRatio pour une meilleure qualité sur écrans HD
+    const outputScale = window.devicePixelRatio || 1;
 
     const pageDiv = document.createElement('div');
     pageDiv.className = 'pdf-page';
@@ -19,14 +22,24 @@ async function renderPage(num) {
     pageDiv.style.height = `${viewport.height}px`;
 
     const canvas = document.createElement('canvas');
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
+    // Augmenter la résolution du canvas pour meilleure qualité
+    canvas.width = Math.floor(viewport.width * outputScale);
+    canvas.height = Math.floor(viewport.height * outputScale);
+    canvas.style.width = `${viewport.width}px`;
+    canvas.style.height = `${viewport.height}px`;
     pageDiv.appendChild(canvas);
 
     const context = canvas.getContext('2d');
+
+    // Appliquer le scaling pour la haute résolution
+    const transform = outputScale !== 1
+        ? [outputScale, 0, 0, outputScale, 0, 0]
+        : null;
+
     const renderContext = {
         canvasContext: context,
         viewport: viewport,
+        transform: transform
     };
 
     await page.render(renderContext).promise;
