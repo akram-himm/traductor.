@@ -1139,6 +1139,16 @@ document.addEventListener('mouseup', (event) => {
     const selection = window.getSelection();
     const text = selection.toString().trim();
 
+    // Debug visuel pour PDFs
+    const isPDF = window.location.href.endsWith('.pdf') || document.contentType === 'application/pdf';
+    if (isPDF) {
+      debug('🔍 PDF Selection attempt:', text.length, 'chars');
+      // Notification visible temporaire
+      if (text.length > 0) {
+        showNotification(`📝 Texte sélectionné: "${text.substring(0, 30)}..."`, 'info');
+      }
+    }
+
     if (text && text.length > 0 && text.length < 1000) {
       selectedText = text;
 
