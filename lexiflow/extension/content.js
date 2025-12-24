@@ -785,8 +785,23 @@ function positionBubble(selection) {
 }
 
 // Positionner l'icône
-function positionIcon(selection) {
-  if (!qtIcon || !selection.rangeCount) return;
+function positionIcon(selection, mouseEvent = null) {
+  if (!qtIcon) return;
+
+  // Pour les PDFs, utiliser les coordonnées de la souris car getBoundingClientRect échoue
+  const isPDF = window.location.href.endsWith('.pdf') || document.contentType === 'application/pdf';
+
+  if (isPDF && mouseEvent) {
+    debug('📍 Using mouse coordinates for PDF icon positioning');
+    const top = mouseEvent.pageY - 12;
+    const left = mouseEvent.pageX + 10;
+    qtIcon.style.top = `${top}px`;
+    qtIcon.style.left = `${left}px`;
+    return;
+  }
+
+  // Positionnement normal pour les sites web
+  if (!selection.rangeCount) return;
 
   const range = selection.getRangeAt(0);
   const rect = range.getBoundingClientRect();
@@ -1135,7 +1150,7 @@ document.addEventListener('mouseup', (event) => {
 
       // Créer et positionner la nouvelle icône
       createIcon();
-      positionIcon(selection);
+      positionIcon(selection, event);
 
       // Traduction au survol si activé
       if (userSettings.hoverTranslation) {
@@ -1184,44 +1199,5 @@ if (window.location.href.includes('pdf-viewer.html')) {
 }
 
 if (window.location.href.endsWith('.pdf') || document.contentType === 'application/pdf') {
-  debug('🚨 PDF DETECTED! Injecting "Enable Translation" button');
-
-  // Create a floating Action Button
-  const fab = document.createElement('div');
-  fab.id = 'lexiflow-pdf-redirect';
-  fab.innerHTML = `
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <span style="font-size: 20px;">🌐</span>
-      <div>
-        <div style="font-weight: bold; font-size: 14px;">Enable Translation</div>
-        <div style="font-size: 10px; opacity: 0.9;">Click to support icon & bubble</div>
-      </div>
-    </div>
-  `;
-
-  fab.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: #3b82f6;
-    color: white;
-    padding: 10px 15px;
-    border-radius: 50px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    z-index: 2147483647;
-    cursor: pointer;
-    font-family: sans-serif;
-    transition: transform 0.2s;
-    user-select: none;
-  `;
-
-  fab.onmouseover = () => fab.style.transform = 'scale(1.05)';
-  fab.onmouseout = () => fab.style.transform = 'scale(1)';
-
-  fab.onclick = () => {
-    const viewerUrl = chrome.runtime.getURL('pdf-viewer.html') + '?file=' + encodeURIComponent(window.location.href);
-    window.location.href = viewerUrl;
-  };
-
-  document.body.appendChild(fab);
+  debug('🚨 PDF DETECTED! Icon will use mouse-based positioning');
 }
