@@ -10,7 +10,8 @@
     "alarms",
     "tabs",
     "identity",
-    "notifications"
+    "notifications",
+    "contextMenus"
   ],
   "host_permissions": [
     "https://api.deepseek.com/*",

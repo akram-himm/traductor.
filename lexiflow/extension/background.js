@@ -9,7 +9,7 @@ const debug = (...args) => DEBUG && console.log(...args);
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
     debug('🎉 Quick Translator Pro installé avec succès!');
-    
+
     // Définir les paramètres par défaut
     chrome.storage.sync.set({
       targetLanguage: 'fr',
@@ -23,13 +23,33 @@ chrome.runtime.onInstalled.addListener((details) => {
       showConfidence: true,
       animationsEnabled: true
     });
-    
+
     // Ouvrir la page de bienvenue (optionnel)
     chrome.tabs.create({
       url: 'popup.html'
     });
   } else if (details.reason === 'update') {
     debug('✨ Quick Translator Pro mis à jour!');
+  }
+
+  // Create Context Menu
+  chrome.contextMenus.create({
+    id: "translate-lexiflow",
+    title: "Translate with LexiFlow",
+    contexts: ["selection"]
+  });
+});
+
+// Handle Context Menu Click
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === "translate-lexiflow" && info.selectionText) {
+    // Open popup in a new small window with the text
+    chrome.windows.create({
+      url: `popup.html?text=${encodeURIComponent(info.selectionText)}`,
+      type: "popup",
+      width: 400,
+      height: 600
+    });
   }
 });
 
@@ -39,8 +59,8 @@ chrome.commands.onCommand.addListener((command) => {
     // Envoyer un message au content script de l'onglet actif
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]) {
-        chrome.tabs.sendMessage(tabs[0].id, { 
-          action: 'triggerTranslation' 
+        chrome.tabs.sendMessage(tabs[0].id, {
+          action: 'triggerTranslation'
         }).catch(() => {
           debug('Content script not loaded on this page');
         });
@@ -55,14 +75,14 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     // Vérifier si c'est notre page de succès de paiement
     if (tab.url.includes('payment-success.html')) {
       debug('💰 Page de succès de paiement détectée');
-      
+
       // Attendre que les webhooks se traitent
       setTimeout(() => {
         // Notifier toutes les vues de l'extension pour rafraîchir
         chrome.runtime.sendMessage({
           type: 'payment-success'
-        }).catch(() => {});
-        
+        }).catch(() => { });
+
         // Mettre à jour le profil utilisateur
         chrome.storage.local.get(['authToken'], async (result) => {
           if (result.authToken) {
@@ -73,7 +93,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
                   'Content-Type': 'application/json'
                 }
               });
-              
+
               if (response.ok) {
                 const data = await response.json();
                 if (data.user) {
@@ -90,22 +110,22 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     }
     // Vérifier si c'est notre URL de callback OAuth
     if (tab.url.includes('my-backend-api-cng7.onrender.com/oauth-success.html') ||
-        tab.url.includes('my-backend-api-cng7.onrender.com/oauth-error.html') ||
-        tab.url.includes('my-backend-api-cng7.onrender.com/oauth-intermediate.html')) {
-      
+      tab.url.includes('my-backend-api-cng7.onrender.com/oauth-error.html') ||
+      tab.url.includes('my-backend-api-cng7.onrender.com/oauth-intermediate.html')) {
+
       // Extraire le token de l'URL
       const url = new URL(tab.url);
       const token = url.searchParams.get('token');
       const error = url.searchParams.get('error');
-      
+
       if (token) {
         // Sauvegarder le token
         chrome.storage.local.set({ authToken: token }, () => {
           debug('Token sauvegardé dans chrome.storage');
-          
+
           // Fermer l'onglet OAuth
           chrome.tabs.remove(tabId);
-          
+
           // Notifier toutes les vues de l'extension
           chrome.runtime.sendMessage({
             type: 'oauth-success',
@@ -113,7 +133,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
           }).catch(() => {
             // Ignorer l'erreur si aucune vue n'écoute
           });
-          
+
           // Notifier l'utilisateur (vérifier que l'API est disponible)
           if (chrome.notifications && chrome.notifications.create) {
             chrome.notifications.create({
@@ -131,7 +151,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       } else if (error) {
         // Fermer l'onglet et afficher l'erreur
         chrome.tabs.remove(tabId);
-        
+
         if (chrome.notifications && chrome.notifications.create) {
           chrome.notifications.create({
             type: 'basic',
@@ -155,14 +175,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     chrome.runtime.openOptionsPage();
     return true;
   }
-  
+
   if (request.action === 'getTabInfo') {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       sendResponse({ tab: tabs[0] });
     });
     return true;
   }
-  
+
   // Gérer la mise à jour du profil après paiement
   if (request.action === 'updateUserProfile') {
     chrome.storage.local.get(['authToken'], async (result) => {
@@ -174,7 +194,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               'Content-Type': 'application/json'
             }
           });
-          
+
           if (response.ok) {
             const data = await response.json();
             if (data.user) {
@@ -194,7 +214,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
     return true; // Asynchrone
   }
-  
+
   // Synchroniser une flashcard avec le serveur
   if (request.action === 'syncFlashcard') {
     chrome.storage.local.get(['authToken'], async (result) => {
@@ -207,11 +227,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             language: request.flashcard.targetLanguage || 'fr',
             sourceLanguage: request.flashcard.sourceLanguage || null,
             category: request.flashcard.folder || 'default',
-            difficulty: request.flashcard.difficulty === 'normal' ? 0 : 
-                       request.flashcard.difficulty === 'hard' ? 3 : 
-                       request.flashcard.difficulty === 'easy' ? 1 : 0
+            difficulty: request.flashcard.difficulty === 'normal' ? 0 :
+              request.flashcard.difficulty === 'hard' ? 3 :
+                request.flashcard.difficulty === 'easy' ? 1 : 0
           };
-          
+
           const response = await fetch('https://my-backend-api-cng7.onrender.com/api/flashcards', {
             method: 'POST',
             headers: {
@@ -220,12 +240,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             },
             body: JSON.stringify(flashcardData)
           });
-          
+
           if (response.ok) {
             debug('✅ Flashcard synchronisée avec le serveur');
             const data = await response.json();
             sendResponse({ success: true, flashcard: data });
-            
+
             // Notifier le popup pour rafraîchir les flashcards
             chrome.runtime.sendMessage({
               action: 'flashcardAdded',
@@ -239,12 +259,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               debug('⚠️ Flashcard existe déjà, pas grave');
               // Considérer comme un succès pour éviter les re-tentatives
               sendResponse({ success: true, duplicate: true });
-              
+
               // Notifier quand même le popup pour rafraîchir
               chrome.runtime.sendMessage({
                 action: 'flashcardAdded',
                 duplicate: true
-              }).catch(() => {});
+              }).catch(() => { });
             } else {
               console.error('❌ Erreur lors de la synchronisation:', errorText);
               sendResponse({ success: false, error: errorText });
@@ -282,7 +302,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 async function cleanupOldData() {
   try {
     const { translations = [] } = await chrome.storage.local.get('translations');
-    
+
     // Garder seulement les 1000 dernières traductions
     if (translations.length > 1000) {
       const trimmed = translations.slice(0, 1000);

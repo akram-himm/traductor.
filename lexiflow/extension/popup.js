@@ -4,7 +4,7 @@ const POPUP_DEBUG = true; // Mettre à true pour activer les logs
 const debug = (...args) => POPUP_DEBUG && console.log(...args);
 
 // Fonction pour afficher les logs de subscription (TEMPORAIRE)
-window.showSubscriptionDebug = function() {
+window.showSubscriptionDebug = function () {
   chrome.storage.local.get(['subscriptionDebugInfo'], (result) => {
     if (result.subscriptionDebugInfo) {
       console.log('📋 DEBUG INFO SUBSCRIPTION:');
@@ -29,7 +29,7 @@ let updateFlashcardsDebounce = null; // Pour éviter les rafraîchissements mult
 
 // Générateur d'UUID simple pour les flashcards
 function generateUUID() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
     const r = Math.random() * 16 | 0;
     const v = c == 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
@@ -47,14 +47,14 @@ async function loadFlashcardsFromServer(force = false) {
     debug('⏳ Chargement déjà en cours, ignoré');
     return;
   }
-  
+
   // Éviter les appels trop rapprochés (sauf si forcé)
   const now = Date.now();
   if (!force && (now - lastFlashcardLoad) < 5000) {
     debug('⏱️ Chargement trop récent, ignoré');
     return;
   }
-  
+
   try {
     const token = await authAPI.getToken();
     if (!token) {
@@ -67,22 +67,22 @@ async function loadFlashcardsFromServer(force = false) {
     lastFlashcardLoad = now;
     debug('🔄 Chargement des flashcards depuis le serveur...');
     const response = await flashcardsAPI.getAll();
-    
+
     if (response && response.flashcards && Array.isArray(response.flashcards)) {
       debug(`☁️ ${response.flashcards.length} flashcards du serveur`);
       // Debug: voir ce que le serveur retourne
       if (response.flashcards.length > 0) {
         debug('🔍 Première flashcard du serveur:', response.flashcards[0]);
       }
-      
+
       // Convertir les flashcards du serveur au format attendu par l'UI
       flashcards = response.flashcards.map(card => {
         // Utiliser detectLanguage si sourceLanguage est manquant
         const sourceLang = card.sourceLanguage || detectLanguage(card.front);
         const targetLang = card.language || userSettings?.targetLanguage || 'fr';
-        
+
         debug(`📝 Flashcard: "${card.front}" - source: ${sourceLang}, target: ${targetLang}`);
-        
+
         return {
           id: card.id,
           front: card.front,
@@ -105,16 +105,16 @@ async function loadFlashcardsFromServer(force = false) {
           syncedWithServer: true
         };
       });
-      
+
       debug(`✅ ${flashcards.length} flashcards chargées`);
     } else {
       debug('ℹ️ Aucune flashcard sur le serveur');
       flashcards = [];
     }
-    
+
     updateFlashcards();
     updateStats();
-    
+
   } catch (error) {
     // Ne pas afficher d'erreur si c'est juste un problème d'authentification
     if (error.message && error.message.includes('Authentication required')) {
@@ -152,17 +152,17 @@ function toggleFolder(key) {
     console.error('Dossier non trouvé:', key);
     return;
   }
-  
+
   const content = document.getElementById(`folder-content-${key}`);
   const arrow = folder.querySelector('.folder-arrow');
-  
+
   if (!content) {
     console.error('Contenu non trouvé:', `folder-content-${key}`);
     return;
   }
-  
+
   const isExpanded = folder.classList.contains('expanded');
-  
+
   if (isExpanded) {
     folder.classList.remove('expanded');
     content.style.maxHeight = '0';
@@ -185,12 +185,12 @@ function swapLanguages(key, currentDirection) {
   debug('swapLanguages appelé:', key, currentDirection);
   const [fromLang, toLang] = currentDirection.split('_');
   const newDirection = `${toLang}_${fromLang}`;
-  
+
   // Sauvegarder la nouvelle direction
   const savedDirections = JSON.parse(localStorage.getItem('folderDirections') || '{}');
   savedDirections[key] = newDirection;
   localStorage.setItem('folderDirections', JSON.stringify(savedDirections));
-  
+
   // Mettre à jour l'affichage
   const folderLangs = document.getElementById(`folder-langs-${key}`);
   if (folderLangs) {
@@ -203,13 +203,13 @@ function swapLanguages(key, currentDirection) {
       </button>
     `;
   }
-  
+
   // Mettre à jour le data-direction du dossier
   const folder = document.querySelector(`.language-folder[data-key="${key}"]`);
   if (folder) {
     folder.dataset.direction = newDirection;
   }
-  
+
   // Recharger le contenu
   const folderItems = document.getElementById(`folder-items-${key}`);
   if (folderItems) {
@@ -217,7 +217,7 @@ function swapLanguages(key, currentDirection) {
       const langs = [t.fromLang, t.toLang].sort();
       return `${langs[0]}_${langs[1]}` === key;
     });
-    
+
     folderItems.innerHTML = renderFolderTranslations(group, toLang, fromLang);
   }
 }
@@ -225,10 +225,10 @@ function swapLanguages(key, currentDirection) {
 // Menu contextuel pour les dossiers
 function showFolderMenu(event, key, type) {
   event.stopPropagation();
-  
+
   // Supprimer les menus existants
   document.querySelectorAll('.folder-menu').forEach(m => m.remove());
-  
+
   const menu = document.createElement('div');
   menu.className = 'folder-menu';
   menu.style.cssText = `
@@ -241,12 +241,12 @@ function showFolderMenu(event, key, type) {
     z-index: 1000;
     min-width: 150px;
   `;
-  
+
   // Positionner le menu
   const rect = event.target.getBoundingClientRect();
   menu.style.left = `${rect.left}px`;
   menu.style.top = `${rect.bottom + 5}px`;
-  
+
   // Options du menu
   if (type === 'history') {
     menu.innerHTML = `
@@ -262,9 +262,9 @@ function showFolderMenu(event, key, type) {
       const toLang = card.language;
       return `${fromLang}_${toLang}` === key;
     });
-    
+
     const canPractice = folderCards.length >= 5;
-    
+
     menu.innerHTML = `
       <div class="menu-item js-delete-flashcard-folder" data-key="${key}" style="padding: 8px 16px; cursor: pointer; transition: background 0.2s;">
         <span style="margin-right: 8px;">🗑️</span>
@@ -281,14 +281,14 @@ function showFolderMenu(event, key, type) {
       </div>
     `;
   }
-  
+
   document.body.appendChild(menu);
-  
+
   // Attacher les event listeners
   menu.addEventListener('click', (e) => {
     const item = e.target.closest('.menu-item');
     if (!item) return;
-    
+
     if (item.classList.contains('js-delete-folder')) {
       deleteHistoryFolder(item.dataset.key);
     } else if (item.classList.contains('js-delete-flashcard-folder')) {
@@ -299,17 +299,17 @@ function showFolderMenu(event, key, type) {
         const toLang = card.language;
         return `${fromLang}_${toLang}` === item.dataset.key;
       });
-      
+
       if (folderCards.length >= 5) {
         practiceFolder(item.dataset.key);
       } else {
         showNotification('Cette langue nécessite au moins 5 mots pour pratiquer', 'warning');
       }
     }
-    
+
     menu.remove();
   });
-  
+
   // Fermer le menu en cliquant ailleurs
   setTimeout(() => {
     document.addEventListener('click', function closeMenu() {
@@ -325,14 +325,14 @@ function deleteHistoryFolder(key) {
     const langs = [t.fromLang, t.toLang].sort();
     return `${langs[0]}_${langs[1]}` === key;
   }).length;
-  
+
   if (!confirm(`Delete ${count} translations from this folder?`)) return;
-  
+
   translations = translations.filter(t => {
     const langs = [t.fromLang, t.toLang].sort();
     return `${langs[0]}_${langs[1]}` !== key;
   });
-  
+
   chrome.storage.local.set({ translations }, () => {
     updateHistory();
     updateStats();
@@ -347,11 +347,11 @@ async function deleteFlashcardFolder(key) {
     // Pas de tri - utiliser l'ordre source->cible
     return `${fromLang}_${toLang}` === key;
   });
-  
+
   if (!confirm(`Delete ${cards.length} flashcards from this folder?`)) return;
-  
+
   debug(`🗑️ Suppression du dossier ${key} avec ${cards.length} flashcards`);
-  
+
   // Supprimer sur le serveur si connecté
   const token = await authAPI.getToken();
   if (token) {
@@ -359,12 +359,12 @@ async function deleteFlashcardFolder(key) {
       // Supprimer toutes les cartes du dossier
       const deletePromises = cards
         .filter(card => card.id && !card.id.toString().startsWith('local_'))
-        .map(card => 
+        .map(card =>
           flashcardsAPI.delete(card.id).catch(err => {
             console.error(`Erreur suppression ${card.id}:`, err);
           })
         );
-      
+
       await Promise.allSettled(deletePromises);
       debug(`✅ ${deletePromises.length} flashcards supprimées du serveur`);
     } catch (error) {
@@ -372,7 +372,7 @@ async function deleteFlashcardFolder(key) {
       // Continuer même si l'erreur serveur
     }
   }
-  
+
   // Supprimer localement
   flashcards = flashcards.filter(card => {
     const fromLang = card.sourceLanguage && card.sourceLanguage !== 'auto' ? card.sourceLanguage : detectLanguage(card.front);
@@ -380,9 +380,9 @@ async function deleteFlashcardFolder(key) {
     // Pas de tri - utiliser l'ordre source->cible
     return `${fromLang}_${toLang}` !== key;
   });
-  
+
   debug(`📊 Flashcards restantes: ${flashcards.length}`);
-  
+
   await saveFlashcards();
   updateFlashcards();
   updateStats();
@@ -396,17 +396,17 @@ function practiceFolder(key) {
     // Pas de tri - utiliser l'ordre source->cible
     return `${fromLang}_${toLang}` === key;
   });
-  
+
   if (cards.length === 0) {
     showNotification('No flashcards in this folder!', 'warning');
     return;
   }
-  
+
   if (cards.length < 5) {
     showNotification('Cette langue nécessite au moins 5 mots pour pratiquer', 'warning');
     return;
   }
-  
+
   // Démarrer la pratique avec ces cartes spécifiques
   const [fromLang, toLang] = key.split('_');
   startPracticeWithConfig(cards, fromLang, toLang);
@@ -415,17 +415,17 @@ function practiceFolder(key) {
 // Fonction pour activer le mode sélection sur les flashcards existantes
 function enablePracticeSelection() {
   debug('🎯 Mode sélection activé');
-  
+
   // Ajouter une barre de sélection en haut
   const container = document.getElementById('flashcardsList');
   if (!container) return;
-  
+
   // Vérifier si on a des flashcards
   if (flashcards.length === 0) {
     showNotification('Aucune flashcard disponible', 'warning');
     return;
   }
-  
+
   // Ajouter la barre de sélection
   const selectionBar = document.createElement('div');
   selectionBar.id = 'practiceSelectionBar';
@@ -443,7 +443,7 @@ function enablePracticeSelection() {
     justify-content: space-between;
     align-items: center;
   `;
-  
+
   selectionBar.innerHTML = `
     <div>
       <h3 style="margin: 0; font-size: 18px;">🎯 Mode Sélection</h3>
@@ -453,16 +453,16 @@ function enablePracticeSelection() {
       ❌ Annuler
     </button>
   `;
-  
+
   container.insertBefore(selectionBar, container.firstChild);
-  
+
   // Grouper les flashcards par langue
   const languageGroups = {};
   flashcards.forEach(card => {
     const fromLang = card.sourceLanguage && card.sourceLanguage !== 'auto' ? card.sourceLanguage : detectLanguage(card.front);
     const toLang = card.language;
     const key = `${fromLang}_${toLang}`;
-    
+
     if (!languageGroups[key]) {
       languageGroups[key] = {
         cards: [],
@@ -472,16 +472,16 @@ function enablePracticeSelection() {
     }
     languageGroups[key].cards.push(card);
   });
-  
+
   // Ajouter les checkboxes à chaque dossier
   document.querySelectorAll('.language-folder').forEach(folder => {
     const key = folder.dataset.key;
     const group = languageGroups[key];
-    
+
     if (group) {
       const cardCount = group.cards.length;
       const canPractice = cardCount >= 5;
-      
+
       // Ajouter la checkbox
       const checkbox = document.createElement('div');
       checkbox.className = 'practice-checkbox';
@@ -501,16 +501,16 @@ function enablePracticeSelection() {
         transition: all 0.2s;
         z-index: 10;
       `;
-      
+
       if (!canPractice) {
         checkbox.title = 'Minimum 5 mots requis pour pratiquer';
         checkbox.innerHTML = '<span style="font-size: 12px; color: #9ca3af;">⚠️</span>';
       }
-      
+
       // Style du dossier
       folder.style.position = 'relative';
       folder.style.cursor = canPractice ? 'pointer' : 'default';
-      
+
       if (canPractice) {
         // Rendre tout le dossier cliquable
         folder.addEventListener('click', (e) => {
@@ -518,9 +518,9 @@ function enablePracticeSelection() {
           if (e.target.closest('.folder-menu-btn') || e.target.closest('.folder-swap') || e.target.closest('.folder-toggle')) {
             return;
           }
-          
+
           e.stopPropagation();
-          
+
           // Désactiver tous les autres dossiers
           document.querySelectorAll('.language-folder').forEach(f => {
             if (f !== folder) {
@@ -530,22 +530,22 @@ function enablePracticeSelection() {
               if (cb) cb.style.display = 'none';
             }
           });
-          
+
           // Marquer comme sélectionné
           folder.classList.add('practice-selected');
           checkbox.style.background = '#10b981';
           checkbox.style.borderColor = '#10b981';
           checkbox.innerHTML = '<span style="color: white; font-size: 16px;">✓</span>';
-          
+
           // Afficher le bouton pour continuer
           showPracticeConfirmation(key, group);
         });
       }
-      
+
       folder.querySelector('.folder-header').appendChild(checkbox);
     }
   });
-  
+
   // Event listener pour annuler
   document.getElementById('cancelPracticeSelection').addEventListener('click', () => {
     disablePracticeSelection();
@@ -555,22 +555,22 @@ function enablePracticeSelection() {
 // Fonction pour désactiver le mode sélection
 function disablePracticeSelection() {
   debug('🎯 Mode sélection désactivé');
-  
+
   // Retirer la barre de sélection
   const selectionBar = document.getElementById('practiceSelectionBar');
   if (selectionBar) selectionBar.remove();
-  
+
   // Retirer les checkboxes et réinitialiser les styles
   document.querySelectorAll('.language-folder').forEach(folder => {
     folder.style.opacity = '1';
     folder.style.pointerEvents = 'auto';
     folder.style.cursor = 'default';
     folder.classList.remove('practice-selected');
-    
+
     const checkbox = folder.querySelector('.practice-checkbox');
     if (checkbox) checkbox.remove();
   });
-  
+
   // Retirer la confirmation si elle existe
   const confirmBar = document.getElementById('practiceConfirmationBar');
   if (confirmBar) confirmBar.remove();
@@ -579,9 +579,9 @@ function disablePracticeSelection() {
 // Fonction pour afficher la confirmation après sélection
 function showPracticeConfirmation(key, group) {
   debug(`🎯 Langue sélectionnée: ${key}`, group);
-  
+
   const container = document.getElementById('flashcardsList');
-  
+
   // Ajouter la barre de confirmation
   const confirmBar = document.createElement('div');
   confirmBar.id = 'practiceConfirmationBar';
@@ -600,7 +600,7 @@ function showPracticeConfirmation(key, group) {
     align-items: center;
     gap: 16px;
   `;
-  
+
   confirmBar.innerHTML = `
     <div style="font-weight: 600;">
       ${getFlagEmoji(group.fromLang)} ${getLanguageName(group.fromLang)} → ${getFlagEmoji(group.toLang)} ${getLanguageName(group.toLang)}
@@ -613,9 +613,9 @@ function showPracticeConfirmation(key, group) {
       ❌ Annuler
     </button>
   `;
-  
+
   document.body.appendChild(confirmBar);
-  
+
   // Event listener pour commencer
   document.getElementById('startSelectedPractice').addEventListener('click', () => {
     debug('🎯 Démarrage de la pratique avec:', group);
@@ -628,19 +628,19 @@ function showPracticeConfirmation(key, group) {
 function showFlashcardsForPractice() {
   const container = document.getElementById('flashcardsList');
   if (!container) return;
-  
+
   if (flashcards.length === 0) {
     showNotification('Aucune flashcard disponible pour pratiquer', 'warning');
     return;
   }
-  
+
   // Grouper les flashcards par langue
   const grouped = {};
   flashcards.forEach(card => {
     const fromLang = card.sourceLanguage && card.sourceLanguage !== 'auto' ? card.sourceLanguage : detectLanguage(card.front);
     const toLang = card.language;
     const key = `${fromLang}_${toLang}`;
-    
+
     if (!grouped[key]) {
       grouped[key] = {
         fromLang,
@@ -651,12 +651,12 @@ function showFlashcardsForPractice() {
     }
     grouped[key].cards.push(card);
   });
-  
+
   // Vérifier quelles langues peuvent être pratiquées
   Object.values(grouped).forEach(group => {
     group.canPractice = group.cards.length >= 5;
   });
-  
+
   container.innerHTML = `
     <div style="padding: 20px;">
       <div style="text-align: center; margin-bottom: 24px;">
@@ -706,10 +706,10 @@ function showFlashcardsForPractice() {
                   </div>
                 </div>
               </div>
-              ${group.canPractice ? 
-                '<span style="font-size: 20px;">▶️</span>' : 
-                '<span style="font-size: 16px;">⚠️</span>'
-              }
+              ${group.canPractice ?
+      '<span style="font-size: 20px;">▶️</span>' :
+      '<span style="font-size: 16px;">⚠️</span>'
+    }
             </div>
             ${!group.canPractice ? `
               <div class="warning-tooltip" style="
@@ -740,13 +740,13 @@ function showFlashcardsForPractice() {
       </div>
     </div>
   `;
-  
+
   // Event listeners pour les cartes de langue
   container.querySelectorAll('.practice-lang-card').forEach(card => {
     card.addEventListener('click', () => {
       const key = card.dataset.key;
       const group = grouped[key];
-      
+
       if (group.canPractice) {
         startPracticeWithConfig(group.cards, group.fromLang, group.toLang);
       }
@@ -758,7 +758,7 @@ function showFlashcardsForPractice() {
 function startPracticeWithConfig(cards, fromLang, toLang) {
   const container = document.getElementById('flashcardsList');
   if (!container) return;
-  
+
   // Afficher l'interface de configuration rapide
   container.innerHTML = `
     <div style="padding: 20px; max-width: 400px; margin: 0 auto;">
@@ -851,11 +851,11 @@ function startPracticeWithConfig(cards, fromLang, toLang) {
       </div>
     </div>
   `;
-  
+
   // Event listeners pour les options
   let direction = 'forward';
   let mode = 'typing';
-  
+
   container.querySelectorAll('.direction-opt').forEach(btn => {
     btn.addEventListener('click', () => {
       container.querySelectorAll('.direction-opt').forEach(b => {
@@ -869,7 +869,7 @@ function startPracticeWithConfig(cards, fromLang, toLang) {
       direction = btn.dataset.dir;
     });
   });
-  
+
   container.querySelectorAll('.mode-opt').forEach(btn => {
     btn.addEventListener('click', () => {
       container.querySelectorAll('.mode-opt').forEach(b => {
@@ -883,7 +883,7 @@ function startPracticeWithConfig(cards, fromLang, toLang) {
       mode = btn.dataset.mode;
     });
   });
-  
+
   // Bouton pour démarrer
   document.getElementById('startPracticeNow').addEventListener('click', () => {
     if (window.practiceSystem) {
@@ -894,7 +894,7 @@ function startPracticeWithConfig(cards, fromLang, toLang) {
 
 function exportFolderData(key, type) {
   let data = {};
-  
+
   if (type === 'history') {
     data.translations = translations.filter(t => {
       const langs = [t.fromLang, t.toLang].sort();
@@ -908,19 +908,19 @@ function exportFolderData(key, type) {
       return `${fromLang}_${toLang}` === key;
     });
   }
-  
+
   data.exportDate = new Date().toISOString();
   data.folderKey = key;
   data.type = type;
-  
+
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
-  
+
   const a = document.createElement('a');
   a.href = url;
   a.download = `quick-translator-${type}-${key}-${new Date().toISOString().split('T')[0]}.json`;
   a.click();
-  
+
   URL.revokeObjectURL(url);
   showNotification('Folder exported successfully!', 'success');
 }
@@ -932,17 +932,17 @@ function toggleFlashcardFolder(key) {
     console.error('Flashcard folder not found:', key);
     return;
   }
-  
+
   const content = document.getElementById(`flashcard-folder-content-${key}`);
   const arrow = folder.querySelector('.folder-arrow');
-  
+
   if (!content) {
     console.error('Flashcard content not found:', `flashcard-folder-content-${key}`);
     return;
   }
-  
+
   const isExpanded = folder.classList.contains('expanded');
-  
+
   if (isExpanded) {
     folder.classList.remove('expanded');
     content.style.maxHeight = '0';
@@ -964,12 +964,12 @@ function swapFlashcardLanguages(key, currentDirection) {
   debug('swapFlashcardLanguages appelé:', key, currentDirection);
   const [fromLang, toLang] = currentDirection.split('_');
   const newDirection = `${toLang}_${fromLang}`;
-  
+
   // Sauvegarder la nouvelle direction
   const savedDirections = JSON.parse(localStorage.getItem('flashcardDirections') || '{}');
   savedDirections[key] = newDirection;
   localStorage.setItem('flashcardDirections', JSON.stringify(savedDirections));
-  
+
   // Mettre à jour l'affichage
   const folderLangs = document.getElementById(`flashcard-folder-langs-${key}`);
   if (folderLangs) {
@@ -982,13 +982,13 @@ function swapFlashcardLanguages(key, currentDirection) {
       </button>
     `;
   }
-  
+
   // Mettre à jour le data-direction du dossier
   const folder = document.querySelector(`.flashcard-language-folder[data-key="${key}"]`);
   if (folder) {
     folder.dataset.direction = newDirection;
   }
-  
+
   // Recharger le contenu
   const grid = document.getElementById(`flashcard-grid-${key}`);
   if (grid) {
@@ -1000,32 +1000,32 @@ function swapFlashcardLanguages(key, currentDirection) {
       // Pas de tri - utiliser l'ordre source->cible
       return `${card.fromLang}_${card.toLang}` === key;
     });
-    
+
     grid.innerHTML = renderFlashcards(cards, toLang, fromLang);
   }
 }
 
 function flipCard(cardId) {
   debug('flipCard appelé avec cardId:', cardId);
-  
+
   // Ne pas parser en int car les IDs sont maintenant des UUIDs
   const card = flashcards.find(c => c.id === cardId);
   if (!card) {
     console.error('Carte non trouvée:', cardId);
     return;
   }
-  
+
   // Utiliser le même format d'ID que dans renderFlashcards
   const safeId = cardId.replace(/-/g, '_');
   const front = document.getElementById(`front-${safeId}`);
   const back = document.getElementById(`back-${safeId}`);
   const cardEl = document.querySelector(`[data-id="${cardId}"]`);
-  
+
   if (!front || !back) {
     console.error('Éléments front/back non trouvés:', { front, back });
     return;
   }
-  
+
   if (front.style.display === 'none') {
     // Retourner vers l'avant
     front.style.display = 'block';
@@ -1036,11 +1036,11 @@ function flipCard(cardId) {
     front.style.display = 'none';
     back.style.display = 'block';
     if (cardEl) cardEl.classList.add('flipped');
-    
+
     // Mettre à jour les statistiques de révision
     card.reviews = (card.reviews || 0) + 1;
     card.lastReview = new Date().toISOString();
-    
+
     // Marquer qu'on est en train de flip une carte
     isFlippingCard = true;
     saveFlashcards();
@@ -1052,37 +1052,37 @@ function flipCard(cardId) {
 function moveToFolder(cardId, folderId) {
   const card = flashcards.find(c => c.id === cardId);
   if (!card) return;
-  
+
   card.folder = folderId;
-  
+
   // Mettre à jour la difficulté selon le dossier
   if (folderId === 'difficult') {
     card.difficulty = 'hard';
   } else if (folderId === 'learned') {
     card.difficulty = 'easy';
   }
-  
+
   saveFlashcards();
   updateFlashcards();
-  
+
   // Feedback visuel
   showNotification(`Carte déplacée vers ${flashcardFolders[folderId].name}`, 'success');
 }
 
 async function deleteFlashcard(cardId) {
   if (!confirm('Delete this flashcard?')) return;
-  
-  
+
+
   const cardToDelete = flashcards.find(c => c.id === cardId);
-  
+
   if (!cardToDelete) {
     console.error('❌ Flashcard non trouvée avec ID:', cardId);
     console.error('IDs disponibles:', flashcards.map(c => c.id));
     showNotification('Flashcard introuvable', 'error');
     return;
   }
-  
-  
+
+
   // Supprimer sur le serveur si connecté
   const token = await authAPI.getToken();
   if (token) {
@@ -1097,14 +1097,14 @@ async function deleteFlashcard(cardId) {
     showNotification('Veuillez vous connecter', 'error');
     return;
   }
-  
+
   // Supprimer localement uniquement si succès serveur
   flashcards = flashcards.filter(c => c.id !== cardId);
-  
+
   // Mettre à jour l'interface
   updateFlashcards();
   updateStats();
-  
+
   showNotification('Flashcard supprimée', 'success');
 }
 
@@ -1125,21 +1125,21 @@ function startPracticeMode() {
     showNotification('No flashcards available for practice!', 'warning');
     return;
   }
-  
+
   // Afficher la sélection de langue
   const container = document.getElementById('flashcardsList');
   if (!container) return;
-  
+
   // Obtenir toutes les langues disponibles
   const languages = new Set();
   flashcards.forEach(card => {
     languages.add(card.language);
-    const sourceLang = card.sourceLanguage && card.sourceLanguage !== 'auto' 
-      ? card.sourceLanguage 
+    const sourceLang = card.sourceLanguage && card.sourceLanguage !== 'auto'
+      ? card.sourceLanguage
       : detectLanguage(card.front);
     languages.add(sourceLang);
   });
-  
+
   container.innerHTML = `
     <div class="practice-setup">
       <h2 style="text-align: center; margin-bottom: 24px;">🎮 Configuration du Mode Pratique</h2>
@@ -1186,7 +1186,7 @@ function startPracticeMode() {
       </div>
     </div>
   `;
-  
+
   // Attacher les event listeners
   container.querySelector('.js-launch-practice').addEventListener('click', launchPractice);
   container.querySelector('.js-cancel-practice').addEventListener('click', updateFlashcards);
@@ -1196,29 +1196,29 @@ function launchPractice() {
   const selectedLangs = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
     .filter(cb => cb.value && cb.value !== 'on')
     .map(cb => cb.value);
-  
+
   if (selectedLangs.length === 0) {
     showNotification('Sélectionnez au moins une langue!', 'warning');
     return;
   }
-  
+
   const randomOrder = document.getElementById('practiceRandom')?.checked ?? true;
   const prioritizeDifficult = document.getElementById('practiceDifficult')?.checked ?? true;
   const limit = parseInt(document.getElementById('practiceLimit')?.value || '20');
-  
+
   // Filtrer les cartes par langue
   let practiceCards = flashcards.filter(card => {
-    const sourceLang = card.sourceLanguage && card.sourceLanguage !== 'auto' 
-      ? card.sourceLanguage 
+    const sourceLang = card.sourceLanguage && card.sourceLanguage !== 'auto'
+      ? card.sourceLanguage
       : detectLanguage(card.front);
     return selectedLangs.includes(card.language) || selectedLangs.includes(sourceLang);
   });
-  
+
   if (practiceCards.length === 0) {
     showNotification('Aucune carte pour les langues sélectionnées!', 'warning');
     return;
   }
-  
+
   // Trier par priorité si demandé
   if (prioritizeDifficult) {
     practiceCards.sort((a, b) => {
@@ -1232,13 +1232,13 @@ function launchPractice() {
       return 0;
     });
   }
-  
+
   // Limiter le nombre et mélanger si demandé
   practiceCards = practiceCards.slice(0, limit);
   if (randomOrder) {
     practiceCards = practiceCards.sort(() => Math.random() - 0.5);
   }
-  
+
   practiceMode = {
     active: true,
     cards: practiceCards,
@@ -1246,7 +1246,7 @@ function launchPractice() {
     score: { correct: 0, incorrect: 0 },
     startTime: Date.now()
   };
-  
+
   displayPracticeMode();
 }
 
@@ -1254,16 +1254,16 @@ function checkAnswer() {
   const input = document.getElementById('practiceAnswer');
   const resultDiv = document.getElementById('practiceResult');
   const checkBtn = document.getElementById('checkBtn');
-  
+
   if (!input || !resultDiv || !checkBtn) return;
-  
+
   const userAnswer = normalizeAnswer(input.value.trim());
   const currentCard = practiceMode.cards[practiceMode.currentIndex];
   const correctAnswer = normalizeAnswer(currentCard.back);
-  
+
   // Vérification plus flexible
   const isCorrect = checkAnswerSimilarity(userAnswer, correctAnswer);
-  
+
   if (isCorrect) {
     practiceMode.score.correct++;
     resultDiv.className = 'practice-result correct';
@@ -1271,7 +1271,7 @@ function checkAnswer() {
       <div style="font-size: 18px; font-weight: bold; margin-bottom: 4px;">✅ Correct!</div>
       <div>Excellente réponse!</div>
     `;
-    
+
     // Mettre à jour la difficulté de la carte
     if (currentCard.difficulty === 'hard') {
       currentCard.difficulty = 'normal';
@@ -1286,18 +1286,18 @@ function checkAnswer() {
       <div>Réponse correcte: <strong>"${currentCard.back}"</strong></div>
       ${userAnswer ? `<div style="margin-top: 4px;">Votre réponse: "${input.value}"</div>` : ''}
     `;
-    
+
     // Augmenter la difficulté si nécessaire
     if (currentCard.difficulty !== 'hard') {
       currentCard.difficulty = currentCard.difficulty === 'easy' ? 'normal' : 'hard';
     }
   }
-  
+
   resultDiv.style.display = 'block';
   input.disabled = true;
   checkBtn.textContent = 'Suivant →';
   checkBtn.onclick = nextQuestion;
-  
+
   // Mettre à jour les statistiques de la carte
   currentCard.lastReview = new Date().toISOString();
   currentCard.reviews = (currentCard.reviews || 0) + 1;
@@ -1307,7 +1307,7 @@ function checkAnswer() {
 function showHint() {
   const currentCard = practiceMode.cards[practiceMode.currentIndex];
   const hint = currentCard.back.substring(0, Math.ceil(currentCard.back.length / 3)) + '...';
-  
+
   showNotification(`Indice: "${hint}"`, 'info');
 }
 
@@ -1318,7 +1318,7 @@ function skipQuestion() {
 
 function nextQuestion() {
   practiceMode.currentIndex++;
-  
+
   if (practiceMode.currentIndex >= practiceMode.cards.length) {
     showPracticeResults();
   } else {
@@ -1346,25 +1346,25 @@ async function createFlashcardFromHistory(original, translated, language, source
     showNotification('Veuillez vous connecter pour créer des flashcards', 'warning');
     return;
   }
-  
+
   // Vérifier les limites pour les utilisateurs gratuits
   if (!checkLimits('flashcard')) return;
-  
+
   // Définir le flag pour éviter les conflits
   isAddingFlashcard = true;
-  
+
   // Vérifier si elle existe déjà côté client
-  const exists = flashcards.some(f => 
-    (f.front?.toLowerCase() === original.toLowerCase() || f.text?.toLowerCase() === original.toLowerCase()) && 
+  const exists = flashcards.some(f =>
+    (f.front?.toLowerCase() === original.toLowerCase() || f.text?.toLowerCase() === original.toLowerCase()) &&
     (f.back?.toLowerCase() === translated.toLowerCase() || f.translation?.toLowerCase() === translated.toLowerCase())
   );
-  
+
   if (exists) {
     showNotification('Cette flashcard existe déjà!', 'warning');
     isAddingFlashcard = false;
     return;
   }
-  
+
   try {
     // Envoyer directement au serveur
     const detectedSourceLang = sourceLanguage || detectLanguage(original);
@@ -1374,9 +1374,9 @@ async function createFlashcardFromHistory(original, translated, language, source
       sourceLanguage: detectedSourceLang,
       targetLanguage: language
     });
-    
+
     // Le dossier sera automatiquement créé avec la nouvelle flashcard
-    
+
     const response = await flashcardsAPI.create({
       originalText: original,
       translatedText: translated,
@@ -1386,19 +1386,19 @@ async function createFlashcardFromHistory(original, translated, language, source
       folder: 'default',
       difficulty: 'normal'
     });
-    
+
     if (response && response.flashcard) {
       debug('✅ Flashcard créée sur le serveur');
-      
+
       // Recharger toutes les flashcards depuis le serveur pour éviter les duplications
       await loadFlashcardsFromServer();
-      
+
       // Marquer qu'on est en train d'ajouter pour éviter le rafraîchissement
       isAddingFlashcard = true;
       setTimeout(() => { isAddingFlashcard = false; }, 100);
-      
+
       updateStats();
-      
+
       showNotification('Flashcard créée avec succès!', 'success');
     }
   } catch (error) {
@@ -1411,7 +1411,7 @@ async function createFlashcardFromHistory(original, translated, language, source
 
 function deleteTranslation(id) {
   if (!confirm('Supprimer cette traduction ?')) return;
-  
+
   translations = translations.filter(t => t.id !== parseInt(id));
   chrome.storage.local.set({ translations }, () => {
     updateHistory();
@@ -1424,33 +1424,33 @@ function deleteTranslation(id) {
 async function checkPremiumStatus() {
   const user = window.currentUser;
   const isPremium = user && (user.isPremium || user.subscriptionStatus === 'premium');
-  
+
   // Si l'utilisateur est Premium, activer automatiquement DeepSeek
   if (isPremium) {
     userSettings.isPro = true;
     // Pas besoin de clé API pour les utilisateurs Premium - elle est gérée côté serveur
-    
+
     // Mettre à jour les badges
     const proBadge = document.getElementById('proBadge');
     const deepSeekBadge = document.getElementById('deepSeekBadge');
-    
+
     if (proBadge) proBadge.style.display = 'flex';
     if (deepSeekBadge && userSettings.deepSeekEnabled) {
       deepSeekBadge.style.display = 'flex';
     }
-    
+
     return true;
   }
-  
+
   userSettings.isPro = false;
-  
+
   // Masquer les badges si pas Premium
   const proBadge = document.getElementById('proBadge');
   const deepSeekBadge = document.getElementById('deepSeekBadge');
-  
+
   if (proBadge) proBadge.style.display = 'none';
   if (deepSeekBadge) deepSeekBadge.style.display = 'none';
-  
+
   return false;
 }
 
@@ -1460,17 +1460,17 @@ async function checkLimits(type = 'translation') {
   const user = await new Promise(resolve => {
     chrome.storage.local.get(['user'], result => resolve(result.user));
   });
-  
+
   // Si pas d'utilisateur connecté, appliquer les limites gratuites
   const isPremium = user && user.subscriptionStatus === 'premium';
-  
+
   if (isPremium) return true; // Pas de limites pour Premium
-  
+
   if (type === 'flashcard') {
     // Limite de flashcards selon le backend
     const limit = isPremium ? Infinity : 100;
     const currentCount = user ? (user.flashcardsCount || 0) : flashcards.length;
-    
+
     if (currentCount >= limit) {
       showNotification(`Limite atteinte! ${isPremium ? 'Illimitées' : '100'} flashcards max. ${!user ? 'Connectez-vous ou ' : ''}Passez à Premium pour plus!`, 'warning');
       if (!user) {
@@ -1484,10 +1484,10 @@ async function checkLimits(type = 'translation') {
     // Limite de traductions par jour (seulement en local pour les non-connectés)
     if (!user) {
       const today = new Date().toDateString();
-      const todayTranslations = translations.filter(t => 
+      const todayTranslations = translations.filter(t =>
         new Date(t.timestamp).toDateString() === today
       ).length;
-      
+
       if (todayTranslations >= 20) {
         showNotification('Limite quotidienne atteinte! Connectez-vous pour continuer', 'warning');
         showLoginWindow();
@@ -1495,23 +1495,23 @@ async function checkLimits(type = 'translation') {
       }
     }
   }
-  
+
   return true;
 }
 
 // Gérer le clic sur "Passer à Premium"
 async function handleUpgradeToPremium() {
   const user = window.currentUser;
-  
+
   if (!user) {
     showLoginWindow();
     return;
   }
-  
+
   // Ouvrir la page de gestion d'abonnement
   // Même pour les utilisateurs Premium pour qu'ils puissent gérer leur abonnement
   chrome.tabs.create({ url: chrome.runtime.getURL('subscription.html') });
-  
+
   // TEMPORAIRE : Ne pas fermer le popup pour débugger
   // window.close();
 }
@@ -1520,7 +1520,7 @@ async function handleUpgradeToPremium() {
 function showUpgradeToAnnualPrompt() {
   const container = document.getElementById('dashboard');
   if (!container) return;
-  
+
   const prompt = document.createElement('div');
   prompt.className = 'premium-prompt';
   prompt.style.cssText = `
@@ -1537,7 +1537,7 @@ function showUpgradeToAnnualPrompt() {
     width: 90%;
     text-align: center;
   `;
-  
+
   prompt.innerHTML = `
     <div style="font-size: 48px; margin-bottom: 16px;">💎</div>
     <h2 style="font-size: 24px; margin-bottom: 16px; color: #1f2937;">Économisez avec le plan annuel!</h2>
@@ -1571,28 +1571,28 @@ function showUpgradeToAnnualPrompt() {
       Garder le plan mensuel
     </button>
   `;
-  
+
   document.body.appendChild(prompt);
-  
+
   // Event listeners
   const upgradeBtn = prompt.querySelector('.js-upgrade-annual');
   const closeBtn = prompt.querySelector('.js-close-prompt');
-  
+
   if (upgradeBtn) {
     upgradeBtn.addEventListener('click', async (e) => {
       e.preventDefault();
       debug('💳 Upgrade vers plan annuel');
       try {
         showNotification('Redirection vers la mise à niveau...', 'info');
-        
+
         // Marquer qu'on attend un checkout pour upgrade
-        chrome.storage.local.set({ 
+        chrome.storage.local.set({
           pendingCheckout: true,
           checkoutTime: Date.now(),
           isUpgrade: true,
           previousPlan: 'monthly'
         });
-        
+
         // Appeler l'API d'upgrade
         const response = await apiRequest('/api/subscription/upgrade-to-annual', {
           method: 'POST'
@@ -1609,7 +1609,7 @@ function showUpgradeToAnnualPrompt() {
       }
     });
   }
-  
+
   if (closeBtn) {
     closeBtn.addEventListener('click', () => {
       prompt.remove();
@@ -1621,7 +1621,7 @@ function showUpgradeToAnnualPrompt() {
 function showPremiumPrompt() {
   const container = document.getElementById('dashboard');
   if (!container) return;
-  
+
   const prompt = document.createElement('div');
   prompt.className = 'premium-prompt';
   prompt.style.cssText = `
@@ -1640,7 +1640,7 @@ function showPremiumPrompt() {
     max-height: 90vh;
     overflow-y: auto;
   `;
-  
+
   prompt.innerHTML = `
     <div style="font-size: 48px; margin-bottom: 16px;">🚀</div>
     <h2 style="font-size: 24px; margin-bottom: 16px; color: #1f2937;">Débloquez LexiFlow Premium</h2>
@@ -1714,9 +1714,9 @@ function showPremiumPrompt() {
       Peut-être plus tard
     </button>
   `;
-  
+
   document.body.appendChild(prompt);
-  
+
   // Ajouter les hover effects
   const cards = prompt.querySelectorAll('.pricing-card');
   cards.forEach(card => {
@@ -1729,14 +1729,14 @@ function showPremiumPrompt() {
       card.style.boxShadow = 'none';
     });
   });
-  
+
   // Event listeners pour les boutons - Utiliser addEventListener pour une meilleure compatibilité
   const monthlyBtn = prompt.querySelector('.js-subscribe-monthly');
   const yearlyBtn = prompt.querySelector('.js-subscribe-yearly');
   const closeBtn = prompt.querySelector('.js-close-prompt');
-  
+
   debug('🔍 Boutons trouvés:', { monthly: !!monthlyBtn, yearly: !!yearlyBtn, close: !!closeBtn });
-  
+
   if (monthlyBtn) {
     monthlyBtn.addEventListener('click', async (e) => {
       e.preventDefault();
@@ -1744,7 +1744,7 @@ function showPremiumPrompt() {
       debug('💳 Clic sur abonnement mensuel');
       try {
         showNotification('Redirection vers le paiement...', 'info');
-        
+
         // Créer la session Stripe directement
         const response = await apiRequest('/api/subscription/create-checkout-session', {
           method: 'POST',
@@ -1763,12 +1763,12 @@ function showPremiumPrompt() {
         showNotification('Erreur lors de la création de la session de paiement', 'error');
       }
     });
-    
+
     // Forcer le style pour s'assurer que le bouton est cliquable
     monthlyBtn.style.pointerEvents = 'auto';
     monthlyBtn.style.cursor = 'pointer';
   }
-  
+
   if (yearlyBtn) {
     yearlyBtn.addEventListener('click', async (e) => {
       e.preventDefault();
@@ -1776,7 +1776,7 @@ function showPremiumPrompt() {
       debug('💳 Clic sur abonnement annuel');
       try {
         showNotification('Redirection vers le paiement...', 'info');
-        
+
         // Créer la session Stripe directement
         const response = await apiRequest('/api/subscription/create-checkout-session', {
           method: 'POST',
@@ -1795,12 +1795,12 @@ function showPremiumPrompt() {
         showNotification('Erreur lors de la création de la session de paiement', 'error');
       }
     });
-    
+
     // Forcer le style pour s'assurer que le bouton est cliquable
     yearlyBtn.style.pointerEvents = 'auto';
     yearlyBtn.style.cursor = 'pointer';
   }
-  
+
   if (closeBtn) {
     closeBtn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -1817,7 +1817,7 @@ async function loadData() {
     debug('⏸️ LoadData ignoré: ajout de flashcard en cours');
     return Promise.resolve();
   }
-  
+
   return new Promise((resolve) => {
     chrome.storage.sync.get({
       targetLanguage: 'fr',
@@ -1836,7 +1836,7 @@ async function loadData() {
     }, async (settings) => {
       userSettings = settings;
       debug('⚙️ Paramètres chargés:', userSettings);
-      
+
       chrome.storage.local.get({
         translations: [],
         flashcardFolders: flashcardFolders,
@@ -1844,20 +1844,20 @@ async function loadData() {
       }, async (data) => {
         translations = data.translations || [];
         flashcardFolders = data.flashcardFolders || flashcardFolders;
-        
+
         // NE PLUS UTILISER LE STOCKAGE LOCAL POUR LES FLASHCARDS
         // Initialiser avec un tableau vide
         flashcards = [];
-        
+
         debug('📊 Données chargées:', {
           translations: translations.length,
           flashcards: flashcards.length
         });
-        
+
         updateHistory();
         updateStats();
         resolve();
-        
+
         // Charger les flashcards depuis le serveur en arrière-plan
         // SEULEMENT si l'utilisateur est connecté
         authAPI.getToken().then(token => {
@@ -1889,9 +1889,9 @@ function saveSettings() {
     // Notifier le content script
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]) {
-        chrome.tabs.sendMessage(tabs[0].id, { 
-          action: 'updateSettings', 
-          settings: userSettings 
+        chrome.tabs.sendMessage(tabs[0].id, {
+          action: 'updateSettings',
+          settings: userSettings
         }).catch(() => {
           // Ignorer les erreurs si le content script n'est pas disponible
         });
@@ -1903,22 +1903,22 @@ function saveSettings() {
 // Vérifier le statut DeepSeek
 async function validateDeepSeekKey(apiKey) {
   if (!apiKey || apiKey.length < 20) return false;
-  
+
   const statusEl = document.getElementById('deepSeekStatus');
   if (statusEl) {
     statusEl.className = 'deepseek-status checking';
     statusEl.innerHTML = '<span>⏳</span><span>Vérification en cours...</span>';
   }
-  
+
   try {
     const response = await fetch('https://api.deepseek.com/v1/models', {
       headers: {
         'Authorization': `Bearer ${apiKey}`
       }
     });
-    
+
     const isValid = response.ok;
-    
+
     if (statusEl) {
       if (isValid) {
         statusEl.className = 'deepseek-status active';
@@ -1928,7 +1928,7 @@ async function validateDeepSeekKey(apiKey) {
         statusEl.innerHTML = '<span>❌</span><span>Clé API invalide ou expirée</span>';
       }
     }
-    
+
     return isValid;
   } catch (error) {
     console.error('❌ Erreur validation DeepSeek:', error);
@@ -1944,41 +1944,41 @@ async function validateDeepSeekKey(apiKey) {
 async function initUI() {
   // Vérifier le statut Premium
   await checkPremiumStatus();
-  
+
   // Badges et boutons
   const proBadge = document.getElementById('proBadge');
   const deepSeekBadge = document.getElementById('deepSeekBadge');
   const premiumBanner = document.getElementById('premiumBanner');
   const upgradeToPremiumBtn = document.getElementById('upgradeToPremiumBtn');
-  
+
   // Vérifier si l'utilisateur est connecté et son statut
   const user = window.currentUser;
   const isPremium = user && (user.isPremium || user.subscriptionStatus === 'premium');
-  
+
   if (proBadge) {
     proBadge.style.display = isPremium ? 'flex' : 'none';
   }
-  
+
   if (deepSeekBadge) {
     deepSeekBadge.style.display = isPremium && userSettings.deepSeekEnabled ? 'flex' : 'none';
   }
-  
+
   if (premiumBanner) {
     premiumBanner.style.display = isPremium ? 'none' : 'block';
   }
-  
+
   // Gérer l'affichage du bouton upgrade dans le header
   if (upgradeToPremiumBtn) {
     // Cacher le bouton dans le header si l'utilisateur est Premium
-    console.log('🔍 Statut Premium pour bouton Upgrade:', { 
-      isPremium, 
+    console.log('🔍 Statut Premium pour bouton Upgrade:', {
+      isPremium,
       user,
       userIsPremium: user?.isPremium,
-      userStatus: user?.subscriptionStatus 
+      userStatus: user?.subscriptionStatus
     });
     upgradeToPremiumBtn.style.display = isPremium ? 'none' : 'inline-block';
   }
-  
+
   // Ajouter/modifier le bouton dans les paramètres pour les utilisateurs Premium
   const settingsTab = document.getElementById('settings');
   if (settingsTab && isPremium) {
@@ -2009,7 +2009,7 @@ async function initUI() {
           </div>
         </div>
       `;
-      
+
       // Ajouter avant la dernière section (Data and backup)
       const lastSection = settingsTab.querySelector('.settings-section:last-child');
       if (lastSection) {
@@ -2019,18 +2019,18 @@ async function initUI() {
       }
     }
   }
-  
+
   // Statistiques
   updateStats();
-  
+
   // Paramètres
   initSettings();
-  
+
   // Charger les contenus
   updateRecentTranslations();
   updateHistory();
   updateFlashcards();
-  
+
   // S'assurer que l'interface est interactive même sans connexion
   enableUIInteractions();
 }
@@ -2043,7 +2043,7 @@ function enableUIInteractions() {
     userAccountSection.onclick = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      
+
       if (window.currentUser) {
         // Toggle le menu utilisateur
         const menu = document.getElementById('userMenu');
@@ -2059,7 +2059,7 @@ function enableUIInteractions() {
         showLoginWindow();
       }
     };
-    
+
     // Définir l'état initial
     if (!window.currentUser) {
       userAccountSection.classList.add('not-logged-in');
@@ -2069,7 +2069,7 @@ function enableUIInteractions() {
       }
     }
   }
-  
+
   // S'assurer que les boutons principaux sont cliquables
   const elementsToEnable = [
     'addFlashcardBtn',
@@ -2079,7 +2079,7 @@ function enableUIInteractions() {
     'exportDataBtn',
     'resetAppBtn'
   ];
-  
+
   elementsToEnable.forEach(id => {
     const el = document.getElementById(id);
     if (el) {
@@ -2088,13 +2088,13 @@ function enableUIInteractions() {
       el.style.opacity = '1';
     }
   });
-  
+
   // S'assurer que les onglets sont cliquables
   document.querySelectorAll('.nav-tab').forEach(tab => {
     tab.style.pointerEvents = 'auto';
     tab.style.cursor = 'pointer';
   });
-  
+
   debug('✅ Interface activée pour utilisation hors ligne');
 }
 
@@ -2102,13 +2102,13 @@ function enableUIInteractions() {
 function updateStats() {
   const totalTranslationsEl = document.getElementById('totalTranslations');
   const totalFlashcardsEl = document.getElementById('totalFlashcards');
-  
+
   if (totalTranslationsEl) {
     // Filtrer les traductions valides (pas même langue)
     const validTranslations = translations.filter(t => t.fromLang !== t.toLang);
     totalTranslationsEl.textContent = validTranslations.length;
   }
-  
+
   if (totalFlashcardsEl) {
     totalFlashcardsEl.textContent = flashcards.length;
   }
@@ -2126,7 +2126,7 @@ function initSettings() {
   const deepSeekToggle = document.getElementById('deepSeekToggle');
   const deepSeekApiKey = document.getElementById('deepSeekApiKey');
   const deepSeekApiGroup = document.getElementById('deepSeekApiGroup');
-  
+
   if (targetLanguage) targetLanguage.value = userSettings.targetLanguage;
   if (buttonColor) buttonColor.value = userSettings.buttonColor;
   if (enabledToggle) enabledToggle.classList.toggle('active', userSettings.isEnabled);
@@ -2134,21 +2134,21 @@ function initSettings() {
   if (smartDetectionToggle) smartDetectionToggle.classList.toggle('active', userSettings.autoDetectSameLanguage);
   if (animationsToggle) animationsToggle.classList.toggle('active', userSettings.animationsEnabled);
   if (autoSaveToggle) autoSaveToggle.classList.toggle('active', userSettings.autoSaveToFlashcards);
-  
+
   if (deepSeekToggle) {
     // Toujours désactiver DeepSeek par défaut si l'utilisateur n'est pas connecté
     deepSeekToggle.classList.remove('active');
     userSettings.deepSeekEnabled = false;
   }
-  
+
   if (deepSeekApiKey && userSettings.deepSeekApiKey) {
     deepSeekApiKey.value = userSettings.deepSeekApiKey;
   }
-  
+
   if (deepSeekApiGroup) {
     deepSeekApiGroup.style.display = userSettings.deepSeekEnabled ? 'block' : 'none';
   }
-  
+
   // Vérifier le statut DeepSeek si activé
   if (userSettings.deepSeekEnabled && userSettings.deepSeekApiKey) {
     validateDeepSeekKey(userSettings.deepSeekApiKey);
@@ -2159,11 +2159,11 @@ function initSettings() {
 function updateRecentTranslations() {
   const container = document.getElementById('recentTranslationsList');
   if (!container) return;
-  
+
   // Filtrer les traductions valides
   const validTranslations = translations.filter(t => t.fromLang !== t.toLang);
   const recent = validTranslations.slice(0, 5);
-  
+
   if (recent.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
@@ -2176,10 +2176,10 @@ function updateRecentTranslations() {
     `;
     return;
   }
-  
+
   container.innerHTML = recent.map(t => {
     const timeAgo = getTimeAgo(new Date(t.timestamp));
-    
+
     return `
       <div class="translation-item" data-id="${t.id}">
         <div class="translation-header">
@@ -2213,10 +2213,10 @@ function updateRecentTranslations() {
 function updateHistory() {
   const container = document.getElementById('historyList');
   if (!container) return;
-  
+
   // Filtrer les traductions valides
   const validTranslations = translations.filter(t => t.fromLang !== t.toLang);
-  
+
   if (validTranslations.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
@@ -2229,13 +2229,13 @@ function updateHistory() {
     `;
     return;
   }
-  
+
   // Grouper par paire de langues unique (bidirectionnel)
   const grouped = {};
   validTranslations.forEach(t => {
     const langs = [t.fromLang, t.toLang].sort();
     const key = `${langs[0]}_${langs[1]}`;
-    
+
     if (!grouped[key]) {
       grouped[key] = {
         langs: langs,
@@ -2244,29 +2244,29 @@ function updateHistory() {
         currentDirection: null
       };
     }
-    
+
     grouped[key].translations.push(t);
-    
+
     if (!grouped[key].primaryDirection) {
       grouped[key].primaryDirection = `${t.fromLang}_${t.toLang}`;
       grouped[key].currentDirection = `${t.fromLang}_${t.toLang}`;
     }
   });
-  
+
   // Récupérer les directions sauvegardées
   const savedDirections = JSON.parse(localStorage.getItem('folderDirections') || '{}');
-  
+
   let html = '';
   Object.entries(grouped).forEach(([key, group]) => {
     // Utiliser la direction sauvegardée si elle existe
     if (savedDirections[key]) {
       group.currentDirection = savedDirections[key];
     }
-    
+
     const currentDirection = group.currentDirection || group.primaryDirection;
     const [fromLang, toLang] = currentDirection.split('_');
     const totalCount = group.translations.length;
-    
+
     html += `
       <div class="language-folder" data-key="${key}" data-direction="${currentDirection}">
         <div class="folder-header" style="position: relative;">
@@ -2298,9 +2298,9 @@ function updateHistory() {
       </div>
     `;
   });
-  
+
   container.innerHTML = html;
-  
+
   // Attacher les event listeners après avoir créé le HTML
   setTimeout(() => {
     // Event listeners pour ouvrir/fermer les dossiers
@@ -2308,13 +2308,13 @@ function updateHistory() {
       header.addEventListener('click', (e) => {
         // Ne pas déclencher si on clique sur un bouton
         if (e.target.closest('button')) return;
-        
+
         const folder = header.closest('.language-folder');
         const key = folder.dataset.key;
         toggleFolder(key);
       });
     });
-    
+
     // Utiliser la délégation d'événements pour les boutons
     container.addEventListener('click', (e) => {
       // Gérer les boutons swap
@@ -2325,7 +2325,7 @@ function updateHistory() {
         const direction = btn.dataset.direction;
         swapLanguages(key, direction);
       }
-      
+
       // Gérer les boutons menu
       if (e.target.closest('.js-menu-btn')) {
         e.stopPropagation();
@@ -2342,7 +2342,7 @@ function updateHistory() {
 function renderFolderTranslations(translations, fromLang, toLang) {
   // Afficher toutes les traductions, peu importe la direction
   const sorted = translations.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  
+
   return sorted.slice(0, 50).map(t => {
     // Déterminer si c'est une traduction inversée
     const isReversed = t.fromLang !== fromLang;
@@ -2350,7 +2350,7 @@ function renderFolderTranslations(translations, fromLang, toLang) {
     const displayToLang = isReversed ? t.fromLang : t.toLang;
     const displayOriginal = isReversed ? t.translated : t.original;
     const displayTranslated = isReversed ? t.original : t.translated;
-    
+
     return `
       <div class="translation-item" data-id="${t.id}">
         <div class="translation-header">
@@ -2385,23 +2385,23 @@ function renderFolderTranslations(translations, fromLang, toLang) {
 async function updateFlashcards() {
   const container = document.getElementById('flashcardsList');
   if (!container) return;
-  
-  
+
+
   // Détecter si les flashcards ont disparu de manière inattendue
   if (flashcards.length === 0 && flashcardsBackup.length > 0) {
     console.error('⚠️ ALERTE: Les flashcards ont disparu! Backup:', flashcardsBackup.length);
     console.trace('Stack trace');
-    
+
     // Essayer de restaurer depuis le backup
     flashcards = [...flashcardsBackup];
     debug('🔄 Flashcards restaurées depuis le backup');
   }
-  
+
   if (practiceMode.active) {
     displayPracticeMode();
     return;
   }
-  
+
   if (flashcards.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
@@ -2415,7 +2415,7 @@ async function updateFlashcards() {
         </button>
       </div>
     `;
-    
+
     // Attacher l'event listener
     const tipsBtn = container.querySelector('.js-tips-btn');
     if (tipsBtn) {
@@ -2423,7 +2423,7 @@ async function updateFlashcards() {
     }
     return;
   }
-  
+
   // Grouper par paires de langues
   const grouped = {};
   flashcards.forEach(card => {
@@ -2431,20 +2431,20 @@ async function updateFlashcards() {
     const frontText = card.front || card.text || card.originalText;
     const backText = card.back || card.translation || card.translatedText;
     const targetLang = card.language || card.targetLanguage || 'fr';
-    
+
     if (!frontText || !backText) return;
-    
+
     // Utiliser sourceLanguage si disponible, sinon détecter
-    const fromLang = card.sourceLanguage && card.sourceLanguage !== 'auto' 
-      ? card.sourceLanguage 
+    const fromLang = card.sourceLanguage && card.sourceLanguage !== 'auto'
+      ? card.sourceLanguage
       : detectLanguage(frontText);
     const toLang = targetLang;
-    
+
     if (fromLang === toLang) return;
-    
+
     // Ne pas trier les langues - garder l'ordre source->cible
     const key = `${fromLang}_${toLang}`;
-    
+
     if (!grouped[key]) {
       grouped[key] = {
         langs: [fromLang, toLang],
@@ -2453,7 +2453,7 @@ async function updateFlashcards() {
         currentDirection: `${fromLang}_${toLang}`
       };
     }
-    
+
     // Normaliser le format de la carte
     const normalizedCard = {
       ...card,
@@ -2463,25 +2463,25 @@ async function updateFlashcards() {
       fromLang,
       toLang
     };
-    
+
     grouped[key].cards.push(normalizedCard);
   });
-  
+
   // Récupérer les directions sauvegardées
   const savedDirections = JSON.parse(localStorage.getItem('flashcardDirections') || '{}');
-  
+
   let html = '';
   Object.entries(grouped).forEach(([key, group]) => {
-    
+
     // Utiliser la direction sauvegardée si elle existe
     if (savedDirections[key]) {
       group.currentDirection = savedDirections[key];
     }
-    
+
     const currentDirection = group.currentDirection || group.primaryDirection;
     const [fromLang, toLang] = currentDirection.split('_');
     const totalCount = group.cards.length;
-    
+
     html += `
       <div class="language-folder flashcard-language-folder" data-key="${key}" data-direction="${currentDirection}">
         <div class="folder-header" style="position: relative;">
@@ -2513,9 +2513,9 @@ async function updateFlashcards() {
       </div>
     `;
   });
-  
+
   container.innerHTML = html || '<div class="empty-state"><div class="empty-state-icon">🎴</div><div>Aucune flashcard valide</div></div>';
-  
+
   // Attacher les event listeners après avoir créé le HTML
   setTimeout(() => {
     // Event listeners pour ouvrir/fermer les dossiers
@@ -2523,17 +2523,17 @@ async function updateFlashcards() {
       header.addEventListener('click', (e) => {
         // Ne pas déclencher si on clique sur un bouton ou une flashcard
         if (e.target.closest('button') || e.target.closest('.flashcard')) return;
-        
+
         const folder = header.closest('.flashcard-language-folder');
         const key = folder.dataset.key;
         toggleFlashcardFolder(key);
       });
     });
-    
+
     // Attacher un seul event listener sur le container principal
     if (!container.dataset.listenersAttached) {
       container.dataset.listenersAttached = 'true';
-      
+
       container.addEventListener('click', (e) => {
         // Gérer les clics sur les flashcards - IMPORTANT: vérifier qu'on n'a pas cliqué sur un bouton
         const flashcard = e.target.closest('.flashcard');
@@ -2545,7 +2545,7 @@ async function updateFlashcards() {
           flipCard(cardId);
           return;
         }
-        
+
         // Gérer les boutons swap flashcard
         if (e.target.closest('.js-flashcard-swap')) {
           e.stopPropagation();
@@ -2554,7 +2554,7 @@ async function updateFlashcards() {
           const direction = btn.dataset.direction;
           swapFlashcardLanguages(key, direction);
         }
-        
+
         // Gérer les boutons menu flashcard
         if (e.target.closest('.js-flashcard-menu')) {
           e.stopPropagation();
@@ -2563,17 +2563,17 @@ async function updateFlashcards() {
           const type = btn.dataset.type;
           showFolderMenu(e, key, type);
         }
-        
+
         // Gérer les boutons d'action des flashcards
         if (e.target.closest('.js-card-action')) {
           e.stopPropagation();
           const btn = e.target.closest('.js-card-action');
           const action = btn.dataset.action;
           const cardId = btn.dataset.cardId;
-          
+
           debug('Action flashcard:', { action, cardId });
-          
-          switch(action) {
+
+          switch (action) {
             case 'favorite':
               moveToFolder(cardId, 'favorites');
               break;
@@ -2601,7 +2601,7 @@ function renderFlashcards(cards, fromLang, toLang) {
     console.warn('renderFlashcards: cards is undefined or not an array');
     return '';
   }
-  
+
   // Afficher toutes les cartes du groupe, peu importe la direction
   return cards.slice(0, 20).map(card => {
     // Déterminer si c'est une carte inversée
@@ -2610,10 +2610,10 @@ function renderFlashcards(cards, fromLang, toLang) {
     const displayBack = isReversed ? card.front : card.back;
     const displayFromLang = isReversed ? card.toLang : card.fromLang;
     const displayToLang = isReversed ? card.fromLang : card.toLang;
-    
+
     // Créer un ID sûr pour HTML en remplaçant les tirets par des underscores
     const safeId = card.id.replace(/-/g, '_');
-    
+
     return `
       <div class="flashcard" data-id="${card.id}" style="cursor: pointer;">
         <div class="flashcard-difficulty difficulty-${card.difficulty || 'normal'}"></div>
@@ -2647,18 +2647,18 @@ function renderFlashcards(cards, fromLang, toLang) {
 // Sauvegarder les flashcards
 async function saveFlashcards() {
   debug('📝 saveFlashcards appelée avec', flashcards.length, 'flashcards');
-  
+
   // Ne plus sauvegarder localement - les flashcards sont uniquement sur le serveur
   debug('☁️ Les flashcards sont maintenant uniquement sur le serveur');
-  
+
   // Si l'utilisateur est connecté, synchroniser avec le backend
   const token = await authAPI.getToken();
   if (token) {
     // Synchroniser TOUTES les flashcards non synchronisées
     const unsyncedCards = flashcards.filter(card => !card.synced && !card.syncedWithServer);
-    
+
     debug(`📤 ${unsyncedCards.length} flashcards à synchroniser`);
-    
+
     // Vérifier que flashcardsAPI est disponible
     if (typeof flashcardsAPI !== 'undefined' && flashcardsAPI.create) {
       for (const card of unsyncedCards) {
@@ -2666,12 +2666,12 @@ async function saveFlashcards() {
           // Vérifier que les données sont valides avant d'envoyer
           const originalText = card.front || card.text || '';
           const translatedText = card.back || card.translation || '';
-          
+
           if (!originalText || !translatedText) {
             console.warn('Flashcard invalide, skip:', card);
             continue;
           }
-          
+
           const sourceLang = card.sourceLanguage || detectLanguage(originalText);
           const targetLang = card.targetLanguage || card.language || 'fr';
           const response = await flashcardsAPI.create({
@@ -2683,7 +2683,7 @@ async function saveFlashcards() {
             folder: card.folder || 'default',
             difficulty: card.difficulty || 'normal'
           });
-          
+
           if (response && response.id) {
             debug('✅ Flashcard synchronisée:', card.front || card.text);
             // Marquer comme synchronisée
@@ -2699,7 +2699,7 @@ async function saveFlashcards() {
     } else {
       console.warn('⚠️ flashcardsAPI non disponible, synchronisation ignorée');
     }
-    
+
     // Ne plus sauvegarder localement - les flashcards sont uniquement sur le serveur
     debug('✅ Flashcards marquées comme synchronisées (pas de sauvegarde locale)');
   }
@@ -2709,10 +2709,10 @@ async function saveFlashcards() {
 function displayPracticeMode() {
   const container = document.getElementById('flashcardsList');
   if (!container || !practiceMode.active) return;
-  
+
   const currentCard = practiceMode.cards[practiceMode.currentIndex];
   const progress = ((practiceMode.currentIndex) / practiceMode.cards.length) * 100;
-  
+
   container.innerHTML = `
     <div class="practice-mode">
       <div class="practice-header">
@@ -2774,7 +2774,7 @@ function displayPracticeMode() {
       </div>
     </div>
   `;
-  
+
   // Focus sur l'input et gérer Enter
   setTimeout(() => {
     const input = document.getElementById('practiceAnswer');
@@ -2791,7 +2791,7 @@ function displayPracticeMode() {
         }
       });
     }
-    
+
     // Event listeners pour les boutons
     container.querySelector('.js-check-answer')?.addEventListener('click', checkAnswer);
     container.querySelector('.js-show-hint')?.addEventListener('click', showHint);
@@ -2814,38 +2814,38 @@ function normalizeAnswer(answer) {
 function checkAnswerSimilarity(userAnswer, correctAnswer) {
   // Correspondance exacte
   if (userAnswer === correctAnswer) return true;
-  
+
   // Correspondance sans articles
   const userWords = userAnswer.split(' ');
   const correctWords = correctAnswer.split(' ');
-  
+
   // Si l'utilisateur a donné tous les mots importants
   const importantWords = correctWords.filter(w => w.length > 2);
   const matchedWords = importantWords.filter(w => userAnswer.includes(w));
-  
+
   if (matchedWords.length >= importantWords.length * 0.8) return true;
-  
+
   // Distance de Levenshtein pour les mots courts
   if (correctAnswer.length < 10) {
     const distance = levenshteinDistance(userAnswer, correctAnswer);
     return distance <= Math.ceil(correctAnswer.length * 0.2);
   }
-  
+
   return false;
 }
 
 // Calculer la distance de Levenshtein
 function levenshteinDistance(a, b) {
   const matrix = [];
-  
+
   for (let i = 0; i <= b.length; i++) {
     matrix[i] = [i];
   }
-  
+
   for (let j = 0; j <= a.length; j++) {
     matrix[0][j] = j;
   }
-  
+
   for (let i = 1; i <= b.length; i++) {
     for (let j = 1; j <= a.length; j++) {
       if (b.charAt(i - 1) === a.charAt(j - 1)) {
@@ -2859,7 +2859,7 @@ function levenshteinDistance(a, b) {
       }
     }
   }
-  
+
   return matrix[b.length][a.length];
 }
 
@@ -2867,13 +2867,13 @@ function levenshteinDistance(a, b) {
 function showPracticeResults() {
   const container = document.getElementById('flashcardsList');
   if (!container) return;
-  
+
   const total = practiceMode.score.correct + practiceMode.score.incorrect;
   const percentage = total > 0 ? Math.round((practiceMode.score.correct / total) * 100) : 0;
   const duration = Math.round((Date.now() - practiceMode.startTime) / 1000);
   const minutes = Math.floor(duration / 60);
   const seconds = duration % 60;
-  
+
   let message, emoji;
   if (percentage >= 90) {
     message = 'Excellent! Maîtrise parfaite!';
@@ -2888,7 +2888,7 @@ function showPracticeResults() {
     message = 'Continuez à pratiquer!';
     emoji = '📚';
   }
-  
+
   container.innerHTML = `
     <div class="practice-results" style="text-align: center; padding: 40px 20px;">
       <div style="font-size: 64px; margin-bottom: 16px;">${emoji}</div>
@@ -2924,7 +2924,7 @@ function showPracticeResults() {
       </div>
     </div>
   `;
-  
+
   // Event listeners
   container.querySelector('.js-restart-practice')?.addEventListener('click', startPracticeMode);
   container.querySelector('.js-quit-results')?.addEventListener('click', quitPractice);
@@ -2933,7 +2933,7 @@ function showPracticeResults() {
 // Utilitaires
 function detectLanguage(text) {
   if (!text) return 'fr';
-  
+
   // Détection par caractères spéciaux
   const patterns = {
     'fr': /[àâäéêëèîïôùûüÿç]/i,
@@ -2947,11 +2947,11 @@ function detectLanguage(text) {
     'zh': /[\u4e00-\u9fff]/,
     'ar': /[\u0600-\u06ff]/
   };
-  
+
   for (const [lang, pattern] of Object.entries(patterns)) {
     if (pattern.test(text)) return lang;
   }
-  
+
   // Détection par mots courants
   const words = text.toLowerCase().split(/\s+/);
   const langWords = {
@@ -2962,10 +2962,10 @@ function detectLanguage(text) {
     'it': ['il', 'la', 'lo', 'le', 'e', 'è', 'in', 'un', 'una'],
     'pt': ['o', 'a', 'os', 'as', 'e', 'é', 'em', 'um', 'uma']
   };
-  
+
   let maxScore = 0;
   let detectedLang = 'en';
-  
+
   for (const [lang, keywords] of Object.entries(langWords)) {
     const score = words.filter(w => keywords.includes(w)).length;
     if (score > maxScore) {
@@ -2973,7 +2973,7 @@ function detectLanguage(text) {
       detectedLang = lang;
     }
   }
-  
+
   return detectedLang;
 }
 
@@ -2992,7 +2992,7 @@ function getFlagEmoji(langCode) {
     'zh': '🇨🇳',
     'auto': '🌐'
   };
-  
+
   return flags[langCode] || '🌐';
 }
 
@@ -3011,7 +3011,7 @@ function getLanguageName(langCode) {
     'zh': '中文',
     'auto': 'Auto'
   };
-  
+
   return names[langCode] || langCode.toUpperCase();
 }
 
@@ -3029,12 +3029,12 @@ function escapeHtml(text) {
 
 function getTimeAgo(date) {
   const seconds = Math.floor((new Date() - date) / 1000);
-  
+
   if (seconds < 60) return 'à l\'instant';
   if (seconds < 3600) return `il y a ${Math.floor(seconds / 60)} min`;
   if (seconds < 86400) return `il y a ${Math.floor(seconds / 3600)} h`;
   if (seconds < 604800) return `il y a ${Math.floor(seconds / 86400)} j`;
-  
+
   return date.toLocaleDateString('fr-FR');
 }
 
@@ -3055,9 +3055,9 @@ function showNotification(message, type = 'info') {
     animation: slideIn 0.3s ease-out;
   `;
   notification.textContent = message;
-  
+
   document.body.appendChild(notification);
-  
+
   setTimeout(() => {
     notification.style.animation = 'slideOut 0.3s ease-in';
     setTimeout(() => notification.remove(), 300);
@@ -3080,7 +3080,7 @@ function showLoginWindow() {
     justify-content: center;
     z-index: 10000;
   `;
-  
+
   loginModal.innerHTML = `
     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2px; border-radius: 18px; max-width: 380px; width: 90%; box-shadow: 0 25px 60px rgba(0,0,0,0.3);">
       <div style="background: white; padding: 28px; border-radius: 16px; position: relative;">
@@ -3115,43 +3115,43 @@ function showLoginWindow() {
       </div>
     </div>
   `;
-  
+
   document.body.appendChild(loginModal);
-  
+
   // Event listeners
   loginModal.querySelector('.js-login-cancel').addEventListener('click', () => {
     loginModal.remove();
   });
-  
+
   loginModal.querySelector('.js-login-submit').addEventListener('click', async () => {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
-    
+
     if (!email || !password) {
       showNotification('Veuillez remplir tous les champs', 'warning');
       return;
     }
-    
+
     // Désactiver le bouton pendant la connexion
     const submitButton = loginModal.querySelector('.js-login-submit');
     submitButton.disabled = true;
     submitButton.textContent = 'Connexion en cours...';
-    
+
     try {
       // Appel API réel pour la connexion
       const response = await authAPI.login(email, password);
-      
+
       // Fermer le modal d'abord
       loginModal.remove();
-      
+
       // Ensuite afficher la notification et mettre à jour l'UI
       showNotification('Connexion réussie!', 'success');
       updateUIAfterLogin(response.user);
-      
+
       // Vérifier si c'est le même utilisateur ou un nouveau
       const previousUserId = localStorage.getItem('lastUserId') || localStorage.getItem('lastDisconnectedUserId');
       const currentUserId = response.user.id || response.user._id;
-      
+
       if (previousUserId && previousUserId !== currentUserId) {
         // C'est un utilisateur différent, nettoyer les données
         debug('🔄 Changement d\'utilisateur détecté, nettoyage des données...');
@@ -3162,38 +3162,38 @@ function showLoginWindow() {
       } else {
         debug('✅ Même utilisateur, conservation des données locales');
       }
-      
+
       // Sauvegarder l'ID de l'utilisateur actuel
       localStorage.setItem('lastUserId', currentUserId);
 
       // Sauvegarder l'email pour pré-remplir le formulaire de récupération
       chrome.storage.local.set({ lastLoginEmail: email });
-      
+
       // NE PAS appeler syncFlashcardsAfterLogin ici - updateUIAfterLogin s'en charge
-      
+
     } catch (error) {
       showNotification(error.message || 'Erreur de connexion', 'error');
       submitButton.disabled = false;
       submitButton.textContent = 'Se connecter';
     }
   });
-  
+
   // Fermer en cliquant à l'extérieur
   loginModal.addEventListener('click', (e) => {
     if (e.target === loginModal) {
       loginModal.remove();
     }
   });
-  
+
   // Focus sur l'email et ajouter les effets
   setTimeout(() => {
     const emailInput = document.getElementById('loginEmail');
     const passwordInput = document.getElementById('loginPassword');
     const submitButton = loginModal.querySelector('.js-login-submit');
-    
+
     // Focus sur l'email
     emailInput.focus();
-    
+
     // Effets de focus pour les inputs
     [emailInput, passwordInput].forEach(input => {
       input.addEventListener('focus', () => {
@@ -3201,26 +3201,26 @@ function showLoginWindow() {
         input.style.background = 'white';
         input.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
       });
-      
+
       input.addEventListener('blur', () => {
         input.style.borderColor = '#e5e7eb';
         input.style.background = '#f9fafb';
         input.style.boxShadow = 'none';
       });
     });
-    
+
     // Effet hover pour le bouton
     submitButton.addEventListener('mouseenter', () => {
       submitButton.style.transform = 'translateY(-1px)';
       submitButton.style.boxShadow = '0 6px 16px rgba(102, 126, 234, 0.5)';
     });
-    
+
     submitButton.addEventListener('mouseleave', () => {
       submitButton.style.transform = 'translateY(0)';
       submitButton.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
     });
   }, 100);
-  
+
   // Event listener pour le lien "Créer un compte"
   loginModal.querySelector('.js-register-link').addEventListener('click', (e) => {
     e.preventDefault();
@@ -3237,15 +3237,15 @@ function showLoginWindow() {
       showForgotPasswordWindow();
     });
   }
-  
-  
+
+
 }
 
 // Fonction handleOAuthLogin mise à jour
 function handleOAuthLogin(provider) {
   // Récupérer le modal de connexion actuel
   const loginModal = document.querySelector('.login-modal');
-  
+
   // Désactiver le bouton Google et afficher un feedback
   const googleButton = loginModal?.querySelector('.js-oauth-google');
   if (googleButton) {
@@ -3255,7 +3255,7 @@ function handleOAuthLogin(provider) {
       <span>Connexion...</span>
     `;
   }
-  
+
   // Timeout pour réactiver le bouton en cas d'échec
   oauthTimeoutId = setTimeout(() => {
     console.error('Timeout OAuth - La connexion prend trop de temps');
@@ -3268,11 +3268,11 @@ function handleOAuthLogin(provider) {
     }
     showNotification('La connexion a échoué. Veuillez réessayer.', 'error');
   }, 30000); // 30 secondes de timeout
-  
+
   // Construire l'URL OAuth avec les paramètres appropriés
   const timestamp = Date.now();
   const authUrl = `${API_CONFIG.BASE_URL}/api/auth/${provider}?prompt=select_account&max_age=0&t=${timestamp}`;
-  
+
   // Afficher un message de chargement
   if (googleButton) {
     googleButton.innerHTML = `
@@ -3282,7 +3282,7 @@ function handleOAuthLogin(provider) {
       </div>
     `;
   }
-  
+
   // Ouvrir dans une fenêtre popup
   chrome.windows.create({
     url: authUrl,
@@ -3299,7 +3299,7 @@ function handleOAuthLogin(provider) {
       }
       console.error('Erreur chrome.windows.create:', chrome.runtime.lastError);
       showNotification('Impossible d\'ouvrir la page de connexion', 'error');
-      
+
       // Réactiver le bouton
       if (googleButton) {
         googleButton.disabled = false;
@@ -3310,15 +3310,15 @@ function handleOAuthLogin(provider) {
       }
       return;
     }
-    
+
     debug('Fenêtre OAuth ouverte:', window.id);
-    
+
     // Fermer le modal si tout va bien
     if (loginModal) {
       loginModal.remove();
     }
   });
-  
+
   // Fonction pour gérer la connexion réussie
   const handleSuccessfulAuth = async (token) => {
     // Annuler le timeout
@@ -3326,20 +3326,20 @@ function handleOAuthLogin(provider) {
       clearTimeout(oauthTimeoutId);
       oauthTimeoutId = null;
     }
-    
+
     if (!token) {
       showNotification('Erreur: Token manquant', 'error');
       return;
     }
-    
+
     // Fermer le modal immédiatement
     if (loginModal) {
       loginModal.remove();
     }
-    
+
     // Afficher un message de chargement
     showNotification('Connexion en cours...', 'info');
-    
+
     // Sauvegarder le token
     chrome.storage.local.set({ authToken: token }, async () => {
       try {
@@ -3348,18 +3348,18 @@ function handleOAuthLogin(provider) {
         if (response && response.user) {
           // Sauvegarder immédiatement les infos utilisateur
           chrome.storage.local.set({ user: response.user });
-          
+
           // Mettre à jour l'interface immédiatement pour feedback rapide
           updateUIAfterLogin(response.user);
           showNotification('Connexion réussie!', 'success');
-          
+
           // Gérer les flashcards en arrière-plan après l'UI
           setTimeout(async () => {
             const currentUserId = response.user.id || response.user._id;
-            
+
             // Sauvegarder l'ID de l'utilisateur actuel
             localStorage.setItem('lastUserId', currentUserId);
-            
+
             // NE PAS nettoyer les données locales - on veut les préserver !
             debug('📌 Préservation des données locales...');
             // flashcards = [];  // COMMENTÉ pour préserver les flashcards
@@ -3368,10 +3368,10 @@ function handleOAuthLogin(provider) {
             // localStorage.removeItem('translations');
             localStorage.removeItem('lastDisconnectedUserId'); // OK de nettoyer ça
             // chrome.storage.local.remove(['flashcards', 'translations']); // COMMENTÉ
-            
+
             // NE PAS appeler syncFlashcardsAfterLogin ici - updateUIAfterLogin s'en charge
             debug(`👤 updateUIAfterLogin va gérer la synchronisation`);
-            
+
             // Réinitialiser le currentUser avec les nouvelles infos
             window.currentUser = response.user;
           }, 100);
@@ -3395,7 +3395,7 @@ function handleOAuthLogin(provider) {
       }
     });
   };
-  
+
   // Fonction pour gérer les erreurs
   const handleAuthError = (error) => {
     // Annuler le timeout
@@ -3403,10 +3403,10 @@ function handleOAuthLogin(provider) {
       clearTimeout(oauthTimeoutId);
       oauthTimeoutId = null;
     }
-    
+
     console.error('Erreur OAuth:', error);
     showNotification(`Erreur de connexion: ${error}`, 'error');
-    
+
     // Réactiver le bouton
     if (googleButton) {
       googleButton.disabled = false;
@@ -3416,7 +3416,7 @@ function handleOAuthLogin(provider) {
       `;
     }
   };
-  
+
 }
 
 // Afficher la fenêtre d'inscription
@@ -3435,7 +3435,7 @@ function showRegisterWindow() {
     justify-content: center;
     z-index: 10000;
   `;
-  
+
   registerModal.innerHTML = `
     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2px; border-radius: 18px; max-width: 380px; width: 90%; box-shadow: 0 25px 60px rgba(0,0,0,0.3);">
       <div style="background: white; padding: 28px; border-radius: 16px; position: relative;">
@@ -3474,67 +3474,67 @@ function showRegisterWindow() {
       </div>
     </div>
   `;
-  
+
   document.body.appendChild(registerModal);
-  
+
   // Event listeners
   registerModal.querySelector('.js-register-cancel').addEventListener('click', () => {
     registerModal.remove();
   });
-  
+
   registerModal.querySelector('.js-register-submit').addEventListener('click', async () => {
     const name = document.getElementById('registerName').value;
     const email = document.getElementById('registerEmail').value;
     const password = document.getElementById('registerPassword').value;
-    
+
     if (!name || !email || !password) {
       showNotification('Veuillez remplir tous les champs', 'warning');
       return;
     }
-    
+
     if (password.length < 8) {
       showNotification('Le mot de passe doit contenir au moins 8 caractères', 'warning');
       return;
     }
-    
+
     // Désactiver le bouton pendant l'inscription
     const submitButton = registerModal.querySelector('.js-register-submit');
     submitButton.disabled = true;
     submitButton.textContent = 'Création en cours...';
-    
+
     try {
       // Appel API pour créer le compte
       const response = await authAPI.register(name, email, password);
-      
+
       registerModal.remove();
       showNotification('Compte créé avec succès!', 'success');
-      
+
       // Mettre à jour l'interface utilisateur
       updateUIAfterLogin(response.user);
-      
+
       // NE PAS appeler syncFlashcardsAfterLogin ici - updateUIAfterLogin s'en charge
-      
+
     } catch (error) {
       showNotification(error.message || 'Erreur lors de la création du compte', 'error');
       submitButton.disabled = false;
       submitButton.textContent = 'Créer mon compte';
     }
   });
-  
+
   // Lien pour revenir à la connexion
   registerModal.querySelector('.js-login-link').addEventListener('click', (e) => {
     e.preventDefault();
     registerModal.remove();
     showLoginWindow();
   });
-  
+
   // Fermer en cliquant à l'extérieur
   registerModal.addEventListener('click', (e) => {
     if (e.target === registerModal) {
       registerModal.remove();
     }
   });
-  
+
   // Focus sur le nom et ajouter les effets
   setTimeout(() => {
     const nameInput = document.getElementById('registerName');
@@ -3778,27 +3778,27 @@ async function showForgotPasswordWindow() {
 // Fonction pour mettre à jour l'UI après connexion
 function updateUIAfterLogin(user) {
   if (!user) return;
-  
+
   // Sauvegarder l'utilisateur courant
   window.currentUser = user;
-  
+
   // Sauvegarder aussi dans chrome.storage pour la persistance
   chrome.storage.local.set({ user: user });
-  
+
   debug('👤 Utilisateur connecté:', user.email || user.name);
-  
+
   // Mettre à jour l'interface utilisateur
   updateUserInterface(user);
-  
+
   // Mettre à jour le quota
   updateUserQuota(user);
-  
+
   // Fermer les modales
   const loginModal = document.getElementById('loginModal');
   const registerModal = document.getElementById('registerModal');
   if (loginModal) loginModal.style.display = 'none';
   if (registerModal) registerModal.style.display = 'none';
-  
+
   // Charger les flashcards depuis le serveur
   debug('🔄 Chargement des flashcards après connexion...');
   loadFlashcardsFromServer().then(() => {
@@ -3808,10 +3808,10 @@ function updateUIAfterLogin(user) {
   }).catch(error => {
     console.error('❌ Erreur chargement flashcards après connexion:', error);
   });
-  
+
   // Mettre à jour le quota
   updateUserQuota(user);
-  
+
   // Rafraîchir l'interface
   updateStats();
 }
@@ -3832,7 +3832,7 @@ function updateUserInterface(user) {
   const userEmailDisplay = document.getElementById('userEmailDisplay');
   const loginText = document.getElementById('loginText');
   const userAccountSection = document.getElementById('userAccountSection');
-  
+
   if (user && user.email) {
     // Afficher seulement la première lettre
     if (avatarLetter) {
@@ -3845,17 +3845,17 @@ function updateUserInterface(user) {
         userAccountSection.style.background = bgColor;
       }
     }
-    
+
     // Préparer l'email pour l'affichage au hover
     if (userEmailDisplay) {
       userEmailDisplay.textContent = user.email;
     }
-    
+
     // Cacher le texte de connexion
     if (loginText) {
       loginText.style.display = 'none';
     }
-    
+
     // Retirer la classe not-logged-in
     if (userAccountSection) {
       userAccountSection.classList.remove('not-logged-in');
@@ -3866,31 +3866,31 @@ function updateUserInterface(user) {
 // Fonction pour afficher le menu utilisateur
 function showUserMenu(user) {
   debug('showUserMenu appelé avec:', user);
-  
+
   // Mettre à jour l'interface avec la première lettre
   updateUserInterface(user);
-  
+
   // Utiliser le menu existant dans le HTML
   const menu = document.getElementById('userMenu');
   if (!menu) {
     console.error('Menu utilisateur non trouvé dans le HTML');
     return;
   }
-  
+
   // Mettre à jour les informations de l'utilisateur dans le menu
   const userEmail = document.getElementById('userEmail');
   const userPlan = document.getElementById('userPlan');
-  
+
   if (userEmail) {
     userEmail.textContent = user.email || user.name || 'Utilisateur';
   }
-  
+
   if (userPlan) {
     const isPremium = user.isPremium || user.subscriptionStatus === 'premium';
     userPlan.textContent = isPremium ? '⭐ Compte Premium' : '📦 Compte Gratuit';
     userPlan.style.color = isPremium ? '#f5576c' : '#6b7280';
   }
-  
+
   // Déplacer le menu dans le body pour éviter les problèmes d'overflow
   if (menu.parentElement !== document.body) {
     document.body.appendChild(menu);
@@ -3912,7 +3912,7 @@ function showUserMenu(user) {
     // Afficher le menu
     menu.style.display = 'block';
   }
-  
+
   // Mettre à jour le bouton de connexion
   const loginButton = document.getElementById('loginButton');
   if (loginButton) {
@@ -3920,7 +3920,7 @@ function showUserMenu(user) {
       <span style="font-size: 12px;">👤</span>
       <span>${user.name || user.email || 'Mon compte'}</span>
     `;
-    
+
     // Ajouter l'événement pour basculer le menu
     loginButton.onclick = (e) => {
       e.stopPropagation();
@@ -3932,7 +3932,7 @@ function showUserMenu(user) {
       }
     };
   }
-  
+
   // Fermer le menu en cliquant ailleurs
   const closeMenu = (e) => {
     const userAccountSection = document.getElementById('userAccountSection');
@@ -3940,14 +3940,14 @@ function showUserMenu(user) {
       menu.style.display = 'none';
     }
   };
-  
+
   // Ajouter l'événement pour fermer le menu
   setTimeout(() => document.addEventListener('click', closeMenu), 100);
-  
+
   // Gérer les boutons du menu
   const switchAccountBtn = document.getElementById('switchAccountBtn');
   const logoutBtn = document.getElementById('logoutBtn');
-  
+
   // Ajouter les effets hover aux boutons
   if (switchAccountBtn) {
     switchAccountBtn.addEventListener('mouseenter', () => {
@@ -3957,7 +3957,7 @@ function showUserMenu(user) {
       switchAccountBtn.style.background = 'none';
     });
   }
-  
+
   if (logoutBtn) {
     logoutBtn.addEventListener('mouseenter', () => {
       logoutBtn.style.background = '#fee2e2';
@@ -3966,47 +3966,47 @@ function showUserMenu(user) {
       logoutBtn.style.background = 'none';
     });
   }
-  
+
   // Gérer le changement de compte
   if (switchAccountBtn) {
     switchAccountBtn.onclick = async () => {
       // Les flashcards sont déjà sauvegardées sur le serveur en temps réel
       // Pas besoin de sauvegarder localement car on veut un stockage 100% serveur
       debug('🔄 Changement de compte - Les flashcards sont déjà sur le serveur');
-      
+
       // Se déconnecter
       await authAPI.logout();
       menu.style.display = 'none';
-      
+
       // Réinitialiser les variables actuelles
       flashcards = [];
       translations = [];
-      
+
       // Réinitialiser l'UI
       resetUIAfterLogout();
-      
+
       // Ouvrir directement la fenêtre de connexion Google
       setTimeout(() => {
         handleOAuthLogin('google');
       }, 500);
     };
   }
-  
+
   // Gérer la déconnexion
   if (logoutBtn) {
     logoutBtn.onclick = async () => {
       menu.style.display = 'none';
-      
+
       // Les flashcards sont déjà sauvegardées sur le serveur en temps réel
       // Pas besoin de sauvegarder localement car on veut un stockage 100% serveur
       debug('👋 Déconnexion - Les flashcards sont déjà sur le serveur');
-      
+
       await authAPI.logout();
-      
+
       // Réinitialiser les données locales
       flashcards = [];
       translations = [];
-      
+
       showNotification('Déconnexion réussie', 'success');
       resetUIAfterLogout();
     };
@@ -4016,10 +4016,10 @@ function showUserMenu(user) {
 // Fonction pour réinitialiser l'UI après déconnexion
 function resetUIAfterLogout() {
   debug('🚪 Resetting UI after logout...');
-  
+
   // TRÈS IMPORTANT : Réinitialiser l'utilisateur courant
   window.currentUser = null;
-  
+
   // IMPORTANT: Sauvegarder les données de l'utilisateur avant de déconnecter
   const currentUserId = localStorage.getItem('lastUserId');
   if (currentUserId && (flashcards.length > 0 || translations.length > 0)) {
@@ -4030,7 +4030,7 @@ function resetUIAfterLogout() {
       targetLanguage: targetLanguage,
       lastSaved: new Date().toISOString()
     };
-    
+
     // Sauvegarder dans chrome.storage.local
     chrome.storage.local.set({ [userDataKey]: userData }, () => {
       debug(`💾 Données sauvegardées pour l'utilisateur ${currentUserId}`);
@@ -4038,27 +4038,27 @@ function resetUIAfterLogout() {
       debug(`   - ${translations.length} traductions`);
     });
   }
-  
+
   // Maintenant on peut nettoyer les variables globales
   translations = [];
   localStorage.removeItem('translations');
   chrome.storage.local.remove(['translations']);
-  
+
   // Nettoyer les flashcards de la mémoire active seulement
   flashcards = [];
   // Ne plus supprimer localement - les flashcards sont uniquement sur le serveur
   debug('🧹 Variables globales nettoyées (données sauvegardées)');
-  
+
   // Clear folder directions
   localStorage.removeItem('folderDirections');
-  
+
   // NE PAS supprimer lastUserId pour pouvoir reconnaître l'utilisateur lors de la reconnexion
   // localStorage.removeItem('lastUserId');
-  
+
   // Clear user settings
   userSettings = {};
   chrome.storage.local.remove(['userSettings']);
-  
+
   // Clear practice mode data
   practiceMode = {
     active: false,
@@ -4067,50 +4067,50 @@ function resetUIAfterLogout() {
     score: { correct: 0, incorrect: 0 },
     startTime: null
   };
-  
+
   // 2. Reset user interface
   const userAccountSection = document.getElementById('userAccountSection');
   const avatarLetter = document.getElementById('avatarLetter');
   const userEmailDisplay = document.getElementById('userEmailDisplay');
   const loginText = document.getElementById('loginText');
-  
+
   if (userAccountSection) {
     userAccountSection.classList.add('not-logged-in');
     userAccountSection.style.background = 'rgba(255,255,255,0.1)';
   }
-  
+
   if (avatarLetter) {
     avatarLetter.textContent = '👤';
   }
-  
+
   if (userEmailDisplay) {
     userEmailDisplay.textContent = '';
   }
-  
+
   if (loginText) {
     loginText.style.display = 'inline';
   }
-  
+
   // 3. Hide quota indicator
   const quotaIndicator = document.getElementById('quotaIndicator');
   if (quotaIndicator) quotaIndicator.style.display = 'none';
-  
+
   // 4. Refresh all UI components to show empty state
   updateHistory();
   updateFlashcards();
   updateStats();
-  
+
   // 5. If practice mode is active, exit it
   if (practiceMode.active) {
     const practiceSection = document.getElementById('practiceSection');
     if (practiceSection) practiceSection.style.display = 'none';
-    
+
     const historySection = document.getElementById('historySection');
     const flashcardsSection = document.getElementById('flashcardsSection');
     if (historySection) historySection.style.display = 'block';
     if (flashcardsSection) flashcardsSection.style.display = 'block';
   }
-  
+
   debug('✅ UI reset completed after logout');
 }
 
@@ -4118,20 +4118,20 @@ function resetUIAfterLogout() {
 function updateUserQuota(user) {
   const quotaIndicator = document.getElementById('quotaIndicator');
   const quotaText = document.getElementById('quotaText');
-  
+
   if (!quotaIndicator || !quotaText) return;
-  
+
   const isPremium = user.isPremium || user.subscriptionStatus === 'premium';
   const flashcardsLimit = isPremium ? 999999 : 100; // Utiliser un grand nombre au lieu d'Infinity
   const flashcardsCount = user.flashcardsCount || 0;
-  
+
   // Afficher l'indicateur avec une animation
   quotaIndicator.style.display = 'inline-flex';
   quotaIndicator.style.opacity = '0';
   setTimeout(() => {
     quotaIndicator.style.opacity = '1';
   }, 100);
-  
+
   // Mettre à jour le texte avec un format simple
   if (isPremium) {
     quotaText.textContent = `${flashcardsCount} (unlimited)`;
@@ -4140,7 +4140,7 @@ function updateUserQuota(user) {
   } else {
     const percentage = (flashcardsCount / flashcardsLimit) * 100;
     quotaText.textContent = `${flashcardsCount}/${flashcardsLimit}`;
-    
+
     // Couleur simple selon le pourcentage
     if (percentage >= 90) {
       quotaIndicator.style.background = 'rgba(239, 68, 68, 0.15)';
@@ -4150,27 +4150,27 @@ function updateUserQuota(user) {
       quotaIndicator.style.borderColor = 'rgba(255, 255, 255, 0.2)';
     }
   }
-  
+
   // Ajouter un tooltip au survol
-  quotaIndicator.title = isPremium 
-    ? 'Premium user - Unlimited flashcards!' 
+  quotaIndicator.title = isPremium
+    ? 'Premium user - Unlimited flashcards!'
     : `Free plan - ${flashcardsLimit - flashcardsCount} flashcards remaining`;
 }
 
 // Fonction pour synchroniser les flashcards après connexion
 async function syncFlashcardsAfterLogin(mergeMode = false) {
   debug('🔄 Synchronisation des flashcards...', mergeMode ? 'Mode fusion' : 'Mode chargement');
-  
+
   // Si on est en mode fusion, on garde les flashcards locales
   let localFlashcards = mergeMode ? [...flashcards] : [];
-  
+
   // Si on n'est pas en mode fusion, on nettoie SEULEMENT les flashcards (pas les traductions!)
   if (!mergeMode) {
     flashcards = [];
     // Ne plus supprimer localement - les flashcards sont uniquement sur le serveur
     // NE PAS toucher aux traductions - elles restent locales
   }
-  
+
   // Vérifier que flashcardsAPI est disponible
   if (typeof flashcardsAPI === 'undefined' || !flashcardsAPI.getAll) {
     console.error('❌ flashcardsAPI non disponible');
@@ -4178,27 +4178,27 @@ async function syncFlashcardsAfterLogin(mergeMode = false) {
     updateStats();
     return;
   }
-  
+
   // Charger les flashcards UNIQUEMENT depuis le backend
   try {
     const response = await flashcardsAPI.getAll();
-    
+
     if (response && response.flashcards && Array.isArray(response.flashcards)) {
       debug(`☁️ ${response.flashcards.length} flashcards du serveur`);
       // Debug: voir ce que le serveur retourne vraiment
       if (response.flashcards.length > 0) {
         debug('🔍 Exemple de flashcard du serveur:', response.flashcards[0]);
       }
-      
+
       // Convertir les flashcards du serveur au bon format
       const serverFlashcards = response.flashcards.map(card => {
         // Utiliser sourceLanguage du serveur ou détecter pour les anciennes flashcards
         const frontText = card.front || card.originalText || card.text;
-        const sourceLang = card.sourceLanguage && card.sourceLanguage !== 'auto' 
-          ? card.sourceLanguage 
+        const sourceLang = card.sourceLanguage && card.sourceLanguage !== 'auto'
+          ? card.sourceLanguage
           : detectLanguage(frontText);
         const targetLang = card.language || card.targetLanguage || 'fr';
-        
+
         return {
           id: card.id || generateUUID(), // Utiliser l'ID existant ou générer un nouveau
           front: card.front || card.originalText,
@@ -4223,16 +4223,16 @@ async function syncFlashcardsAfterLogin(mergeMode = false) {
           serverId: card._id || card.id
         };
       });
-      
+
       if (mergeMode) {
         // FUSION : Utiliser un Map pour éviter les doublons par ID
         const flashcardMap = new Map();
-        
+
         // Ajouter d'abord les flashcards locales
         localFlashcards.forEach(card => {
           flashcardMap.set(card.id, card);
         });
-        
+
         // Ajouter/Mettre à jour avec les flashcards du serveur
         serverFlashcards.forEach(card => {
           const existingCard = flashcardMap.get(card.id);
@@ -4241,22 +4241,22 @@ async function syncFlashcardsAfterLogin(mergeMode = false) {
             flashcardMap.set(card.id, card);
           }
         });
-        
+
         flashcards = Array.from(flashcardMap.values());
         debug(`✅ Fusion terminée: ${flashcards.length} flashcards au total`);
-        
+
       } else {
         // Mode chargement simple
         flashcards = serverFlashcards;
         debug(`✅ ${flashcards.length} flashcards chargées du serveur`);
       }
-      
+
       // Ne plus sauvegarder localement - les flashcards sont uniquement sur le serveur
       debug('☁️ Flashcards chargées depuis le serveur uniquement');
-      
+
     } else {
       debug('ℹ️ Aucune flashcard sur le serveur');
-      
+
       if (mergeMode) {
         // Garder les flashcards locales
         flashcards = localFlashcards;
@@ -4267,15 +4267,15 @@ async function syncFlashcardsAfterLogin(mergeMode = false) {
         debug('🔄 Compte vide, pas de flashcards');
       }
     }
-    
+
     // Mettre à jour l'interface
     updateFlashcards();
     updateStats();
-    
+
   } catch (error) {
     console.error('❌ Erreur lors du chargement des flashcards:', error);
     showNotification('Erreur de chargement des flashcards', 'error');
-    
+
     // En cas d'erreur, tableau vide
     flashcards = [];
     updateFlashcards();
@@ -4286,7 +4286,7 @@ async function syncFlashcardsAfterLogin(mergeMode = false) {
 // Effacer tout l'historique
 async function clearHistory() {
   if (!confirm('Effacer tout l\'historique des traductions ?')) return;
-  
+
   // Supprimer sur le serveur si connecté
   const token = await authAPI.getToken();
   if (token) {
@@ -4299,7 +4299,7 @@ async function clearHistory() {
       // Continuer même si l'erreur serveur
     }
   }
-  
+
   // Supprimer localement
   translations = [];
   chrome.storage.local.set({ translations }, () => {
@@ -4316,12 +4316,12 @@ function backupFlashcards() {
     timestamp: new Date().toISOString(),
     version: '1.0'
   };
-  
+
   // Stocker le backup dans chrome.storage.local avec une clé différente
   chrome.storage.local.set({ flashcardsBackup: backup }, () => {
     debug(`💾 Backup créé: ${flashcards.length} flashcards sauvegardées`);
   });
-  
+
   return backup;
 }
 
@@ -4331,14 +4331,14 @@ function restoreFlashcardsFromBackup() {
     if (result.flashcardsBackup && result.flashcardsBackup.flashcards) {
       const backup = result.flashcardsBackup;
       flashcards = backup.flashcards;
-      
+
       // Ne plus sauvegarder localement - les flashcards sont uniquement sur le serveur
       debug('🔄 Flashcards restaurées depuis le backup');
-      
+
       // Mettre à jour l'interface
       updateFlashcards();
       updateStats();
-      
+
       showNotification(`${flashcards.length} flashcards restaurées depuis le backup`, 'success');
     } else {
       showNotification('Aucun backup trouvé', 'warning');
@@ -4349,23 +4349,23 @@ function restoreFlashcardsFromBackup() {
 // Effacer toutes les flashcards
 async function clearFlashcards() {
   if (!confirm('Effacer toutes les flashcards ?')) return;
-  
+
   // Créer un backup avant de supprimer
   backupFlashcards();
-  
+
   // Supprimer aussi sur le serveur si connecté
   const token = await authAPI.getToken();
   if (token) {
     try {
       showNotification('Suppression en cours...', 'info');
-      
+
       // Supprimer toutes les flashcards sur le serveur une par une
       const deletePromises = flashcards
         .filter(card => card.id && !card.id.startsWith('local_'))
         .map(card => flashcardsAPI.delete(card.id).catch(err => {
           console.error(`Erreur suppression ${card.id}:`, err);
         }));
-      
+
       await Promise.all(deletePromises);
       debug('✅ Toutes les flashcards supprimées du serveur');
     } catch (error) {
@@ -4373,7 +4373,7 @@ async function clearFlashcards() {
       showNotification('Erreur de suppression sur le serveur', 'error');
     }
   }
-  
+
   // Supprimer localement
   flashcards = [];
   updateFlashcards();
@@ -4386,40 +4386,40 @@ function importData() {
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = '.json';
-  
+
   input.onchange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
+
     try {
       const text = await file.text();
       const data = JSON.parse(text);
-      
+
       if (!data.translations || !data.flashcards) {
         throw new Error('Format de fichier invalide');
       }
-      
+
       if (confirm('Remplacer toutes les données actuelles par celles du fichier ?')) {
         translations = data.translations || [];
         flashcards = data.flashcards || [];
         flashcardFolders = data.flashcardFolders || flashcardFolders;
-        
+
         // Importer aussi les paramètres si disponibles
         if (data.settings) {
           Object.assign(userSettings, data.settings);
           saveSettings();
         }
-        
+
         // Sauvegarder les traductions et dossiers localement
-        chrome.storage.local.set({ 
-          translations, 
-          flashcardFolders 
+        chrome.storage.local.set({
+          translations,
+          flashcardFolders
         }, async () => {
           // Si connecté, synchroniser les flashcards importées avec le serveur
           const token = await authAPI.getToken();
           if (token && flashcards.length > 0) {
             showNotification('Synchronisation des flashcards importées...', 'info');
-            
+
             // Envoyer toutes les flashcards importées au serveur
             for (const card of flashcards) {
               try {
@@ -4435,11 +4435,11 @@ function importData() {
                 console.error('Erreur lors de la synchronisation:', error);
               }
             }
-            
+
             // Recharger depuis le serveur pour avoir les IDs corrects
             await loadFlashcardsFromServer();
           }
-          
+
           initUI();
           showNotification('Data imported successfully!', 'success');
         });
@@ -4448,7 +4448,7 @@ function importData() {
       showNotification('Erreur lors de l\'import: ' + error.message, 'error');
     }
   };
-  
+
   input.click();
 }
 
@@ -4457,23 +4457,23 @@ function exportData() {
   const data = {
     translations: [...translations],
     flashcards: [...flashcards],
-    flashcardFolders: {...flashcardFolders},
-    settings: {...userSettings},
+    flashcardFolders: { ...flashcardFolders },
+    settings: { ...userSettings },
     exportDate: new Date().toISOString(),
     version: '1.0'
   };
-  
+
   const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
-  
+
   const a = document.createElement('a');
   a.href = url;
   a.download = `lexiflow-backup-${new Date().toISOString().split('T')[0]}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  
+
   URL.revokeObjectURL(url);
   showNotification('Données exportées avec succès!', 'success');
 }
@@ -4483,28 +4483,28 @@ function resetApp() {
   if (!confirm('⚠️ Attention! Ceci supprimera toutes vos données (traductions, flashcards, paramètres). Continuer ?')) {
     return;
   }
-  
+
   if (!confirm('Are you really sure? This action is irreversible!')) {
     return;
   }
-  
+
   // Créer un backup complet avant de réinitialiser
   const fullBackup = {
     flashcards: [...flashcards],
     translations: [...translations],
-    flashcardFolders: {...flashcardFolders},
-    userSettings: {...userSettings},
+    flashcardFolders: { ...flashcardFolders },
+    userSettings: { ...userSettings },
     timestamp: new Date().toISOString(),
     version: '1.0'
   };
-  
+
   chrome.storage.local.set({ fullBackup }, () => {
     debug('💾 Backup complet créé avant reset');
   });
-  
+
   // Sauvegarder les flashcards actuelles pour pouvoir les supprimer du serveur
   const flashcardsToDelete = [...flashcards];
-  
+
   // Réinitialiser toutes les données
   translations = [];
   flashcards = [];
@@ -4514,7 +4514,7 @@ function resetApp() {
     difficult: { name: 'Difficiles', icon: '🔥' },
     learned: { name: 'Maîtrisées', icon: '✅' }
   };
-  
+
   // Réinitialiser les paramètres
   userSettings = {
     targetLanguage: 'fr',
@@ -4531,12 +4531,12 @@ function resetApp() {
     immersionMode: false,
     autoSaveToFlashcards: false
   };
-  
+
   // Sauvegarder
   chrome.storage.local.clear(() => {
     chrome.storage.sync.clear(async () => {
       saveSettings();
-      
+
       // Supprimer aussi les flashcards du serveur si connecté
       const token = await authAPI.getToken();
       if (token) {
@@ -4547,18 +4547,18 @@ function resetApp() {
             .map(card => flashcardsAPI.delete(card.id).catch(err => {
               console.error(`Erreur suppression ${card.id}:`, err);
             }));
-          
+
           await Promise.all(deletePromises);
           debug('✅ Toutes les flashcards supprimées du serveur lors du reset');
         } catch (error) {
           console.error('❌ Erreur lors de la suppression serveur:', error);
         }
       }
-      
+
       // Ne sauvegarder que les traductions et les dossiers (pas les flashcards)
-      chrome.storage.local.set({ 
-        translations, 
-        flashcardFolders 
+      chrome.storage.local.set({
+        translations,
+        flashcardFolders
       }, () => {
         initUI();
         showNotification('Application réinitialisée', 'info');
@@ -4571,13 +4571,13 @@ function resetApp() {
 function switchTab(tabName) {
   document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-  
+
   const selectedTab = document.querySelector(`[data-tab="${tabName}"]`);
   const selectedContent = document.getElementById(tabName);
-  
+
   if (selectedTab) selectedTab.classList.add('active');
   if (selectedContent) selectedContent.classList.add('active');
-  
+
   // Rafraîchir le contenu si nécessaire
   if (tabName === 'history') updateHistory();
   if (tabName === 'flashcards') updateFlashcards();
@@ -4596,71 +4596,88 @@ window.addEventListener('unhandledrejection', (e) => {
 // Event listeners principaux
 document.addEventListener('DOMContentLoaded', async () => {
   debug('🚀 DOMContentLoaded fired');
-  
+
+  // Check for URL parameters (e.g. from Context Menu)
+  const urlParams = new URLSearchParams(window.location.search);
+  const textToTranslate = urlParams.get('text');
+
+  if (textToTranslate) {
+    debug('📥 Received text via URL:', textToTranslate);
+    // Wait for UI to be ready
+    setTimeout(() => {
+      const input = document.getElementById('inputText');
+      if (input) {
+        input.value = textToTranslate;
+        // Trigger translation logic
+        handleTranslation();
+      }
+    }, 500);
+  }
+
   // Nettoyer les anciennes données de dossiers supprimés
   chrome.storage.sync.remove(['deletedFolders'], () => {
     debug('🧹 Anciennes données de dossiers supprimés nettoyées');
   });
-  
+
   // Réveiller le serveur dès le chargement
   if (API_CONFIG && API_CONFIG.wakeUpServer) {
     API_CONFIG.wakeUpServer().catch(() => {
       debug('⏰ Tentative de réveil du serveur...');
     });
   }
-  
+
   try {
     await loadData();
     await initUI();
-    
+
     // Rafraîchir l'affichage du bouton après que l'utilisateur soit chargé
     setTimeout(() => {
       initUI(); // Re-exécuter initUI pour mettre à jour correctement l'interface
     }, 500);
-    
-    
+
+
     // Debug: Vérifier les flashcards au démarrage
     debug('🚀 Démarrage - Flashcards chargées:', flashcards.length);
     // Ne plus vérifier localStorage pour les flashcards
     debug('📦 Flashcards uniquement sur le serveur maintenant');
-    
+
     // Vérifier si on revient de Stripe
     chrome.storage.local.get(['pendingCheckout', 'isUpgrade', 'previousPlan'], async (result) => {
       if (result.pendingCheckout) {
         console.log('🔄 Retour de Stripe checkout détecté');
         const isUpgrade = result.isUpgrade || false;
         chrome.storage.local.remove(['pendingCheckout', 'isUpgrade', 'previousPlan']);
-        
+
         // Afficher un message d'attente
         if (isUpgrade) {
           showNotification('⏳ Mise à jour de votre plan en cours...', 'info');
         }
-        
+
         // Forcer le rafraîchissement du profil après un délai pour laisser Stripe traiter
         setTimeout(async () => {
           console.log('⏳ Rafraîchissement du profil après paiement...');
           let retryCount = 0;
           const maxRetries = 5;
-          
+
           const refreshProfile = async () => {
             try {
               // Réveiller le serveur si nécessaire
               if (window.API_CONFIG && window.API_CONFIG.wakeUpServer) {
                 await window.API_CONFIG.wakeUpServer();
               }
-              
+
               const response = await apiRequest('/api/user/profile');
               if (response && response.user) {
                 console.log('✅ Profil mis à jour avec succès:', response.user);
                 window.currentUser = response.user;
                 chrome.storage.local.set({ user: response.user });
-                
+
                 // Mettre à jour l'UI
                 updateUIAfterLogin(response.user);
-                
+
                 // Vérifier le statut Premium
                 await checkPremiumStatus();
-                
+
                 // Afficher une notification si c'était un upgrade et que le plan a changé
                 if (isUpgrade && response.user.subscriptionPlan === 'yearly') {
                   showNotification('✨ Félicitations! Vous êtes maintenant sur le plan annuel!', 'success');
@@ -4671,7 +4688,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } catch (error) {
               console.error(`Erreur rafraîchissement profil (tentative ${retryCount + 1}):`, error);
               retryCount++;
-              
+
               if (retryCount < maxRetries) {
                 // Réessayer après un délai progressif
                 setTimeout(refreshProfile, 2000 * retryCount);
@@ -4681,23 +4698,23 @@ document.addEventListener('DOMContentLoaded', async () => {
               }
             }
           };
-          
+
           await refreshProfile();
         }, 3000); // Attendre 3 secondes avant de commencer
       }
     });
-    
+
     // Récupérer lastAuthCheck depuis le storage
     chrome.storage.local.get(['lastAuthCheck', 'user'], async (result) => {
       const lastAuthCheck = result.lastAuthCheck || 0;
       const now = Date.now();
       const token = await authAPI.getToken();
-      
+
       if (!token) {
         debug('Pas de token, utilisateur non connecté');
         return;
       }
-      
+
       // Si on a un token mais pas de currentUser, toujours charger le profil
       if (!window.currentUser && result.user) {
         // Utiliser l'utilisateur en cache d'abord pour l'UI rapide
@@ -4705,7 +4722,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateUIAfterLogin(result.user);
         debug('Utilisateur restauré depuis le cache');
       }
-      
+
       // Si toujours pas de currentUser, charger depuis l'API
       if (!window.currentUser) {
         try {
@@ -4721,11 +4738,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           debug('Erreur chargement profil:', error);
         }
       }
-      
+
       // Vérifier le token en arrière-plan seulement si nécessaire
       if (now - lastAuthCheck > 60000) {
         chrome.storage.local.set({ lastAuthCheck: now });
-        
+
         setTimeout(async () => {
           try {
             // Vérifier la validité du token en arrière-plan
@@ -4733,17 +4750,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (response && response.user) {
               // Mettre à jour le cache
               chrome.storage.local.set({ user: response.user });
-              
+
               // Mettre à jour seulement si différent
               if (JSON.stringify(window.currentUser) !== JSON.stringify(response.user)) {
                 window.currentUser = response.user;
                 updateUIAfterLogin(response.user);
               }
-              
+
               // Vérifier si c'est le même utilisateur
               const previousUserId = localStorage.getItem('lastUserId') || localStorage.getItem('lastDisconnectedUserId');
               const currentUserId = response.user.id || response.user._id;
-              
+
               if (!previousUserId || previousUserId === currentUserId) {
                 // Même utilisateur ou première connexion, garder les données locales
                 debug('✅ Même utilisateur, conservation des flashcards locales');
@@ -4756,7 +4773,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 localStorage.removeItem('translations');
                 chrome.storage.local.remove(['translations']);
                 localStorage.setItem('lastUserId', currentUserId);
-                
+
                 // NE PAS appeler syncFlashcardsAfterLogin ici - updateUIAfterLogin s'en charge
               }
             }
@@ -4766,7 +4783,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               debug('Erreur temporaire mais utilisateur déjà connecté, on ne change rien');
               return;
             }
-            
+
             // Seulement si pas d'utilisateur ET erreur 401 ET le token est vraiment invalide
             if (!window.currentUser && error.status === 401) {
               // Vérifier une dernière fois si le token existe
@@ -4786,22 +4803,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 1000); // Délai plus long pour éviter les vérifications trop rapides
       }
     });
-    
+
     // Navigation
     document.querySelectorAll('.nav-tab').forEach(tab => {
       tab.addEventListener('click', () => switchTab(tab.dataset.tab));
     });
-    
+
     // Event listener pour les traductions récentes
     const recentContainer = document.getElementById('recentTranslationsList');
     if (recentContainer) {
       recentContainer.addEventListener('click', (e) => {
         const target = e.target.closest('[data-action]');
         if (!target) return;
-        
+
         const action = target.dataset.action;
-        
-        switch(action) {
+
+        switch (action) {
           case 'copyTranslation':
             copyTranslation(target.dataset.text);
             break;
@@ -4816,17 +4833,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       });
     }
-    
+
     // Event listener pour l'historique
     const historyContainer = document.getElementById('historyList');
     if (historyContainer) {
       historyContainer.addEventListener('click', (e) => {
         const target = e.target.closest('[data-action]');
         if (!target) return;
-        
+
         const action = target.dataset.action;
-        
-        switch(action) {
+
+        switch (action) {
           case 'copyTranslation':
             copyTranslation(target.dataset.text);
             break;
@@ -4844,7 +4861,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       });
     }
-    
+
     // Bouton de connexion - configuration initiale
     const loginButton = document.getElementById('loginButton');
     if (loginButton) {
@@ -4858,13 +4875,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           loginButton.style.transform = 'translateY(-1px)';
           loginButton.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
         });
-        
+
         loginButton.addEventListener('mouseleave', () => {
           loginButton.style.background = 'rgba(255,255,255,0.15)';
           loginButton.style.transform = 'translateY(0)';
           loginButton.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
         });
-        
+
         // Ne pas ajouter un nouveau listener si onclick est déjà défini
         if (!loginButton.onclick) {
           loginButton.addEventListener('click', () => {
@@ -4874,16 +4891,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
     }
-    
-    
+
+
     // Actions globales
     document.addEventListener('click', (e) => {
       const target = e.target.closest('[data-action]');
       if (!target) return;
-      
+
       const action = target.dataset.action;
-      
-      switch(action) {
+
+      switch (action) {
         case 'clearHistory':
           clearHistory();
           break;
@@ -4917,7 +4934,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           break;
       }
     });
-    
+
     // Paramètres - Langue cible
     const targetLanguage = document.getElementById('targetLanguage');
     if (targetLanguage) {
@@ -4927,58 +4944,58 @@ document.addEventListener('DOMContentLoaded', async () => {
         showNotification(`Langue cible: ${getLanguageName(e.target.value)}`, 'info');
       });
     }
-    
+
     // Paramètres - Couleur du bouton
     const buttonColor = document.getElementById('buttonColor');
     if (buttonColor) {
       buttonColor.addEventListener('change', (e) => {
         userSettings.buttonColor = e.target.value;
         saveSettings();
-        
+
         // Mettre à jour immédiatement l'icône
         chrome.tabs.query({}, (tabs) => {
           tabs.forEach(tab => {
             chrome.tabs.sendMessage(tab.id, {
               action: 'updateButtonColor',
               color: e.target.value
-            }).catch(() => {});
+            }).catch(() => { });
           });
         });
-        
+
         showNotification('Couleur mise à jour!', 'success');
       });
     }
-    
+
     // Paramètres - Toggles avec gestion des fonctionnalités manquantes
     const toggles = [
-      { 
-        id: 'enabledToggle', 
-        setting: 'isEnabled', 
+      {
+        id: 'enabledToggle',
+        setting: 'isEnabled',
         label: 'Extension',
         action: (enabled) => {
-          chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+          chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             if (tabs[0]) {
               chrome.tabs.sendMessage(tabs[0].id, {
                 action: 'toggleExtension',
                 enabled: enabled
-              }).catch(() => {});
+              }).catch(() => { });
             }
           });
         }
       },
-      { 
-        id: 'shortcutToggle', 
-        setting: 'enableShortcut', 
-        label: 'Raccourci' 
+      {
+        id: 'shortcutToggle',
+        setting: 'enableShortcut',
+        label: 'Raccourci'
       },
-      { 
-        id: 'smartDetectionToggle', 
-        setting: 'autoDetectSameLanguage', 
-        label: 'Détection intelligente' 
+      {
+        id: 'smartDetectionToggle',
+        setting: 'autoDetectSameLanguage',
+        label: 'Détection intelligente'
       },
-      { 
-        id: 'animationsToggle', 
-        setting: 'animationsEnabled', 
+      {
+        id: 'animationsToggle',
+        setting: 'animationsEnabled',
         label: 'Animations',
         action: (enabled) => {
           if (!enabled) {
@@ -4999,39 +5016,39 @@ document.addEventListener('DOMContentLoaded', async () => {
               chrome.tabs.sendMessage(tab.id, {
                 action: 'updateSettings',
                 settings: { autoSaveToFlashcards: enabled }
-              }).catch(() => {});
+              }).catch(() => { });
             });
           });
         }
       }
     ];
-    
+
     // IMPORTANT: Créer les toggles manquants dynamiquement
     setTimeout(() => {
       const settingsSection = document.querySelector('.settings-section:nth-of-type(2)');
       if (settingsSection) {
         // Ajouter les toggles manquants
         const missingToggles = [
-          { 
+          {
             id: 'hoverToggle',
-            setting: 'hoverTranslation', 
+            setting: 'hoverTranslation',
             label: 'Translation on hover',
             description: 'Traduit automatiquement après 1 seconde de sélection'
           },
-          { 
+          {
             id: 'immersionToggle',
-            setting: 'immersionMode', 
+            setting: 'immersionMode',
             label: 'Mode immersion',
             description: 'Ajoute des indicateurs de traduction sur les éléments de la page'
           },
-          { 
+          {
             id: 'autoSaveToggle',
-            setting: 'autoSaveToFlashcards', 
+            setting: 'autoSaveToFlashcards',
             label: 'Sauvegarde automatique',
             description: 'Crée automatiquement une flashcard après chaque traduction'
           }
         ];
-        
+
         missingToggles.forEach(toggle => {
           // Vérifier si le toggle n'existe pas déjà
           if (!document.getElementById(toggle.id)) {
@@ -5045,7 +5062,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               <div class="toggle-switch ${userSettings[toggle.setting] ? 'active' : ''}" id="${toggle.id}"></div>
             `;
             settingsSection.appendChild(settingRow);
-            
+
             // Ajouter l'event listener
             const toggleElement = document.getElementById(toggle.id);
             if (toggleElement) {
@@ -5060,7 +5077,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
       }
     }, 100);
-    
+
     toggles.forEach(({ id, setting, label, action }) => {
       const toggle = document.getElementById(id);
       if (toggle) {
@@ -5068,32 +5085,32 @@ document.addEventListener('DOMContentLoaded', async () => {
           userSettings[setting] = !userSettings[setting];
           toggle.classList.toggle('active', userSettings[setting]);
           saveSettings();
-          
+
           if (action) {
             action(userSettings[setting]);
           }
-          
+
           showNotification(`${label} ${userSettings[setting] ? 'activé' : 'désactivé'}`, 'info');
         });
       }
     });
-    
+
     // DeepSeek settings - Nouveau comportement
     const deepSeekToggle = document.getElementById('deepSeekToggle');
     const deepSeekStatus = document.getElementById('deepSeekStatus');
-    
+
     if (deepSeekToggle) {
       // Initialiser l'état du toggle selon le statut de connexion/premium
       const isLoggedIn = !!window.currentUser; // Vérifier le statut de connexion réel
       const isPremium = window.currentUser?.isPremium || false;  // Vérifier le statut premium réel
-      
+
       // Désactiver le toggle si non connecté ou non premium
       if (!isLoggedIn) {
         deepSeekToggle.classList.add('disabled');
         deepSeekToggle.style.opacity = '0.5';
         deepSeekToggle.style.cursor = 'not-allowed';
         deepSeekToggle.title = 'Vous devez vous connecter';
-        
+
         if (deepSeekStatus) {
           deepSeekStatus.innerHTML = '<span>ℹ️</span><span>Connectez-vous pour accéder à DeepSeek AI</span>';
         }
@@ -5102,22 +5119,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         deepSeekToggle.style.opacity = '0.5';
         deepSeekToggle.style.cursor = 'not-allowed';
         deepSeekToggle.title = 'Vous devez souscrire à Premium';
-        
+
         if (deepSeekStatus) {
           deepSeekStatus.innerHTML = '<span>ℹ️</span><span>Vous devez souscrire à Premium</span>';
         }
       }
-      
+
       deepSeekToggle.addEventListener('click', async (e) => {
         // Récupérer l'état actuel de connexion
         const currentIsLoggedIn = !!window.currentUser;
         const currentIsPremium = window.currentUser?.isPremium || window.currentUser?.subscriptionStatus === 'premium';
-        
+
         // Empêcher l'action si désactivé
         if (deepSeekToggle.classList.contains('disabled')) {
           e.preventDefault();
           e.stopPropagation();
-          
+
           if (!currentIsLoggedIn) {
             showNotification('Vous devez vous connecter pour activer DeepSeek AI', 'warning');
             showLoginWindow();
@@ -5127,24 +5144,24 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
           return;
         }
-        
+
         // Logique normale si connecté et premium - pas besoin de clé API
         userSettings.deepSeekEnabled = !userSettings.deepSeekEnabled;
         deepSeekToggle.classList.toggle('active', userSettings.deepSeekEnabled);
-        
+
         // Pour les utilisateurs Premium, pas besoin de vérifier la clé
         if (currentIsPremium) {
           if (deepSeekStatus) {
             deepSeekStatus.className = userSettings.deepSeekEnabled ? 'deepseek-status active' : 'deepseek-status inactive';
-            deepSeekStatus.innerHTML = userSettings.deepSeekEnabled 
+            deepSeekStatus.innerHTML = userSettings.deepSeekEnabled
               ? '<span>✅</span><span>DeepSeek AI activé (Premium)</span>'
               : '<span>❌</span><span>DeepSeek AI désactivé</span>';
           }
         }
-        
+
         saveSettings();
         await checkPremiumStatus();
-        
+
         if (userSettings.deepSeekEnabled) {
           showNotification('DeepSeek AI activé!', 'success');
           if (deepSeekStatus) {
@@ -5160,7 +5177,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       });
     }
-    
+
     // Rafraîchir périodiquement les stats uniquement
     // Event listener pour le bouton Mode Pratique
     const practiceBtn = document.getElementById('startPracticeBtn');
@@ -5170,13 +5187,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         enablePracticeSelection();
       });
     }
-    
+
     // Ne pas recharger loadData() car cela peut écraser les flashcards en cours d'ajout
     setInterval(async () => {
       // await loadData(); // Commenté pour éviter l'écrasement des flashcards
       updateStats();
     }, 5000);
-    
+
   } catch (error) {
     console.error('❌ Erreur initialisation:', error);
     // Ne pas afficher de notification d'erreur sauf si c'est vraiment critique
@@ -5219,14 +5236,14 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
       }
     }
     */
-    
+
     // Gérer les changements de traductions
     if (changes.translations) {
       debug('📌 Traductions mises à jour dans storage');
       if (changes.translations.newValue) {
         translations = changes.translations.newValue;
         debug(`🔄 Mise à jour: ${translations.length} traductions`);
-        
+
         // Rafraîchir l'affichage si on est sur l'onglet historique
         const activeTab = document.querySelector('.tab-content.active');
         if (activeTab && activeTab.id === 'history') {
@@ -5251,7 +5268,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // Gérer l'ajout de flashcard depuis content.js
   if (message.action === 'flashcardAdded' && message.flashcard) {
     debug('📥 Nouvelle flashcard reçue du content script');
-    
+
     // Recharger les flashcards depuis le serveur
     setTimeout(async () => {
       await loadFlashcardsFromServer();
@@ -5259,17 +5276,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }, 500); // Petit délai pour laisser le temps au serveur
     return;
   }
-  
-  
+
+
   if (message.type === 'oauth-success' && message.token) {
     debug('Message OAuth reçu avec token');
-    
+
     // Annuler le timeout OAuth s'il existe
     if (oauthTimeoutId) {
       clearTimeout(oauthTimeoutId);
       oauthTimeoutId = null;
     }
-    
+
     // Sauvegarder le token
     chrome.storage.local.set({ authToken: message.token }, async () => {
       try {
